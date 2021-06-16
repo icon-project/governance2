@@ -1,0 +1,9 @@
+.?*
+!.github
+!doc/.vuepress
+__pycache__
+**/.DS_Store
+**/*.iml
+doc.tmp/
+build/
+bin/
