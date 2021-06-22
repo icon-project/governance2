@@ -1,4 +1,4 @@
-package governance;
+package com.icon.governance;
 
 import score.Address;
 import score.Context;
@@ -6,7 +6,6 @@ import score.Context;
 import java.math.BigInteger;
 import java.util.Map;
 import java.util.List;
-import java.util.HashMap;
 
 class PRepInfo {
     private final String name;

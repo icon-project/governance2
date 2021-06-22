@@ -1,4 +1,4 @@
-package governance;
+package com.icon.governance;
 
 import score.ByteArrayObjectWriter;
 import score.Address;
@@ -65,10 +65,11 @@ public class NetworkProposal {
                 description,
                 type,
                 value,
-                type,
-                v,
                 (BigInteger) term.get("startBlockHeight"),
                 expireVotingPeriod,
+                type,
+                v,
+                prepsInfo.size(),
                 totalBondedDelegation
         );
 
@@ -88,4 +89,5 @@ public class NetworkProposal {
     public void rejectProposal() {}
 
     public void expireProposal() {}
+
 }

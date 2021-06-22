@@ -1,4 +1,4 @@
-package governance;
+package com.icon.governance;
 
 import score.Address;
 import score.annotation.EventLog;

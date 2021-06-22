@@ -1,9 +1,10 @@
-package governance;
+package com.icon.governance;
+
+import com.eclipsesource.json.Json;
 
 import score.Address;
-import score.annotation.Keep;
-import score.Context;
 import score.ObjectWriter;
+import score.ObjectReader;
 
 import java.math.BigInteger;
 import java.util.Map;
@@ -98,6 +99,7 @@ class Voter {
         }
 
     }
+
 
     public static class DisAgree {
         private List<Vote> voteList;
@@ -211,26 +213,26 @@ class Voter {
         );
     }
 
-    private void toWriteWithAgree(ObjectWriter w, Voter v) {
+    private void writeWithAgree(ObjectWriter w, Voter v) {
         v.agree.writeObject(w, v.agree);
     }
 
-    private void toWriteWithDisAgree(ObjectWriter w, Voter v) {
+    private void writeWithDisAgree(ObjectWriter w, Voter v) {
         v.disAgree.writeObject(w, v.disAgree);
     }
 
-    private void toWriteWithNoVote(ObjectWriter w, Voter v) {
+    private void writeWithNoVote(ObjectWriter w, Voter v) {
         v.noVote.writeObject(w, v.noVote);
     }
 
     public static void writeObject(ObjectWriter w, Voter v) {
         w.beginMap(3);
             w.write("agree");
-            v.toWriteWithAgree(w, v);
+            v.writeWithAgree(w, v);
             w.write("disagree");
-            v.toWriteWithDisAgree(w, v);
+            v.writeWithDisAgree(w, v);
             w.write("noVote");
-            v.toWriteWithNoVote(w, v);
+            v.writeWithNoVote(w, v);
         w.end();
     }
 }
@@ -252,15 +254,16 @@ class Voter {
     3 - Canceled
 */
 public class Proposal {
-    byte[]  id;
+    Voter   vote;
     Address proposer;
     String  proposerName;
     String  title;
     String  description;
-    int     type;
+    byte[]  id;
     byte[]  value;
     int     status;
-    Voter   vote;
+    int     type;
+    int     totalVoter;
     BigInteger  startBlockHeight;
     BigInteger  expireBlockHeight;
     BigInteger  totalBondedDelegation;
@@ -273,10 +276,11 @@ public class Proposal {
             String description,
             int type,
             byte[] value,
-            int status,
-            Voter vote,
             BigInteger  startBlockHeight,
             BigInteger  expireBlockHeight,
+            int status,
+            Voter vote,
+            int         totalVoter,
             BigInteger  totalBondedDelegation
     ){
         this.id = id;
@@ -290,10 +294,84 @@ public class Proposal {
         this.expireBlockHeight = expireBlockHeight;
         this.status = status;
         this.vote = vote;
+        this.totalVoter = totalVoter;
         this.totalBondedDelegation = totalBondedDelegation;
     }
 
-    public static void writeObject(ObjectWriter w, Proposal p) {
+//    public Map<String, ?> toMap() {
+//        var proposalMap = Map.of(
+//                "id", id,
+//                "proposer", proposer,
+//                "proposer_name", proposerName,
+//                "title", title,
+//                "description", description,
+//                "type", type,
+//                "value", value,
+//                "start_block_height", startBlockHeight,
+//                "end_block_height", expireBlockHeight,
+//                "status", status,
+//                "vote", vote.toMap(),
+//                "total_voter", totalVoter,
+//                "total_delegated_amount", totalBondedDelegation
+//        );
+//        return proposalMap;
+//    }
 
+    private void writeWithVote(ObjectWriter w, Voter v) {
+        v.writeObject(w, v);
     }
+
+    public static void writeObject(ObjectWriter w, Proposal p) {
+        w.beginMap(13);
+            w.write("id");
+            w.write(p.id);
+            w.write("proposer");
+            w.write(p.proposer);
+            w.write("proposer_name");
+            w.write(p.proposerName);
+            w.write("title");
+            w.write(p.title);
+            w.write("description");
+            w.write(p.description);
+            w.write("type");
+            w.write(p.type);
+            w.write("value");
+            w.write(p.value);
+
+            w.write("start_block_height");
+            w.write(p.startBlockHeight);
+            w.write("end_block_height");
+            w.write(p.expireBlockHeight);
+            w.write("status");
+            w.write(p.status);
+            w.write("vote");
+            w.write(p.vote);
+            w.write("total_voter");
+            w.write(p.totalVoter);
+            w.write("total_delegated_amount");
+            w.write(p.totalBondedDelegation);
+        w.end();
+    }
+
+    public static Proposal readObject(ObjectReader r) {
+        r.beginMap();
+        var proposal = new Proposal(
+                r.readByteArray(),
+                r.readAddress(),
+                r.readString(),
+                r.readString(),
+                r.readString(),
+                r.readInt(),
+                r.readByteArray(),
+                r.readBigInteger(),
+                r.readBigInteger(),
+                r.readInt(),
+                new Voter(),
+                r.readInt(),
+                r.readBigInteger()
+        );
+        r.end();
+        return proposal;
+    }
+
 }

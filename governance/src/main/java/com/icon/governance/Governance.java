@@ -1,11 +1,10 @@
-package governance;
+package com.icon.governance;
 
 import score.Address;
 import score.Context;
 import score.annotation.External;
 
 import java.math.BigInteger;
-import java.util.Map;
 import java.util.List;
 
 
@@ -19,11 +18,6 @@ public class Governance {
         networkProposal = new NetworkProposal();
         event = new Event();
     }
-
-//    @External
-//    public List<PRepInfo> getMainPRepsInfo() {
-//        return chainScore.getMainPRepsInfo();
-//    }
 
     @External
     public void setRevision(int code) {
@@ -55,6 +49,10 @@ public class Governance {
 //        event.Accepted();
     }
 
+//    @External(readonly = true)
+//    public Map getProposal(byte[] id) {
+//        return networkProposal.getProposal(id);
+//    }
 
     @External
     public void registerProposal(
@@ -65,9 +63,9 @@ public class Governance {
     ) {
         List<PRepInfo> prepsInfo = chainScore.getMainPRepsInfo();
         Address proposer = Context.getCaller();
-        if (!hasUsable(proposer, prepsInfo)) {
-            Context.revert("No Permission: only main prep");
-        }
+//        if (!hasUsable(proposer, prepsInfo)) {
+//            Context.revert("No Permission: only main prep");
+//        }
 
         byte[] id = Context.getTransactionHash();
         networkProposal.submitProposal(
