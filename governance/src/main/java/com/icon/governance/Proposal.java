@@ -12,7 +12,6 @@ import score.ObjectReader;
 import java.math.BigInteger;
 
 final class Value {
-    final int proposalType;
     int code;
     String text;
     String name;
@@ -20,59 +19,52 @@ final class Value {
     int type;
     BigInteger value;
 
-    public Value(int p_type, String text) {
+    public Value(String text) {
         // Text
-        this.proposalType = p_type;
         this.text = text;
     }
 
-    public Value(int p_type, int code, String name) {
+    public Value(int code, String name) {
         // Revision
-        this.proposalType = p_type;
         this.code = code;
         this.name = name;
     }
 
-    public Value(int p_type, Address address, int type) {
+    public Value(Address address, int type) {
         // MaliciousScore
-        this.proposalType = p_type;
         this.address = address;
         this.type = type;
     }
 
-    public Value(int p_type, Address address) {
+    public Value(Address address) {
         // PRepDisQualification
-        this.proposalType = p_type;
         this.address = address;
     }
 
-    public Value(int p_type, BigInteger value) {
+    public Value(BigInteger value) {
         // StepPrice, IRep
-        this.proposalType = p_type;
         this.value = value;
     }
 
     public static Value makeWithJson(int type, JsonObject value) {
         switch (type) {
             case 0:
-                return new Value(type, value.getString("value", null));
+                return new Value(value.getString("value", null));
             case 1:
                 return new Value(
-                        type,
                         Integer.parseInt(value.getString("code", null)),
                         value.getString("name", null)
                 );
             case 2:
                 return new Value(
-                        type,
                         Convert.strToAddress(value.getString("address" ,null)),
                         Convert.hexToInt(value.getString("type", null))
                 );
             case 3:
-                return new Value(type, Convert.strToAddress(value.getString("address", null)));
+                return new Value(Convert.strToAddress(value.getString("address", null)));
             case 4:
             case 5:
-                return new Value(type, new BigInteger(value.getString("value", null), 10));
+                return new Value(new BigInteger(value.getString("value", null), 10));
         }
         throw new IllegalArgumentException("Invalid value type");
     }
@@ -203,7 +195,7 @@ public class Proposal {
                 r.readString(),
                 r.readString(),
                 r.readInt(),
-                new Value(0, BigInteger.ZERO),
+                new Value(""),
                 r.readBigInteger(),
                 r.readBigInteger(),
                 r.readInt(),
