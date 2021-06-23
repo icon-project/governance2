@@ -26,7 +26,7 @@ public class NetworkProposal {
             String title,
             String description,
             int type,
-            byte[] value,
+            Value value,
             List<PRepInfo> prepsInfo,
             ChainScore chainScore
     ) {
@@ -79,6 +79,10 @@ public class NetworkProposal {
         // proposal.toEncode();
          proposalGather.set(id, enc.toByteArray());
     }
+
+//    public getProposal(byte[] id) {
+//
+//    }
 
     public void cancelProposal() {}
 

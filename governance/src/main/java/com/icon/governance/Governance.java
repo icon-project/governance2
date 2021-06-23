@@ -1,5 +1,10 @@
 package com.icon.governance;
 
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonValue;
+
+
 import score.Address;
 import score.Context;
 import score.annotation.External;
@@ -17,6 +22,11 @@ public class Governance {
         chainScore = new ChainScore();
         networkProposal = new NetworkProposal();
         event = new Event();
+    }
+
+    @External
+    public void readJson(byte[] jso) {
+        Proposal p = Proposal.makeWithJson(jso);
     }
 
     @External
@@ -49,11 +59,6 @@ public class Governance {
 //        event.Accepted();
     }
 
-//    @External(readonly = true)
-//    public Map getProposal(byte[] id) {
-//        return networkProposal.getProposal(id);
-//    }
-
     @External
     public void registerProposal(
             String title,
@@ -68,13 +73,18 @@ public class Governance {
 //        }
 
         byte[] id = Context.getTransactionHash();
+
+        String s = new String(value);
+        JsonValue json = Json.parse(s);
+        Value v = Value.makeWithJson(type, json.asObject());
+
         networkProposal.submitProposal(
                 id,
                 proposer,
                 title,
                 description,
                 type,
-                value,
+                v,
                 prepsInfo,
                 chainScore
         );

@@ -1,242 +1,83 @@
 package com.icon.governance;
 
 import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonValue;
+import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.ParseException;
 
 import score.Address;
 import score.ObjectWriter;
 import score.ObjectReader;
 
 import java.math.BigInteger;
-import java.util.Map;
-import java.util.List;
 
-/*
-    VOTER STATUS
-    2 - Pending (noVote) --> Slash **
-    1 - Agree
-    0 - DisAgree
+final class Value {
+    final int proposalType;
+    int code;
+    String text;
+    String name;
+    Address address;
+    int type;
+    BigInteger value;
 
-    Condition Rate
-    Approve - 0.66
-    DisApprove - 0.33
-*/
-class Voter {
-    private Agree agree;
-    private DisAgree disAgree;
-    private NoVote noVote;
-
-    public static class Vote {
-        private byte[] id;
-        private String timestamp;
-        private Address address;
-        private String name;
-        private BigInteger amount;
-
-        public static void writeObject(ObjectWriter w, Vote v) {
-            w.beginMap(5);
-                w.write("id");
-                w.write(v.id);
-
-                w.write("timestamp");
-                w.write(v.timestamp);
-
-                w.write("address");
-                w.write(v.address);
-
-                w.write("name");
-                w.write(v.name);
-
-                w.write("amount");
-                w.write(v.amount);
-            w.end();
-        }
+    public Value(int p_type, String text) {
+        // Text
+        this.proposalType = p_type;
+        this.text = text;
     }
 
-    public static class Agree {
-        private List<Vote> voteList;
-        private BigInteger amount;
-
-        public Agree() {
-            this.voteList = List.of();
-            this.amount = BigInteger.ZERO;
-        }
-
-        public List<Vote> getVoteList() {
-            return voteList;
-        }
-
-        public void setVoteList(List<Vote> voteList) {
-            this.voteList = voteList;
-        }
-
-        public BigInteger getAmount() {
-            return amount;
-        }
-
-        public void setAmount(BigInteger amount) {
-            this.amount = amount;
-        }
-
-        public Map<String, ?> toMap() {
-            return Map.of(
-                    "list", voteList,
-                    "amount", amount
-            );
-        }
-
-        public static void writeObject(ObjectWriter w, Agree a) {
-            w.beginMap(2);
-                w.write("list");
-                w.beginList(a.getVoteList().size());
-                    for (Vote vote : a.getVoteList()) {
-                        vote.writeObject(w, vote);
-                    }
-                w.end();
-
-                w.write("amount");
-                w.write(a.getAmount());
-            w.end();
-        }
-
+    public Value(int p_type, int code, String name) {
+        // Revision
+        this.proposalType = p_type;
+        this.code = code;
+        this.name = name;
     }
 
-
-    public static class DisAgree {
-        private List<Vote> voteList;
-        private BigInteger amount;
-
-        public DisAgree() {
-            this.voteList = List.of();
-            this.amount = BigInteger.ZERO;
-        }
-
-        public List<Vote> getVoteList() {
-            return voteList;
-        }
-
-        public void setVoteList(List<Vote> voteList) {
-            this.voteList = voteList;
-        }
-
-        public BigInteger getAmount() {
-            return amount;
-        }
-
-        public void setAmount(BigInteger amount) {
-            this.amount = amount;
-        }
-
-        public Map<String, ?> toMap() {
-            return Map.of(
-                    "list", voteList,
-                    "amount", amount
-            );
-        }
-
-        public static void writeObject(ObjectWriter w, DisAgree d) {
-            w.beginMap(2);
-                w.write("list");
-                w.beginList(d.getVoteList().size());
-                    for (Vote vote : d.getVoteList()) {
-                        vote.writeObject(w, vote);
-                    }
-                w.end();
-
-                w.write("amount");
-                w.write(d.getAmount());
-            w.end();
-        }
+    public Value(int p_type, Address address, int type) {
+        // MaliciousScore
+        this.proposalType = p_type;
+        this.address = address;
+        this.type = type;
     }
 
-    public static class NoVote {
-        private List<Address> list;
-        private BigInteger amount;
-
-        public NoVote() {
-            this.list = List.of();
-            this.amount = BigInteger.ZERO;
-        }
-
-        public List<Address> getList() {
-            return list;
-        }
-
-        public void setList(List<Address> list) {
-            this.list = list;
-        }
-
-        public BigInteger getAmount() {
-            return amount;
-        }
-
-        public void setAmount(BigInteger amount) {
-            this.amount = amount;
-        }
-
-        public Map<String, ?> toMap() {
-            return Map.of(
-                    "list", list,
-                    "amount", amount
-            );
-        }
-
-        public static void writeObject(ObjectWriter w, NoVote n) {
-            w.beginMap(2);
-                w.write("list");
-                w.beginList(n.getList().size());
-                    for (Address addr : n.getList()) {
-                        w.write(addr);
-                    }
-                w.end();
-
-                w.write("amount");
-                w.write(n.getAmount());
-            w.end();
-        }
+    public Value(int p_type, Address address) {
+        // PRepDisQualification
+        this.proposalType = p_type;
+        this.address = address;
     }
 
-    public Voter() {
-        this.agree = new Agree();
-        this.disAgree = new DisAgree();
-        this.noVote = new NoVote();
+    public Value(int p_type, BigInteger value) {
+        // StepPrice, IRep
+        this.proposalType = p_type;
+        this.value = value;
     }
 
-     public void setAmountForNoVote(BigInteger amount) {
-        this.noVote.setAmount(amount);
-     }
-
-    public Map<String, Map<String, ?>> toMap() {
-        return Map.of(
-                "agree", agree.toMap(),
-                "disagree", disAgree.toMap(),
-                "noVote", noVote.toMap()
-        );
+    public static Value makeWithJson(int type, JsonObject value) {
+        switch (type) {
+            case 0:
+                return new Value(type, value.getString("value", null));
+            case 1:
+                return new Value(
+                        type,
+                        Integer.parseInt(value.getString("code", null)),
+                        value.getString("name", null)
+                );
+            case 2:
+                return new Value(
+                        type,
+                        Convert.strToAddress(value.getString("address" ,null)),
+                        Convert.hexToInt(value.getString("type", null))
+                );
+            case 3:
+                return new Value(type, Convert.strToAddress(value.getString("address", null)));
+            case 4:
+            case 5:
+                return new Value(type, new BigInteger(value.getString("value", null), 10));
+        }
+        throw new IllegalArgumentException("Invalid value type");
     }
 
-    private void writeWithAgree(ObjectWriter w, Voter v) {
-        v.agree.writeObject(w, v.agree);
-    }
-
-    private void writeWithDisAgree(ObjectWriter w, Voter v) {
-        v.disAgree.writeObject(w, v.disAgree);
-    }
-
-    private void writeWithNoVote(ObjectWriter w, Voter v) {
-        v.noVote.writeObject(w, v.noVote);
-    }
-
-    public static void writeObject(ObjectWriter w, Voter v) {
-        w.beginMap(3);
-            w.write("agree");
-            v.writeWithAgree(w, v);
-            w.write("disagree");
-            v.writeWithDisAgree(w, v);
-            w.write("noVote");
-            v.writeWithNoVote(w, v);
-        w.end();
-    }
 }
-
 
 /*
     PROPOSAL TYPE
@@ -260,7 +101,7 @@ public class Proposal {
     String  title;
     String  description;
     byte[]  id;
-    byte[]  value;
+    Value  value;
     int     status;
     int     type;
     int     totalVoter;
@@ -275,7 +116,7 @@ public class Proposal {
             String title,
             String description,
             int type,
-            byte[] value,
+            Value value,
             BigInteger  startBlockHeight,
             BigInteger  expireBlockHeight,
             int status,
@@ -362,7 +203,7 @@ public class Proposal {
                 r.readString(),
                 r.readString(),
                 r.readInt(),
-                r.readByteArray(),
+                new Value(0, BigInteger.ZERO),
                 r.readBigInteger(),
                 r.readBigInteger(),
                 r.readInt(),
@@ -374,4 +215,56 @@ public class Proposal {
         return proposal;
     }
 
+    public static Proposal makeWithJson(byte[] data) throws ParseException {
+        String jsonStr = new String(data);
+        JsonValue json = Json.parse(jsonStr);
+        JsonObject jsonObj = json.asObject();
+
+        byte[] id = Convert.hexToBytes(
+                jsonObj.getString("id", null)
+        );
+        Address proposer = Convert.strToAddress(
+                jsonObj.getString("proposer", null)
+        );
+
+        String proposerName = jsonObj.getString("proposer_name", null);
+        String title = jsonObj.getString("title", null);
+        String description = jsonObj.getString("description", null);
+
+        int type = Convert.hexToInt(
+                jsonObj.getString("type", null)
+        );
+        Value value = Value.makeWithJson(
+                type, jsonObj.get("value").asObject()
+        );
+
+        BigInteger  startBlockHeight = Convert.hexToBigInt(
+                jsonObj.getString("start_block_height", null)
+        );
+        BigInteger  expireBlockHeight = Convert.hexToBigInt(
+                jsonObj.getString("end_block_height", null)
+        );
+        int status = Convert.hexToInt(
+                jsonObj.getString("status", null)
+        );
+        Voter vote = Voter.makeVoterWithJson(jsonObj.get("vote"));
+        int totalVoter = vote.size();
+        BigInteger  totalBondedDelegation = vote.totalAmount();
+
+        return new Proposal(
+                id,
+                proposer,
+                proposerName,
+                title,
+                description,
+                type,
+                value,
+                startBlockHeight,
+                expireBlockHeight,
+                status,
+                vote,
+                totalVoter,
+                totalBondedDelegation
+        );
+    }
 }
