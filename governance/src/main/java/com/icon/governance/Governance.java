@@ -1,16 +1,17 @@
 package com.icon.governance;
 
 import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 
 
 import score.Address;
 import score.Context;
+import score.DictDB;
 import score.annotation.External;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
 
 
 public class Governance {
@@ -22,11 +23,6 @@ public class Governance {
         chainScore = new ChainScore();
         networkProposal = new NetworkProposal();
         event = new Event();
-    }
-
-    @External
-    public void readJson(byte[] jso) {
-        Proposal p = Proposal.makeWithJson(jso);
     }
 
     @External
@@ -59,33 +55,40 @@ public class Governance {
 //        event.Accepted();
     }
 
+    @External(readonly = true)
+    public Map<String, ?> getProposal(String hexString) {
+        byte[] id = Convert.hexToBytes(hexString);
+        this.networkProposal.getProposal(id);
+        return Map.of();
+    }
+
+
     @External
     public void registerProposal(
             String title,
             String description,
-            int type,
-            byte[] value
+            String type,
+            String value
     ) {
-        List<PRepInfo> prepsInfo = chainScore.getMainPRepsInfo();
         Address proposer = Context.getCaller();
 //        if (!hasUsable(proposer, prepsInfo)) {
 //            Context.revert("No Permission: only main prep");
 //        }
 
         byte[] id = Context.getTransactionHash();
+        int proposalType = Convert.hexToInt(type);
 
-        String s = new String(value);
-        JsonValue json = Json.parse(s);
-        Value v = Value.makeWithJson(type, json.asObject());
+        String stringValue = new String(Convert.hexToBytes(value));
+        JsonValue json = Json.parse(stringValue);
+        Value v = Value.makeWithJson(proposalType, json.asObject());
 
         networkProposal.submitProposal(
                 id,
                 proposer,
                 title,
                 description,
-                type,
+                proposalType,
                 v,
-                prepsInfo,
                 chainScore
         );
     }

@@ -6,6 +6,7 @@ import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import score.Address;
 import score.Context;
+import score.ObjectReader;
 import score.ObjectWriter;
 
 import java.math.BigInteger;
@@ -23,218 +24,265 @@ import java.util.Map;
     DisApprove - 0.33
 */
 
-class Vote {
-    private final byte[] id;
-    private final BigInteger timestamp;
-    private final Address address;
-    private final String name;
-    private final BigInteger amount;
-
-    public Vote(byte[] id, BigInteger timestamp, Address address, String name, BigInteger amount) {
-        this.id = id;
-        this.timestamp = timestamp;
-        this.address = address;
-        this.name = name;
-        this.amount = amount;
-    }
-
-    public static void writeObject(ObjectWriter w, Vote v) {
-        w.beginMap(5);
-            w.write("id");
-            w.write(v.id);
-
-            w.write("timestamp");
-            w.write(v.timestamp);
-
-            w.write("address");
-            w.write(v.address);
-
-            w.write("name");
-            w.write(v.name);
-
-            w.write("amount");
-            w.write(v.amount);
-        w.end();
-    }
-}
-
-
-interface IVoter {
-    abstract List<?> getVoteList();
-    abstract BigInteger getAmount();
-    abstract Map<?, ?> toMap();
-    abstract int size();
-    abstract void readJson(JsonValue jsonValue);
-}
-
-abstract class Slot implements IVoter {
-    List<Vote> voteList;
-    BigInteger amount;
-
-    public Slot(List<Vote> list, BigInteger amount) {
-        this.voteList = list;
-        this.amount = amount;
-    }
-
-    public List<Vote> getVoteList() {
-        return this.voteList;
-    }
-
-    public void setVoteList(List<Vote> list) {
-        this.voteList = list;
-    }
-
-    public BigInteger getAmount() {
-        return this.amount;
-    }
-
-    public void setAmount(BigInteger amount) {
-        this.amount = amount;
-    }
-
-    public int size() {
-        return this.voteList.size();
-    }
-
-    public Map<String, ?> toMap() {
-        return Map.of(
-                "list", voteList,
-                "amount", amount
-        );
-    }
-
-    public void readJson(JsonValue jsonValue) {
-        JsonObject obj = jsonValue.asObject();
-
-        JsonArray array = obj.get("list").asArray();
-        BigInteger total = Convert.hexToBigInt(obj.getString("amount", null));
-        this.setAmount(total);
-
-        Vote[] voteList = new Vote[array.size()];
-        int i = 0;
-        for (JsonValue item : array) {
-            JsonObject voteJson = item.asObject();
-            if (voteJson.size() != 5) {
-                throw new IllegalArgumentException("Invalid agree size");
-            }
-
-            String _id = voteJson.getString("id", null);
-            String _timestamp = voteJson.getString("timestamp", null);
-            String _address = voteJson.getString("address", null);
-            String _amount = voteJson.getString("amount", null);
-
-            byte[] id = Convert.hexToBytes(_id);
-            BigInteger timestamp = Convert.hexToBigInt(_timestamp);
-            Address address = Convert.strToAddress(_address);
-            String name = voteJson.getString("name", null);
-            BigInteger amount = Convert.hexToBigInt(_amount);
-
-            voteList[i++] = new Vote(id, timestamp, address, name, amount);
-        }
-        this.setVoteList(List.of(voteList));
-    }
-
-    public static void writeObject(ObjectWriter w, Slot a) {
-        w.beginMap(2);
-        w.write("list");
-        w.beginList(a.getVoteList().size());
-        for (Vote vote : a.getVoteList()) {
-            vote.writeObject(w, vote);
-        }
-        w.end();
-
-        w.write("amount");
-        w.write(a.getAmount());
-        w.end();
-    }
-}
-
-class Agree extends Slot {
-    public Agree() {
-        super(List.of(), BigInteger.ZERO);
-    }
-}
-
-
-class DisAgree extends Slot {
-    public DisAgree() {
-        super(List.of(), BigInteger.ZERO);
-    }
-}
-
-class NoVote implements IVoter {
-    List<Address> list;
-    BigInteger amount;
-
-    public NoVote() {
-        this.list = List.of();
-        this.amount = BigInteger.ZERO;
-    }
-
-    public List<Address> getVoteList() {
-        return list;
-    }
-
-    public void setVoteList(List<Address> list) {
-        this.list = list;
-    }
-
-    public BigInteger getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigInteger amount) {
-        this.amount = amount;
-    }
-
-    public int size() {
-        return list.size();
-    }
-
-    public Map<String, ?> toMap() {
-        return Map.of(
-                "list", list,
-                "amount", amount
-        );
-    }
-
-    public static void writeObject(ObjectWriter w, NoVote n) {
-        w.beginMap(2);
-        w.write("list");
-        w.beginList(n.getVoteList().size());
-        for (Address addr : n.getVoteList()) {
-            w.write(addr);
-        }
-        w.end();
-
-        w.write("amount");
-        w.write(n.getAmount());
-        w.end();
-    }
-
-    public void readJson(JsonValue jsonValue) {
-        JsonObject obj = jsonValue.asObject();
-
-        JsonArray array = obj.get("list").asArray();
-        BigInteger total = Convert.hexToBigInt(obj.getString("amount", null));
-        this.setAmount(total);
-
-        Address[] addrList = new Address[array.size()];
-        int i = 0;
-        for (JsonValue item : array) {
-            String _address = item.asString();
-            Address address = Convert.strToAddress(_address);
-            addrList[i++] = address;
-        }
-        this.setVoteList(List.of(addrList));
-    }
-}
-
-class Voter {
+public class Voter {
     Agree agree;
     DisAgree disAgree;
     NoVote noVote;
 
+    public static class Vote {
+        private final byte[] id;
+        private final BigInteger timestamp;
+        private final Address address;
+        private final String name;
+        private final BigInteger amount;
+
+        public Vote(byte[] id, BigInteger timestamp, Address address, String name, BigInteger amount) {
+            this.id = id;
+            this.timestamp = timestamp;
+            this.address = address;
+            this.name = name;
+            this.amount = amount;
+        }
+
+        public static void writeObject(ObjectWriter w, Vote v) {
+            w.beginList(5);
+            w.write(v.id);
+            w.write(v.timestamp);
+            w.write(v.address);
+            w.write(v.name);
+            w.write(v.amount);
+            w.end();
+        }
+
+        public static Vote readObject(ObjectReader r) {
+            r.beginList();
+            var v = new Vote(
+                    r.readByteArray(),
+                    r.readBigInteger(),
+                    r.readAddress(),
+                    r.readString(),
+                    r.readBigInteger()
+            );
+            r.end();
+            return v;
+        }
+    }
+
+    public abstract static class Slot {
+        Vote[] voteList;
+        BigInteger amount;
+
+        public Slot(Vote[] list, BigInteger amount) {
+            this.voteList = list;
+            this.amount = amount;
+        }
+
+        public Vote[] getVoteList() {
+            return this.voteList;
+        }
+
+        public void setVoteList(Vote[] list) {
+            this.voteList = list;
+        }
+
+        public BigInteger getAmount() {
+            return this.amount;
+        }
+
+        public void setAmount(BigInteger amount) {
+            this.amount = amount;
+        }
+
+        public Integer size() {
+            return this.voteList.length;
+        }
+
+        public Map<String, Object> toMap() {
+            return Map.of(
+                    "list", voteList,
+                    "amount", amount
+            );
+        }
+
+        public void readJson(JsonValue jsonValue) {
+            JsonObject obj = jsonValue.asObject();
+
+            JsonArray array = obj.get("list").asArray();
+            BigInteger total = Convert.hexToBigInt(obj.getString("amount", null));
+            this.setAmount(total);
+
+            Vote[] voteList = new Vote[array.size()];
+            int i = 0;
+            for (JsonValue item : array) {
+                JsonObject voteJson = item.asObject();
+                if (voteJson.size() != 5) {
+                    throw new IllegalArgumentException("Invalid agree size");
+                }
+
+                String _id = voteJson.getString("id", null);
+                String _timestamp = voteJson.getString("timestamp", null);
+                String _address = voteJson.getString("address", null);
+                String _amount = voteJson.getString("amount", null);
+
+                byte[] id = Convert.hexToBytes(_id);
+                BigInteger timestamp = Convert.hexToBigInt(_timestamp);
+                Address address = Convert.strToAddress(_address);
+                String name = voteJson.getString("name", null);
+                BigInteger amount = Convert.hexToBigInt(_amount);
+
+                voteList[i++] = new Vote(id, timestamp, address, name, amount);
+            }
+            this.setVoteList(voteList);
+        }
+    }
+
+    public static class Agree extends Slot {
+        public Agree() {
+            super(new Vote[0], BigInteger.ZERO);
+        }
+
+        public static void writeObject(ObjectWriter w, Agree a) {
+            w.beginList(2);
+            w.write(a.size());
+            for (Vote v : a.getVoteList()) {
+                w.write(v);
+            }
+            w.write(a.getAmount());
+            w.end();
+        }
+
+        public static Agree readObject(ObjectReader r) {
+            r.beginList();
+            var a = new Agree();
+            int size = r.readInt();
+            Vote[] voteList = new Vote[size];
+
+            for (int i = 0; i < size; i++) {
+                Vote v = r.read(Vote.class);
+                voteList[i] = v;
+            }
+
+            a.setVoteList(voteList);
+            a.setAmount(r.readBigInteger());
+            r.end();
+            return a;
+        }
+    }
+
+
+    public static class DisAgree extends Slot {
+        public DisAgree() {
+            super(new Vote[0], BigInteger.ZERO);
+        }
+
+        public static void writeObject(ObjectWriter w, DisAgree d) {
+            w.beginList(2);
+            w.write(d.size());
+            for (Vote v : d.getVoteList()) {
+                w.write(v);
+            }
+            w.write(d.getAmount());
+            w.end();
+        }
+
+        public static DisAgree readObject(ObjectReader r) {
+            r.beginList();
+            var d = new DisAgree();
+            int size = r.readInt();
+            Vote[] voteList = new Vote[size];
+
+            for (int i = 0; i < size; i++) {
+                Vote v = r.read(Vote.class);
+                voteList[i] = v;
+            }
+
+            d.setVoteList(voteList);
+            d.setAmount(r.readBigInteger());
+            r.end();
+            return d;
+        }
+    }
+
+    public static class NoVote {
+        Address[] list;
+        BigInteger amount;
+
+        public NoVote() {
+            this.list = new Address[0];
+            this.amount = BigInteger.ZERO;
+        }
+
+        public static void writeObject(ObjectWriter w, NoVote n) {
+            w.beginList(2);
+            w.write(n.size());
+            for (Address v : n.getAddressList()) {
+                w.write(v);
+            }
+            w.write(n.getAmount());
+            w.end();
+        }
+
+        public static NoVote readObject(ObjectReader r) {
+            r.beginList();
+            var n = new NoVote();
+            int size = r.readInt();
+            Address[] addressList = new Address[size];
+
+            for (int i = 0; i < size; i++) {
+                Address a = r.readAddress();
+                addressList[i] = a;
+            }
+
+            n.setAddressList(addressList);
+            n.setAmount(r.readBigInteger());
+            r.end();
+            return n;
+        }
+
+        public Address[] getAddressList() {
+            return this.list;
+        }
+
+        public void setAddressList(Address[] list) {
+            this.list = list;
+        }
+
+        public BigInteger getAmount() {
+            return amount;
+        }
+
+        public void setAmount(BigInteger amount) {
+            this.amount = amount;
+        }
+
+        public Integer size() {
+            return list.length;
+        }
+
+        public Map<String, Object> toMap() {
+            return Map.of(
+                    "list", list,
+                    "amount", amount
+            );
+        }
+
+        public void readJson(JsonValue jsonValue) {
+            JsonObject obj = jsonValue.asObject();
+
+            JsonArray array = obj.get("list").asArray();
+            BigInteger total = Convert.hexToBigInt(obj.getString("amount", null));
+            this.setAmount(total);
+
+            Address[] addrList = new Address[array.size()];
+            int i = 0;
+            for (JsonValue item : array) {
+                String _address = item.asString();
+                Address address = Convert.strToAddress(_address);
+                addrList[i++] = address;
+            }
+            this.setAddressList(addrList);
+        }
+    }
 
     public Voter() {
         this.agree = new Agree();
@@ -242,11 +290,40 @@ class Voter {
         this.noVote = new NoVote();
     }
 
+    public Voter(
+            Agree a,
+            DisAgree d,
+            NoVote n
+    ) {
+        this.agree = a;
+        this.disAgree = d;
+        this.noVote = n;
+    }
+
+    public static void writeObject(ObjectWriter w, Voter v) {
+        w.beginList(3);
+        w.write(v.agree);
+        w.write(v.disAgree);
+        w.write(v.noVote);
+        w.end();
+    }
+
+    public static Voter readObject(ObjectReader r) {
+        r.beginList();
+        var v = new Voter(
+                r.read(Agree.class),
+                r.read(DisAgree.class),
+                r.read(NoVote.class)
+        );
+        r.end();
+        return v;
+    }
+
     public void setAmountForNoVote(BigInteger amount) {
         this.noVote.setAmount(amount);
     }
 
-    public Map<String, Map<String, ?>> toMap() {
+    public Map<String, Map<String, Object>> toMap() {
         return Map.of(
                 "agree", agree.toMap(),
                 "disagree", disAgree.toMap(),
@@ -255,9 +332,9 @@ class Voter {
     }
 
     public String sizeof() {
-        return  "agree: " + agree.size() +
-                " disagree: " + disAgree.size() +
-                " noVote: " + noVote.size();
+        return  "agree: " + agree.size().toString() +
+                " disagree: " + disAgree.size().toString() +
+                " noVote: " + noVote.size().toString();
     }
 
     public int size() {
@@ -307,17 +384,5 @@ class Voter {
 //    private void writeWithNoVote(ObjectWriter w, Voter v) {
 //        v.noVote.writeObject(w, v.noVote);
 //    }
-
-    public static void writeObject(ObjectWriter w, Voter v) {
-        w.beginMap(3);
-        w.write("agree");
-        w.write(v.agree);
-        w.write("disagree");
-        w.write(v.disAgree);
-        w.write("noVote");
-        w.write(v.noVote);
-        w.end();
-    }
-
 }
 

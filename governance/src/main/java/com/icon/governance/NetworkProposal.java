@@ -12,12 +12,22 @@ import java.util.List;
 
 
 public class NetworkProposal {
-    private final DictDB<byte[], byte[]> proposalGather;
-    private final ArrayDB<byte[]> keyset;
+    private final DictDB<byte[], byte[]> proposalList = Context.newDictDB("proposal_list", byte[].class);
+    private final ArrayDB<byte[]> proposalListKeys = Context.newArrayDB("proposal_list_keys", byte[].class);
+    private final DictDB<byte[], Proposal> proposalGather = Context.newDictDB("proposal_gather", Proposal.class);
 
-    public NetworkProposal() {
-        this.proposalGather = Context.newDictDB("proposal_list", byte[].class);
-        this.keyset = Context.newArrayDB("proposal_list_keys", byte[].class);
+    public Map<String, ?> getProposal(byte[] id) {
+        byte[] data = this.proposalList.getOrDefault(id, new byte[0]);
+        if (data.length > 0) {
+            // python db.get
+            Proposal p = Proposal.makeWithJson(data);
+            return Map.of();
+        } else {
+            // java db.get
+            Context.println("PROPOSAL GATHER");
+            Proposal p = proposalGather.get(id);
+            return Map.of();
+        }
     }
 
     public void submitProposal(
@@ -27,11 +37,12 @@ public class NetworkProposal {
             String description,
             int type,
             Value value,
-            List<PRepInfo> prepsInfo,
             ChainScore chainScore
     ) {
+
+        PRepInfo[] prepsInfo = chainScore.getMainPRepsInfo();
         BigInteger totalBondedDelegation = BigInteger.ZERO;
-        String proposerName = new String();
+        String proposerName = "";
 
         Voter v = new Voter();
 
@@ -67,22 +78,13 @@ public class NetworkProposal {
                 value,
                 (BigInteger) term.get("startBlockHeight"),
                 expireVotingPeriod,
-                type,
+                0, // status enum,,?
                 v,
-                prepsInfo.size(),
+                prepsInfo.length,
                 totalBondedDelegation
         );
-
-        ByteArrayObjectWriter enc = Context.newByteArrayObjectWriter("RLPn");
-        enc.write(proposal);
-
-        // proposal.toEncode();
-         proposalGather.set(id, enc.toByteArray());
+        proposalGather.set(id, proposal);
     }
-
-//    public getProposal(byte[] id) {
-//
-//    }
 
     public void cancelProposal() {}
 

@@ -72,7 +72,7 @@ class ChainScore {
     }
 
     // icon.chainscore_iiss... 에 구현
-    public List<PRepInfo> getMainPRepsInfo() {
+    public PRepInfo[] getMainPRepsInfo() {
         Map<String, Object> mainPreps = this.getMainPReps();
         List<Map<String, Object>> info = (List<Map<String, Object>>) mainPreps.get("preps");
 
@@ -90,14 +90,14 @@ class ChainScore {
             prepInfo[i] = itemInfo;
         }
 
-        return List.of(prepInfo);
+        return prepInfo;
     }
 
     private Map<String, Object> getMainPReps() {
         return (Map<String, Object>) Context.call(CHAIN_SCORE, "getMainPReps");
     }
 
-    public Map getPRepTerm() {
+    public Map<String, Object> getPRepTerm() {
         return (Map<String, Object>) Context.call(CHAIN_SCORE, "getPRepTerm");
     }
 }

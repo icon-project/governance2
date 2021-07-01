@@ -3,73 +3,14 @@ package com.icon.governance;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.ParseException;
 
 import score.Address;
+import score.Context;
 import score.ObjectWriter;
 import score.ObjectReader;
 
 import java.math.BigInteger;
-
-final class Value {
-    int code;
-    String text;
-    String name;
-    Address address;
-    int type;
-    BigInteger value;
-
-    public Value(String text) {
-        // Text
-        this.text = text;
-    }
-
-    public Value(int code, String name) {
-        // Revision
-        this.code = code;
-        this.name = name;
-    }
-
-    public Value(Address address, int type) {
-        // MaliciousScore
-        this.address = address;
-        this.type = type;
-    }
-
-    public Value(Address address) {
-        // PRepDisQualification
-        this.address = address;
-    }
-
-    public Value(BigInteger value) {
-        // StepPrice, IRep
-        this.value = value;
-    }
-
-    public static Value makeWithJson(int type, JsonObject value) {
-        switch (type) {
-            case 0:
-                return new Value(value.getString("value", null));
-            case 1:
-                return new Value(
-                        Integer.parseInt(value.getString("code", null)),
-                        value.getString("name", null)
-                );
-            case 2:
-                return new Value(
-                        Convert.strToAddress(value.getString("address" ,null)),
-                        Convert.hexToInt(value.getString("type", null))
-                );
-            case 3:
-                return new Value(Convert.strToAddress(value.getString("address", null)));
-            case 4:
-            case 5:
-                return new Value(new BigInteger(value.getString("value", null), 10));
-        }
-        throw new IllegalArgumentException("Invalid value type");
-    }
-
-}
+import java.util.Map;
 
 /*
     PROPOSAL TYPE
@@ -87,19 +28,19 @@ final class Value {
     3 - Canceled
 */
 public class Proposal {
-    Voter   vote;
-    Address proposer;
-    String  proposerName;
-    String  title;
-    String  description;
-    byte[]  id;
-    Value  value;
-    int     status;
-    int     type;
-    int     totalVoter;
-    BigInteger  startBlockHeight;
-    BigInteger  expireBlockHeight;
-    BigInteger  totalBondedDelegation;
+    final byte[] id;
+    final Address proposer;
+    String proposerName;
+    String title;
+    String description;
+    int type;
+    Value value;
+    BigInteger startBlockHeight;
+    BigInteger expireBlockHeight;
+    int status;
+    Voter vote;
+    int totalVoter;
+    BigInteger totalBondedDelegation;
 
     public Proposal(
             byte[] id,
@@ -131,7 +72,46 @@ public class Proposal {
         this.totalBondedDelegation = totalBondedDelegation;
     }
 
-//    public Map<String, ?> toMap() {
+    public static void writeObject(ObjectWriter w, Proposal p) {
+        w.beginList(13);
+        w.write(p.id);
+        w.write(p.proposer);
+        w.write(p.proposerName);
+        w.write(p.title);
+        w.write(p.description);
+        w.write(p.type);
+        w.write(p.value);
+        w.write(p.startBlockHeight);
+        w.write(p.expireBlockHeight);
+        w.write(p.status);
+        w.write(p.vote);
+        w.write(p.totalVoter);
+        w.write(p.totalBondedDelegation);
+        w.end();
+    }
+
+    public static Proposal readObject(ObjectReader r) {
+        r.beginMap();
+        var p = new Proposal(
+                r.readByteArray(),
+                r.readAddress(),
+                r.readString(),
+                r.readString(),
+                r.readString(),
+                r.readInt(),
+                r.read(Value.class),
+                r.readBigInteger(),
+                r.readBigInteger(),
+                r.readInt(),
+                r.read(Voter.class),
+                r.readInt(),
+                r.readBigInteger()
+        );
+        r.end();
+        return p;
+    }
+
+//    public Map<String, Object> toMap() {
 //        var proposalMap = Map.of(
 //                "id", id,
 //                "proposer", proposer,
@@ -147,67 +127,26 @@ public class Proposal {
 //                "total_voter", totalVoter,
 //                "total_delegated_amount", totalBondedDelegation
 //        );
-//        return proposalMap;
+//        return Map.of(
+//                "id", id,
+//                "proposer", proposer,
+//                "proposer_name", proposerName,
+//                "title", title,
+//                "description", description,
+//                "type", type,
+//                "value", value.toMap(),
+//                "start_block_height", startBlockHeight,
+//                "end_block_height", expireBlockHeight,
+//                "status", status,
+//                "vote", vote.toMap(),
+//                "total_voter", totalVoter,
+//                "total_delegated_amount", totalBondedDelegation
+//        );
 //    }
 
-    private void writeWithVote(ObjectWriter w, Voter v) {
-        v.writeObject(w, v);
-    }
-
-    public static void writeObject(ObjectWriter w, Proposal p) {
-        w.beginMap(13);
-            w.write("id");
-            w.write(p.id);
-            w.write("proposer");
-            w.write(p.proposer);
-            w.write("proposer_name");
-            w.write(p.proposerName);
-            w.write("title");
-            w.write(p.title);
-            w.write("description");
-            w.write(p.description);
-            w.write("type");
-            w.write(p.type);
-            w.write("value");
-            w.write(p.value);
-
-            w.write("start_block_height");
-            w.write(p.startBlockHeight);
-            w.write("end_block_height");
-            w.write(p.expireBlockHeight);
-            w.write("status");
-            w.write(p.status);
-            w.write("vote");
-            w.write(p.vote);
-            w.write("total_voter");
-            w.write(p.totalVoter);
-            w.write("total_delegated_amount");
-            w.write(p.totalBondedDelegation);
-        w.end();
-    }
-
-    public static Proposal readObject(ObjectReader r) {
-        r.beginMap();
-        var proposal = new Proposal(
-                r.readByteArray(),
-                r.readAddress(),
-                r.readString(),
-                r.readString(),
-                r.readString(),
-                r.readInt(),
-                new Value(""),
-                r.readBigInteger(),
-                r.readBigInteger(),
-                r.readInt(),
-                new Voter(),
-                r.readInt(),
-                r.readBigInteger()
-        );
-        r.end();
-        return proposal;
-    }
-
-    public static Proposal makeWithJson(byte[] data) throws ParseException {
+    public static Proposal makeWithJson(byte[] data) {
+        // python, java 서로 다른 DB 사용(prefix key),
+        // python.get is null -> java score.
         String jsonStr = new String(data);
         JsonValue json = Json.parse(jsonStr);
         JsonObject jsonObj = json.asObject();
@@ -240,8 +179,20 @@ public class Proposal {
                 jsonObj.getString("status", null)
         );
         Voter vote = Voter.makeVoterWithJson(jsonObj.get("vote"));
+
         int totalVoter = vote.size();
+//        int total_voter = Integer.parseInt(jsonObj.getString("total_voter", null));
+//        if (totalVoter != total_voter) {
+//            throw new IllegalArgumentException("totalVoter not equal");
+//        }
+
         BigInteger  totalBondedDelegation = vote.totalAmount();
+//        BigInteger  total_delegated_amount = new BigInteger(
+//                jsonObj.getString("total_delegated_amount", null)
+//        );
+//        if (!totalBondedDelegation.equals(total_delegated_amount)) {
+//            throw new IllegalArgumentException("amount not equal");
+//        }
 
         return new Proposal(
                 id,
