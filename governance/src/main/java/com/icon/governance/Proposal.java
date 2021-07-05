@@ -9,8 +9,8 @@ import score.Context;
 import score.ObjectWriter;
 import score.ObjectReader;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Map;
 
 /*
     PROPOSAL TYPE
@@ -148,12 +148,14 @@ public class Proposal {
         // python, java 서로 다른 DB 사용(prefix key),
         // python.get is null -> java score.
         String jsonStr = new String(data);
+        Context.println(jsonStr);
         JsonValue json = Json.parse(jsonStr);
         JsonObject jsonObj = json.asObject();
 
         byte[] id = Convert.hexToBytes(
-                jsonObj.getString("id", null)
+                "0x" + jsonObj.getString("id", null)
         );
+
         Address proposer = Convert.strToAddress(
                 jsonObj.getString("proposer", null)
         );
@@ -162,31 +164,32 @@ public class Proposal {
         String title = jsonObj.getString("title", null);
         String description = jsonObj.getString("description", null);
 
-        int type = Convert.hexToInt(
-                jsonObj.getString("type", null)
-        );
+        int type = jsonObj.getInt("type", 0);
         Value value = Value.makeWithJson(
                 type, jsonObj.get("value").asObject()
         );
 
-        BigInteger  startBlockHeight = Convert.hexToBigInt(
-                jsonObj.getString("start_block_height", null)
-        );
-        BigInteger  expireBlockHeight = Convert.hexToBigInt(
-                jsonObj.getString("end_block_height", null)
-        );
-        int status = Convert.hexToInt(
-                jsonObj.getString("status", null)
-        );
+        BigInteger  startBlockHeight = BigDecimal.valueOf(
+                jsonObj.getDouble("start_block_height", 0)
+        ).toBigInteger();
+
+        BigInteger  expireBlockHeight = BigDecimal.valueOf(
+                jsonObj.getDouble("end_block_height", 0)
+        ).toBigInteger();
+
+        int status = jsonObj.getInt("status", 0);
         Voter vote = Voter.makeVoterWithJson(jsonObj.get("vote"));
 
-        int totalVoter = vote.size();
+        int totalVoter = jsonObj.getInt("total_voter", 0);
+
 //        int total_voter = Integer.parseInt(jsonObj.getString("total_voter", null));
 //        if (totalVoter != total_voter) {
 //            throw new IllegalArgumentException("totalVoter not equal");
 //        }
 
-        BigInteger  totalBondedDelegation = vote.totalAmount();
+        BigInteger  totalBondedDelegation = BigDecimal.valueOf(
+                jsonObj.getDouble("total_delegated_amount", 0)
+        ).toBigInteger();
 //        BigInteger  total_delegated_amount = new BigInteger(
 //                jsonObj.getString("total_delegated_amount", null)
 //        );

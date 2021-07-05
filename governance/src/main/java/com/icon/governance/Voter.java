@@ -9,6 +9,7 @@ import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
@@ -108,7 +109,9 @@ public class Voter {
             JsonObject obj = jsonValue.asObject();
 
             JsonArray array = obj.get("list").asArray();
-            BigInteger total = Convert.hexToBigInt(obj.getString("amount", null));
+            BigInteger total = BigDecimal.valueOf(
+                    obj.getDouble("amount", 0)
+            ).toBigInteger();
             this.setAmount(total);
 
             Vote[] voteList = new Vote[array.size()];
@@ -119,16 +122,19 @@ public class Voter {
                     throw new IllegalArgumentException("Invalid agree size");
                 }
 
-                String _id = voteJson.getString("id", null);
-                String _timestamp = voteJson.getString("timestamp", null);
-                String _address = voteJson.getString("address", null);
-                String _amount = voteJson.getString("amount", null);
-
-                byte[] id = Convert.hexToBytes(_id);
-                BigInteger timestamp = Convert.hexToBigInt(_timestamp);
-                Address address = Convert.strToAddress(_address);
+                byte[] id = Convert.hexToBytes(
+                        voteJson.getString("id", null)
+                );
+                BigInteger timestamp = BigDecimal.valueOf(
+                        voteJson.getDouble("timestamp", 0)
+                ).toBigInteger();
+                Address address = Convert.strToAddress(
+                        voteJson.getString("address", null)
+                );
                 String name = voteJson.getString("name", null);
-                BigInteger amount = Convert.hexToBigInt(_amount);
+                BigInteger amount = BigDecimal.valueOf(
+                        voteJson.getDouble("amount", 0)
+                ).toBigInteger();
 
                 voteList[i++] = new Vote(id, timestamp, address, name, amount);
             }
@@ -270,7 +276,9 @@ public class Voter {
             JsonObject obj = jsonValue.asObject();
 
             JsonArray array = obj.get("list").asArray();
-            BigInteger total = Convert.hexToBigInt(obj.getString("amount", null));
+            BigInteger total = BigDecimal.valueOf(
+                    obj.getDouble("amount", 0)
+            ).toBigInteger();
             this.setAmount(total);
 
             Address[] addrList = new Address[array.size()];
