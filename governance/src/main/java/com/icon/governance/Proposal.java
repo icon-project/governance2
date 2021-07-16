@@ -11,6 +11,7 @@ import score.ObjectReader;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Map;
 
 /*
     PROPOSAL TYPE
@@ -111,40 +112,25 @@ public class Proposal {
         return p;
     }
 
-//    public Map<String, Object> toMap() {
-//        var proposalMap = Map.of(
-//                "id", id,
-//                "proposer", proposer,
-//                "proposer_name", proposerName,
-//                "title", title,
-//                "description", description,
-//                "type", type,
-//                "value", value,
-//                "start_block_height", startBlockHeight,
-//                "end_block_height", expireBlockHeight,
-//                "status", status,
-//                "vote", vote.toMap(),
-//                "total_voter", totalVoter,
-//                "total_delegated_amount", totalBondedDelegation
-//        );
-//        return Map.of(
-//                "id", id,
-//                "proposer", proposer,
-//                "proposer_name", proposerName,
-//                "title", title,
-//                "description", description,
-//                "type", type,
-//                "value", value.toMap(),
-//                "start_block_height", startBlockHeight,
-//                "end_block_height", expireBlockHeight,
-//                "status", status,
-//                "vote", vote.toMap(),
-//                "total_voter", totalVoter,
-//                "total_delegated_amount", totalBondedDelegation
-//        );
-//    }
+    public Map<String, Object> toMap() {
+        return Map.ofEntries(
+                Map.entry("id", id),
+                Map.entry("proposer", proposer),
+                Map.entry("proposer_name", proposerName),
+                Map.entry("title", title),
+                Map.entry("description", description),
+                Map.entry("type", type),
+                Map.entry("value", value.toMap()),
+                Map.entry("start_block_height", startBlockHeight),
+                Map.entry("end_block_height", expireBlockHeight),
+                Map.entry("status", status),
+                Map.entry("vote", vote.toMap()),
+                Map.entry("total_voter", totalVoter),
+                Map.entry("total_bonded_delegation", totalBondedDelegation)
+        );
+    }
 
-    public static Proposal makeWithJson(byte[] data) {
+    public static Proposal loadJson(byte[] data) {
         // python, java 서로 다른 DB 사용(prefix key),
         // python.get is null -> java score.
         String jsonStr = new String(data);

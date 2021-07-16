@@ -1,6 +1,5 @@
 package com.icon.governance;
 
-import score.ByteArrayObjectWriter;
 import score.Address;
 import score.Context;
 import score.DictDB;
@@ -8,30 +7,36 @@ import score.ArrayDB;
 
 import java.math.BigInteger;
 import java.util.Map;
-import java.util.List;
 
 
 public class NetworkProposal {
     private final DictDB<byte[], byte[]> proposalList = Context.newDictDB("proposal_list", byte[].class);
     private final ArrayDB<byte[]> proposalListKeys = Context.newArrayDB("proposal_list_keys", byte[].class);
     private final DictDB<byte[], Proposal> proposalGather = Context.newDictDB("proposal_gather", Proposal.class);
+    private final ArrayDB<byte[]> proposalGatherKeys = Context.newArrayDB("proposal_gather_keys", byte[].class);
+    private final static int VOTING_STATUS = 0;
+    private final static int APPROVED_STATUS = 0;
+    private final static int DISAPPROVED_STATUS = 0;
+    private final static int CANCELED_STATUS = 0;
 
-    public Map<String, ?> getProposal(byte[] id) {
-        byte[] data = this.proposalList.getOrDefault(id, new byte[0]);
+    public Proposal getProposal(byte[] id) {
+        byte[] data = proposalList.getOrDefault(id, new byte[0]);
+        Proposal p;
         if (data.length > 0) {
-            // python db.get
-            Proposal p = Proposal.makeWithJson(data);
-            return Map.of();
+            // get python governance data
+            p = Proposal.loadJson(data);
         } else {
-            // java db.get
+            // get java governance data
             Context.println("PROPOSAL GATHER");
-            Proposal p = proposalGather.get(id);
-            return Map.of();
+            p = proposalGather.get(id);
         }
+        if (p == null) Context.revert("No registered proposal");
+        return p;
     }
 
-    public void submitProposal(
+    public void registerProposal(
             byte[] id,
+            BigInteger blockHeight,
             Address proposer,
             String title,
             String description,
@@ -76,9 +81,9 @@ public class NetworkProposal {
                 description,
                 type,
                 value,
-                (BigInteger) term.get("startBlockHeight"),
+                blockHeight,
                 expireVotingPeriod,
-                0, // status enum,,?
+                VOTING_STATUS,
                 v,
                 prepsInfo.length,
                 totalBondedDelegation
@@ -86,14 +91,34 @@ public class NetworkProposal {
         proposalGather.set(id, proposal);
     }
 
-    public void cancelProposal() {}
+    public void cancelProposal(byte[] id, Address sender, BigInteger blockHeight) {
+        Proposal p = getProposal(id);
+        if (p == null) {
+            Context.revert("No registered proposal");
+        }
+        if (p.expireBlockHeight.compareTo(blockHeight) < 0) {
+            Context.revert("This proposal has already expired");
+        }
+        if (!sender.equals(p.proposer)) {
+            Context.revert("No permission - only for proposer");
+        }
+        if (p.status != VOTING_STATUS) {
+            Context.revert("Can not be canceled - only voting proposal");
+        }
+        p.status = CANCELED_STATUS;
+        proposalGather.set(id, p);
+    }
 
-    public void votingProposal() {}
+    public void voteProposal(
+            byte[] id,
+            int vote,
+            BigInteger blockHeight,
+            byte[] txHash,
+            BigInteger timestamp,
+            PRepInfo[] prepsInfo
+    ) {
 
-    public void approveProposal() {}
-
-    public void rejectProposal() {}
+    }
 
     public void expireProposal() {}
-
 }

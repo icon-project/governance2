@@ -6,7 +6,6 @@ import com.eclipsesource.json.JsonValue;
 
 import score.Address;
 import score.Context;
-import score.DictDB;
 import score.annotation.External;
 
 import java.math.BigInteger;
@@ -19,47 +18,44 @@ public class Governance {
     private final NetworkProposal networkProposal;
     private final Event event;
 
-    public Governance(String name) {
+    public Governance() {
         chainScore = new ChainScore();
         networkProposal = new NetworkProposal();
         event = new Event();
     }
 
-    @External
     public void setRevision(int code) {
         chainScore.setRevision(code);
         event.RevisionChanged(code);
     }
 
-    @External
     public void setStepPrice(BigInteger price) {
         chainScore.setStepPrice(price);
         event.StepPriceChanged(price);
     }
 
-    @External
     public void setStepCost(String type, BigInteger cost) {
         chainScore.setStepCost(type, cost);
         event.StepCostChanged(type, cost);
     }
 
-    @External
     public void acceptScore(byte[] txHash) {
         chainScore.acceptScore(txHash);
         event.Accepted(new String(txHash));
     }
 
-    @External
     public void rejectScore(byte[] txHash) {
         chainScore.rejectScore(txHash);
 //        event.Accepted();
     }
 
     @External(readonly = true)
-    public Map<String, ?> getProposal(String hexString) {
-        byte[] id = Convert.hexToBytes(hexString);
-        this.networkProposal.getProposal(id);
-        return Map.of();
+    public Map<String, ?> getProposal(byte[] id) {
+        Proposal p = networkProposal.getProposal(id);
+        if (p == null) {
+            return null;
+        }
+        return p.toMap();
     }
 
 
@@ -81,9 +77,10 @@ public class Governance {
         String stringValue = new String(Convert.hexToBytes(value));
         JsonValue json = Json.parse(stringValue);
         Value v = Value.makeWithJson(proposalType, json.asObject());
-
-        networkProposal.submitProposal(
+        BigInteger blockHeight = BigInteger.valueOf(Context.getBlockHeight());
+        networkProposal.registerProposal(
                 id,
+                blockHeight,
                 proposer,
                 title,
                 description,
@@ -93,7 +90,34 @@ public class Governance {
         );
     }
 
-    private boolean hasUsable(Address proposer, List<PRepInfo> prepsInfo) {
+    @External
+    public void voteProposal(byte[] id, int vote) {
+        Address sender = Context.getCaller();
+        PRepInfo[] prepsInfo = chainScore.getMainPRepsInfo();
+        BigInteger blockHeight = BigInteger.valueOf(Context.getBlockHeight());
+        byte[] txHash = Context.getTransactionHash();
+        BigInteger timestamp = BigInteger.valueOf(Context.getTransactionTimestamp());
+        if (checkMainPRep(sender, prepsInfo))
+            Context.revert("No permission - only for main prep");
+
+        networkProposal.voteProposal(id, vote, blockHeight, txHash, timestamp, prepsInfo);
+
+        event.NetworkProposalVoted(id, vote, sender);
+    }
+
+    @External
+    public void cancelProposal(byte[] id) {
+        PRepInfo[] prepsInfo = chainScore.getMainPRepsInfo();
+        Address sender = Context.getCaller();
+        BigInteger blockHeight = BigInteger.valueOf(Context.getBlockHeight());
+
+        if (!checkMainPRep(sender, prepsInfo)) Context.revert("No Permission: only main prep");
+
+        networkProposal.cancelProposal(id, sender, blockHeight);
+        event.NetworkProposalCanceled(id);
+    }
+
+    private boolean checkMainPRep(Address proposer, PRepInfo[] prepsInfo) {
         for (PRepInfo prep : prepsInfo) {
             if (proposer.equals(prep.getAddress())) {
                 return true;

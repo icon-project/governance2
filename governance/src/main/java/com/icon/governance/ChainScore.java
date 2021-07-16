@@ -71,9 +71,8 @@ class ChainScore {
         Context.call(CHAIN_SCORE, "rejectScore", (Object) txHash);
     }
 
-    // icon.chainscore_iiss... 에 구현
     public PRepInfo[] getMainPRepsInfo() {
-        Map<String, Object> mainPreps = this.getMainPReps();
+        Map<String, Object> mainPreps = getMainPReps();
         List<Map<String, Object>> info = (List<Map<String, Object>>) mainPreps.get("preps");
 
         PRepInfo[] prepInfo = new PRepInfo[info.size()];
