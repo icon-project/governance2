@@ -131,8 +131,6 @@ public class Proposal {
     }
 
     public static Proposal loadJson(byte[] data) {
-        // python, java 서로 다른 DB 사용(prefix key),
-        // python.get is null -> java score.
         String jsonStr = new String(data);
         Context.println(jsonStr);
         JsonValue json = Json.parse(jsonStr);
@@ -168,20 +166,9 @@ public class Proposal {
 
         int totalVoter = jsonObj.getInt("total_voter", 0);
 
-//        int total_voter = Integer.parseInt(jsonObj.getString("total_voter", null));
-//        if (totalVoter != total_voter) {
-//            throw new IllegalArgumentException("totalVoter not equal");
-//        }
-
         BigInteger  totalBondedDelegation = BigDecimal.valueOf(
                 jsonObj.getDouble("total_delegated_amount", 0)
         ).toBigInteger();
-//        BigInteger  total_delegated_amount = new BigInteger(
-//                jsonObj.getString("total_delegated_amount", null)
-//        );
-//        if (!totalBondedDelegation.equals(total_delegated_amount)) {
-//            throw new IllegalArgumentException("amount not equal");
-//        }
 
         return new Proposal(
                 id,
@@ -198,5 +185,77 @@ public class Proposal {
                 totalVoter,
                 totalBondedDelegation
         );
+    }
+
+    public void validateVote(int vote) {
+        if (vote != Voter.AGREE_VOTE && vote != Voter.DISAGREE_VOTE) Context.revert("Invalid vote parameter: "+vote);
+    }
+
+    public void updateVote(PRepInfo p, int vote) {
+        var voter = p.getAddress();
+        if (this.vote.agreed(voter) || this.vote.disagreed(voter)) {
+            Context.revert("Already voted");
+        }
+        if (!this.vote.isInNoVote(voter)) {
+            Context.revert("No permission - only for main prep when network proposal registered");
+        }
+        if (vote == Voter.AGREE_VOTE) {
+            voteAgree(p);
+        } else {
+            voteDisagree(p);
+        }
+    }
+
+    private void voteAgree(PRepInfo voter) {
+        Voter.Vote[] updatedAgree = new Voter.Vote[vote.agree.voteList.length + 1];
+        Voter.Vote v = new Voter.Vote(
+                Context.getTransactionHash(),
+                BigInteger.valueOf(Context.getTransactionTimestamp()),
+                voter.getAddress(),
+                voter.getName(),
+                BigInteger.valueOf(Context.getTransactionTimestamp())
+        );
+        System.arraycopy(vote.agree.voteList, 0, updatedAgree, 0, vote.agree.voteList.length);
+        updatedAgree[vote.agree.voteList.length] = v;
+        vote.agree.setVoteList(updatedAgree);
+
+        var votedAmount = vote.agree.getAmount();
+        vote.agree.setAmount(votedAmount.add(voter.getBondedDelegation()));
+
+        updateNoVote(voter);
+    }
+
+    private void voteDisagree(PRepInfo voter) {
+        Voter.Vote[] updatedDisagree = new Voter.Vote[vote.disagree.voteList.length + 1];
+        Voter.Vote v = new Voter.Vote(
+                Context.getTransactionHash(),
+                BigInteger.valueOf(Context.getTransactionTimestamp()),
+                voter.getAddress(),
+                voter.getName(),
+                BigInteger.valueOf(Context.getTransactionTimestamp())
+        );
+        System.arraycopy(vote.disagree.voteList, 0, updatedDisagree, 0, vote.disagree.voteList.length);
+        updatedDisagree[vote.disagree.voteList.length] = v;
+        vote.disagree.setVoteList(updatedDisagree);
+
+        var votedAmount = vote.disagree.getAmount();
+        vote.disagree.setAmount(votedAmount.add(voter.getBondedDelegation()));
+
+        updateNoVote(voter);
+    }
+
+    private  void updateNoVote(PRepInfo prep) {
+        var addresses = vote.noVote.getAddressList();
+        int size = vote.noVote.size();
+        Address[] updatedList = new Address[size - 1];
+        for (int i = 0; i < size; i++) {
+            if (prep.getAddress().equals(addresses[i])) {
+                continue;
+            }
+            updatedList[i] = addresses[i];
+        }
+        vote.noVote.setAddressList(updatedList);
+        var amount = vote.noVote.getAmount();
+        vote.noVote.setAmount(amount.subtract(prep.getBondedDelegation()));
     }
 }

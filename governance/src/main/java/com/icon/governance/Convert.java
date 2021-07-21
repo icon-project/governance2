@@ -2,8 +2,6 @@ package com.icon.governance;
 
 import score.Address;
 
-import java.math.BigInteger;
-
 class Convert {
     public static byte[] hexToBytes(String value) {
         if (value.startsWith("0x") && (value.length() % 2 == 0)) {
@@ -23,14 +21,6 @@ class Convert {
     public static int hexToInt(String value) {
         if(value.startsWith("0x")) {
             return Integer.parseInt(value.substring(2), 16);
-        } else {
-            throw new IllegalArgumentException("Invalid hex value");
-        }
-    }
-
-    public static BigInteger hexToBigInt(String value) {
-        if(value.startsWith("0x")) {
-            return new BigInteger(value.substring(2), 16);
         } else {
             throw new IllegalArgumentException("Invalid hex value");
         }
