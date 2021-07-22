@@ -6,6 +6,7 @@ import score.Address;
 import score.Context;
 import score.annotation.EventLog;
 import score.annotation.External;
+import score.annotation.Payable;
 
 import java.math.BigInteger;
 import java.util.Map;
@@ -55,6 +56,7 @@ public class Governance {
     }
 
 
+    @Payable
     @External
     public void registerProposal(
             String title,
@@ -62,6 +64,10 @@ public class Governance {
             int type,
             byte[] value
     ) {
+        var fee = Context.getValue();
+        if (fee.compareTo(fee()) != 0) {
+            Context.revert("have to pay 100ICX to register proposal");
+        }
         Address proposer = Context.getCaller();
         PRepInfo[] prepsInfo = chainScore.getMainPRepsInfo();
         var prep = getPRepInfo(proposer, prepsInfo);
@@ -120,6 +126,14 @@ public class Governance {
             }
         }
         return null;
+    }
+
+    private BigInteger fee() {
+        BigInteger result = BigInteger.ONE;
+        for (int i = 0; i < 20; i++) {
+            result = result.multiply(BigInteger.TEN);
+        }
+        return result;
     }
 
     /*
