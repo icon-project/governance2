@@ -27,7 +27,6 @@ public class NetworkProposal {
         if (data.length > 0) {
             p = Proposal.loadJson(data);
         } else {
-            Context.println("PROPOSAL GATHER");
             p = proposalDict.get(id);
         }
         if (p == null) Context.revert("No registered proposal");

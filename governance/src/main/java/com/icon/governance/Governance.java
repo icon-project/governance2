@@ -13,13 +13,8 @@ import java.util.Map;
 
 
 public class Governance {
-    private final ChainScore chainScore;
-    private final NetworkProposal networkProposal;
-
-    public Governance() {
-        chainScore = new ChainScore();
-        networkProposal = new NetworkProposal();
-    }
+    private final static ChainScore chainScore = new ChainScore();
+    private final static NetworkProposal networkProposal = new NetworkProposal();
 
     public void setRevision(int code) {
         chainScore.setRevision(code);
@@ -61,7 +56,7 @@ public class Governance {
     public void registerProposal(
             String title,
             String description,
-            int type,
+            BigInteger type,
             byte[] value
     ) {
         var fee = Context.getValue();
@@ -74,20 +69,20 @@ public class Governance {
         if (prep == null)
             Context.revert("No permission - only for main prep");
 
+        int intTypeValue = type.intValue();
         String stringValue = new String(value);
         JsonValue json = Json.parse(stringValue);
-        Value v = Value.makeWithJson(type, json.asObject());
-        BigInteger blockHeight = BigInteger.valueOf(Context.getBlockHeight());
+        Value v = Value.makeWithJson(intTypeValue, json.asObject());
         var term = chainScore.getPRepTerm();
         networkProposal.registerProposal(
                 title,
                 description,
-                type,
+                intTypeValue,
                 v,
                 prepsInfo,
                 term
         );
-        NetworkProposalRegistered(title, description, type, value, proposer);
+        NetworkProposalRegistered(title, description, intTypeValue, value, proposer);
     }
 
     @External

@@ -1,4 +1,4 @@
 rootProject.name = 'governance2'
 include (
-    'governance'
-)
+    'governance',
+    'testinteg')
