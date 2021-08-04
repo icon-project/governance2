@@ -21,14 +21,19 @@ import java.util.Map;
     3 - PREP_DISQUALIFICATION
     4 - STEP_PRICE
     5 - IREP
+    6 - STEP_COSTS
 
-    PROPOSAL STATUS
-    0 - Voting
-    1 - Approved
-    2 - DisApproved
-    3 - Canceled
 */
 public class Proposal {
+    public static final int TEXT = 0;
+    public static final int REVISION = 1;
+    public static final int MALICIOUS_SCORE = 2;
+    public static final int PREP_DISQUALIFICATION = 3;
+    public static final int STEP_PRICE = 4;
+    public static final int IREP = 5;
+    public static final int STEP_COSTS = 6;
+    public static final int FREEZE_SCORE = 0;
+    public static final int UNFREEZE_SCORE = 1;
     final byte[] id;
     final Address proposer;
     String proposerName;

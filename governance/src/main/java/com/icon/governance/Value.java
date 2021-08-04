@@ -3,18 +3,15 @@ package com.icon.governance;
 
 import com.eclipsesource.json.JsonObject;
 import score.Address;
-import score.Context;
-import score.ObjectWriter;
 import score.ObjectReader;
+import score.ObjectWriter;
 
 import java.math.BigInteger;
 import java.util.Map;
 
 public class Value {
     private final int proposalType;
-    private int code;
     private String text;
-    private String name;
     private Address address;
     private int type;
     private BigInteger value;
@@ -22,13 +19,6 @@ public class Value {
     public Value(int p, String text) {
         // Text
         this.text = text;
-        this.proposalType = p;
-    }
-
-    public Value(int p, int code, String name) {
-        // Revision
-        this.code = code;
-        this.name = name;
         this.proposalType = p;
     }
 
@@ -46,7 +36,7 @@ public class Value {
     }
 
     public Value(int p, BigInteger value) {
-        // StepPrice, IRep
+        // StepPrice, IRep, Revision
         this.value = value;
         this.proposalType = p;
     }
@@ -66,50 +56,61 @@ public class Value {
     }
 
     public int type() {
-        return this.proposalType;
+        return proposalType;
+    }
+
+    public BigInteger value() {
+        return value;
+    }
+
+    public Address address() {
+        return address;
     }
 
     private void set(ObjectWriter w) {
         w.write(proposalType);
 
-        if (proposalType == 0) {
+        if (proposalType == Proposal.TEXT) {
             w.write(text);
-        } else if (proposalType == 1) {
-            w.write(code);
-            w.write(name);
-        } else if (proposalType == 2) {
+        }else if (proposalType == Proposal.MALICIOUS_SCORE) {
             w.write(address);
             w.write(type);
-        } else if (proposalType == 3) {
+        } else if (proposalType == Proposal.PREP_DISQUALIFICATION) {
             w.write(address);
-        } else if (proposalType == 4 || proposalType == 5){
+        } else if (
+                proposalType == Proposal.REVISION
+                        || proposalType == Proposal.STEP_PRICE
+                        || proposalType == Proposal.IREP
+        ){
             w.write(value);
         }
     }
     public int size() {
         switch (proposalType) {
-            case 0:
-            case 3:
-            case 4:
-            case 5:
+            case Proposal.TEXT:
+            case Proposal.REVISION:
+            case Proposal.PREP_DISQUALIFICATION:
+            case Proposal.STEP_PRICE:
+            case Proposal.IREP:
                 return 2;
-            case 1:
-            case 2:
+            case Proposal.MALICIOUS_SCORE:
                 return 3;
         }
         throw new IllegalArgumentException("proposalType not exist");
     }
 
     public static Value make(int proposalType, ObjectReader r) {
-        if (proposalType == 0) {
+        if (proposalType == Proposal.TEXT) {
             return new Value(proposalType, r.readString());
-        } else if (proposalType == 1) {
-            return new Value(proposalType, r.readInt(), r.readString());
-        } else if (proposalType == 2) {
+        } else if (proposalType == Proposal.MALICIOUS_SCORE) {
             return new Value(proposalType, r.readAddress(), r.readInt());
-        } else if (proposalType == 3) {
+        } else if (proposalType == Proposal.PREP_DISQUALIFICATION) {
             return new Value(proposalType, r.readAddress());
-        } else if (proposalType == 4 || proposalType == 5){
+        } else if (
+                proposalType == Proposal.REVISION
+                        || proposalType == Proposal.STEP_PRICE
+                        || proposalType == Proposal.IREP
+        ) {
             return new Value(proposalType, r.readBigInteger());
         } else {
             throw new IllegalArgumentException("proposalType not exist");
@@ -118,47 +119,40 @@ public class Value {
 
     public static Value makeWithJson(int type, JsonObject value) {
         switch (type) {
-            case 0:
+            case Proposal.TEXT:
                 return new Value(type, value.getString("value", null));
-            case 1:
-                return new Value(
-                        type,
-                        Integer.parseInt(value.getString("code", null)),
-                        value.getString("name", null)
-                );
-            case 2:
+            case Proposal.MALICIOUS_SCORE:
                 return new Value(
                         type,
                         Convert.strToAddress(value.getString("address" ,null)),
                         Convert.hexToInt(value.getString("type", null))
                 );
-            case 3:
+            case Proposal.PREP_DISQUALIFICATION:
                 return new Value(type, Convert.strToAddress(value.getString("address", null)));
-            case 4:
-            case 5:
-                return new Value(type, new BigInteger(value.getString("value", null), 10));
+            case Proposal.REVISION:
+            case Proposal.STEP_PRICE:
+            case Proposal.IREP:
+                var v = value.getString("value", null);
+                v = v.substring(2);
+                return new Value(type, new BigInteger(v, 16));
         }
         throw new IllegalArgumentException("Invalid value type");
     }
 
     public Map<String, Object> toMap() {
         switch (proposalType) {
-            case 0:
+            case Proposal.TEXT:
                 return Map.of("value", text);
-            case 1:
-                return Map.of(
-                        "code", code,
-                        "name", name
-                );
-            case 2:
+            case Proposal.MALICIOUS_SCORE:
                 return Map.of(
                         "address", address,
                         "type", type
                 );
-            case 3:
+            case Proposal.PREP_DISQUALIFICATION:
                 return Map.of("address", address);
-            case 4:
-            case 5:
+            case Proposal.REVISION:
+            case Proposal.STEP_PRICE:
+            case Proposal.IREP:
                 return Map.of("value", value);
         }
         throw new IllegalArgumentException("Invalid value type");

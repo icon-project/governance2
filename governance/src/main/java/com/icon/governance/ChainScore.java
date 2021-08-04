@@ -49,26 +49,42 @@ class ChainScore {
         Context.require(value.length == 32);
     }
 
-    public void setRevision(int code) {
+    void setRevision(BigInteger code) {
         Context.call(CHAIN_SCORE, "setRevision", code);
     }
 
-    public void setStepPrice(BigInteger price) {
+    void setStepPrice(BigInteger price) {
         Context.call(CHAIN_SCORE, "setStepPrice", price);
     }
 
-    public void setStepCost(String type, BigInteger cost) {
+    void setStepCost(String type, BigInteger cost) {
         Context.call(CHAIN_SCORE, "setStepCost", type, cost);
+    }
+
+    void disqualifyPRep(Address address) {
+        Context.call(CHAIN_SCORE, "disqualifyPRep", address);
+    }
+
+    public void setIRep(BigInteger irep) {
+        Context.call(CHAIN_SCORE, "setIRep", irep);
     }
 
     public void acceptScore(byte[] txHash) {
         validateHash(txHash);
-        Context.call(CHAIN_SCORE, "acceptScore", (Object) txHash);
+        Context.call(CHAIN_SCORE, "acceptScore", txHash);
     }
 
-    public void rejectScore(byte[] txHash) {
+    public void rejectScore(byte[] txHash, String reason) {
         validateHash(txHash);
-        Context.call(CHAIN_SCORE, "rejectScore", (Object) txHash);
+        Context.call(CHAIN_SCORE, "rejectScore", txHash, reason);
+    }
+
+    public void blockScore(Address address) {
+        Context.call(CHAIN_SCORE, "blockScore", address);
+    }
+
+    public void unblockScore(Address address) {
+        Context.call(CHAIN_SCORE, "unblockScore", address);
     }
 
     public PRepInfo[] getMainPRepsInfo() {

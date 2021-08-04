@@ -8,7 +8,13 @@ import score.DictDB;
 import java.math.BigInteger;
 import java.util.Map;
 
-
+/*
+    PROPOSAL STATUS
+    0 - Voting
+    1 - Approved
+    2 - DisApproved
+    3 - Canceled
+*/
 public class NetworkProposal {
     private final DictDB<byte[], byte[]> proposalList = Context.newDictDB("proposal_list", byte[].class);
     private final ArrayDB<byte[]> proposalListKeys = Context.newArrayDB("proposal_list_keys", byte[].class);
@@ -112,17 +118,10 @@ public class NetworkProposal {
     }
 
     public int voteProposal(
-            byte[] id,
+            Proposal p,
             int vote,
-            PRepInfo prep,
-            PRepInfo[] prepsInfo
+            PRepInfo prep
     ) {
-        Proposal p = getProposal(id);
-        if (p == null) {
-            Context.revert("No registered proposal");
-        }
-        p.validateVote(vote);
-
         var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
         if (p.expireBlockHeight.compareTo(blockHeight) < 0) {
             Context.revert("This proposal has already expired");
@@ -149,5 +148,4 @@ public class NetworkProposal {
         proposalDict.set(p.id, p);
         return status;
     }
-
 }
