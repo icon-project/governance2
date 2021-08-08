@@ -40,6 +40,14 @@ public class ChainScore extends Score {
         return call("getStepPrice", null).asInteger();
     }
 
+    public BigInteger getIRep() throws IOException {
+        return call("getIRep", null).asInteger();
+    }
+
+    public BigInteger getRevision() throws IOException {
+        return call("getRevision", null).asInteger();
+    }
+
     public Bytes registerPRep(
             Wallet wallet,
             String name,
@@ -65,11 +73,18 @@ public class ChainScore extends Score {
     }
 
     public Bytes setStake(Wallet wallet, BigInteger value) throws IOException {
-
         RpcObject params = new RpcObject.Builder()
                 .put("value", new RpcValue(value))
                 .build();
         return invoke(wallet, "setStake", params, BigInteger.ZERO, null);
+    }
+
+    public Bytes setBonderList(Wallet wallet, Address[] bonders) throws IOException {
+        var rpcBonders = getRpcAddressList(bonders);
+        RpcObject params = new RpcObject.Builder()
+                .put("bonderList", rpcBonders)
+                .build();
+        return invoke(wallet, "setBonderList", params);
     }
 
     public Bytes setBond(Wallet wallet, Delegation[] delegations) throws IOException {
@@ -96,6 +111,14 @@ public class ChainScore extends Score {
                     .put("value", new RpcValue(delegation.value))
                     .build()
             );
+        }
+        return rpcArrayBuilder.build();
+    }
+
+    private RpcArray getRpcAddressList(Address[] addresses) {
+        var rpcArrayBuilder = new RpcArray.Builder();
+        for (Address address : addresses) {
+            rpcArrayBuilder.add(new RpcValue(address));
         }
         return rpcArrayBuilder.build();
     }

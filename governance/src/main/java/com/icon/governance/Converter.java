@@ -2,7 +2,9 @@ package com.icon.governance;
 
 import score.Address;
 
-class Convert {
+import java.math.BigInteger;
+
+class Converter {
     public static byte[] hexToBytes(String value) {
         if (value.startsWith("0x") && (value.length() % 2 == 0)) {
             String hex = value.substring(2);
@@ -18,11 +20,14 @@ class Convert {
         }
     }
 
-    public static int hexToInt(String value) {
+    public static BigInteger hexToInt(String value) {
         if(value.startsWith("0x")) {
-            return Integer.parseInt(value.substring(2), 16);
+            return new BigInteger(value.substring(2), 16);
+        } else if (value.startsWith(("-0x"))){
+            return new BigInteger("-" + value.substring(3), 16);
         } else {
             throw new IllegalArgumentException("Invalid hex value");
+
         }
     }
 

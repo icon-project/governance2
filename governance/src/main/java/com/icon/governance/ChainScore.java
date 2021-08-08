@@ -43,7 +43,7 @@ class PRepInfo {
 }
 
 class ChainScore {
-    private static final Address CHAIN_SCORE = Address.fromString("cx0000000000000000000000000000000000000000");
+    static final Address CHAIN_SCORE = Address.fromString("cx0000000000000000000000000000000000000000");
 
     private void validateHash(byte[] value) {
         Context.require(value.length == 32);
@@ -53,46 +53,66 @@ class ChainScore {
         Context.call(CHAIN_SCORE, "setRevision", code);
     }
 
+    BigInteger getRevision() {
+        return (BigInteger) Context.call(CHAIN_SCORE, "getRevision");
+    }
+
     void setStepPrice(BigInteger price) {
         Context.call(CHAIN_SCORE, "setStepPrice", price);
     }
 
-    void setStepCost(String type, BigInteger cost) {
-        Context.call(CHAIN_SCORE, "setStepCost", type, cost);
+    BigInteger getStepPrice() {
+        return (BigInteger) Context.call(CHAIN_SCORE, "getStepPrice");
+    }
+
+    void setStepCosts(String type, BigInteger cost) {
+        Context.call(CHAIN_SCORE, "setStepCosts", type, cost);
     }
 
     void disqualifyPRep(Address address) {
         Context.call(CHAIN_SCORE, "disqualifyPRep", address);
     }
 
-    public void setIRep(BigInteger irep) {
+    void setIRep(BigInteger irep) {
         Context.call(CHAIN_SCORE, "setIRep", irep);
     }
 
-    public void acceptScore(byte[] txHash) {
+    void acceptScore(byte[] txHash) {
         validateHash(txHash);
         Context.call(CHAIN_SCORE, "acceptScore", txHash);
     }
 
-    public void rejectScore(byte[] txHash, String reason) {
+    void rejectScore(byte[] txHash, String reason) {
         validateHash(txHash);
         Context.call(CHAIN_SCORE, "rejectScore", txHash, reason);
     }
 
-    public void blockScore(Address address) {
+    void blockScore(Address address) {
         Context.call(CHAIN_SCORE, "blockScore", address);
     }
 
-    public void unblockScore(Address address) {
+    void unblockScore(Address address) {
         Context.call(CHAIN_SCORE, "unblockScore", address);
     }
 
-    public PRepInfo[] getMainPRepsInfo() {
+    void validateIRep(BigInteger irep) {
+        Context.call(CHAIN_SCORE, "validateIRep", irep);
+    }
+
+    PRepInfo[] getMainPRepsInfo() {
         Map<String, Object> mainPreps = getMainPReps();
-        List<Map<String, Object>> info = (List<Map<String, Object>>) mainPreps.get("preps");
+        return getPRepInfolist(mainPreps);
+    }
+
+    PRepInfo[] getSubPRepsInfo() {
+        Map<String, Object> subPReps = getSubPReps();
+        return getPRepInfolist(subPReps);
+    }
+
+    private PRepInfo[] getPRepInfolist(Map<String, Object> preps) {
+        List<Map<String, Object>> info = (List<Map<String, Object>>) preps.get("preps");
 
         PRepInfo[] prepInfo = new PRepInfo[info.size()];
-        // name, address, delegated, bondedDelegation.
         for (int i = 0; i < info.size(); i++) {
             Map<String, Object> item = info.get(i);
             PRepInfo itemInfo = new PRepInfo(
@@ -108,11 +128,15 @@ class ChainScore {
         return prepInfo;
     }
 
-    private Map<String, Object> getMainPReps() {
+    Map<String, Object> getMainPReps() {
         return (Map<String, Object>) Context.call(CHAIN_SCORE, "getMainPReps");
     }
 
-    public Map<String, Object> getPRepTerm() {
+    Map<String, Object> getSubPReps() {
+        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getSubPReps");
+    }
+
+    Map<String, Object> getPRepTerm() {
         return (Map<String, Object>) Context.call(CHAIN_SCORE, "getPRepTerm");
     }
 }

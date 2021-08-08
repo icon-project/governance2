@@ -20,10 +20,13 @@ public class NetworkProposal {
     private final ArrayDB<byte[]> proposalListKeys = Context.newArrayDB("proposal_list_keys", byte[].class);
     private final DictDB<byte[], Proposal> proposalDict = Context.newDictDB("proposals", Proposal.class);
     private final ArrayDB<byte[]> proposalKeys = Context.newArrayDB("proposal_keys", byte[].class);
+    public final static int STATUS_MIN = 0;
     public final static int VOTING_STATUS = 0;
     public final static int APPROVED_STATUS = 1;
     public final static int DISAPPROVED_STATUS = 2;
     public final static int CANCELED_STATUS = 3;
+    public final static int STATUS_MAX = CANCELED_STATUS;
+    public final static int GET_PROPOSALS_FILTER_ALL = 100;
     public final static float APPROVE_RATE = 0.66f;
     public final static float DISAPPROVE_RATE = 0.33f;
 
@@ -37,6 +40,36 @@ public class NetworkProposal {
         }
         if (p == null) Context.revert("No registered proposal");
         return p;
+    }
+
+    public Map<String, Object>[] getProposals(int typeCondition, int statusCondition) {
+        var listKeySize = proposalListKeys.size();
+        var keysSize = proposalKeys.size();
+        Map<String, Object>[] proposals = new Map[listKeySize + keysSize];
+
+        for (int i=0; i < listKeySize; i++) {
+            var key = proposalListKeys.get(i);
+            var proposal = Proposal.loadJson(proposalList.get(key));
+            filterProposal(typeCondition, statusCondition, proposals, i, proposal);
+        }
+
+        for (int i=0; i < keysSize; i++) {
+            var key = proposalKeys.get(i);
+            var proposal = proposalDict.get(key);
+            filterProposal(typeCondition, statusCondition, proposals, listKeySize + i, proposal);
+        }
+
+        return proposals;
+    }
+
+    private void filterProposal(int typeCondition, int statusCondition, Map<String, Object>[] proposals, int i, Proposal proposal) {
+        int type = proposal.type;
+        int status = proposal.status;
+        if ((typeCondition == type || typeCondition == NetworkProposal.GET_PROPOSALS_FILTER_ALL) &&
+                (statusCondition == status) || statusCondition == NetworkProposal.GET_PROPOSALS_FILTER_ALL) {
+            var proposalMap = proposal.toMap();
+            proposals[i] = proposalMap;
+        }
     }
 
     public void registerProposal(
@@ -96,6 +129,7 @@ public class NetworkProposal {
                 totalBondedDelegation
         );
         proposalDict.set(id, proposal);
+        proposalKeys.add(id);
     }
 
     public void cancelProposal(byte[] id, Address sender) {

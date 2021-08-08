@@ -179,4 +179,32 @@ public class TransactionHandler {
     public ConfirmedTransaction getTransaction(Bytes txHash) throws IOException {
         return iconService.getTransaction(txHash).execute();
     }
+
+    public void waitNextTerm() throws IOException, ResultTimeoutException {
+        Call<RpcItem> call = new Call.Builder()
+                .to(Constants.CHAIN_SCORE_ADDRESS)
+                .method("getPRepTerm")
+                .build();
+        var prepTerm = iconService.call(call).execute().asObject();
+        var endBlockHeight = prepTerm.getItem("endBlockHeight").asInteger();
+        var limitTime = System.currentTimeMillis() + 120000;
+        while (true) {
+            var blockHeight = iconService.getLastBlock().execute();
+            var height = blockHeight.getHeight();
+            if (endBlockHeight.compareTo(height) > 0) {
+                if (limitTime < System.currentTimeMillis()) {
+                    throw new ResultTimeoutException();
+                }
+                try {
+                    // wait until next term
+                    LOG.debug( "BH : " + height + ", endBlockHeight : " + endBlockHeight);
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                break;
+            }
+        }
+    }
 }

@@ -137,13 +137,13 @@ public class Voter {
                     throw new IllegalArgumentException("Invalid agree size");
                 }
 
-                byte[] id = Convert.hexToBytes(
+                byte[] id = Converter.hexToBytes(
                         voteJson.getString("id", null)
                 );
                 BigInteger timestamp = BigDecimal.valueOf(
                         voteJson.getDouble("timestamp", 0)
                 ).toBigInteger();
-                Address address = Convert.strToAddress(
+                Address address = Converter.strToAddress(
                         voteJson.getString("address", null)
                 );
                 String name = voteJson.getString("name", null);
@@ -300,7 +300,7 @@ public class Voter {
             int i = 0;
             for (JsonValue item : array) {
                 String _address = item.asString();
-                Address address = Convert.strToAddress(_address);
+                Address address = Converter.strToAddress(_address);
                 addrList[i++] = address;
             }
             this.setAddressList(addrList);

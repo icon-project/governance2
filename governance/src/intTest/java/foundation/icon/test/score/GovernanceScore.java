@@ -20,10 +20,7 @@ import foundation.icon.icx.Wallet;
 import foundation.icon.icx.data.Bytes;
 import foundation.icon.icx.transport.jsonrpc.RpcObject;
 import foundation.icon.icx.transport.jsonrpc.RpcValue;
-import foundation.icon.test.Constants;
-import foundation.icon.test.ResultTimeoutException;
-import foundation.icon.test.TransactionFailureException;
-import foundation.icon.test.TransactionHandler;
+import foundation.icon.test.*;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -56,11 +53,11 @@ public class GovernanceScore extends Score {
         return call("getProposals", params).asInteger();
     }
 
-    public BigInteger getProposal(byte[] id) throws IOException {
+    public RpcObject getProposal(byte[] id) throws IOException {
         RpcObject params = new RpcObject.Builder()
                 .put("id", new RpcValue(id))
                 .build();
-        return call("getProposal", params).asInteger();
+        return call("getProposal", params).asObject();
     }
 
     public Bytes registerProposal(Wallet wallet, String title, String description, BigInteger type, byte[] value) throws IOException {
@@ -73,7 +70,7 @@ public class GovernanceScore extends Score {
                 .build();
         LOG.info("register proposal done : " + title);
         LOG.infoExiting();
-        return invoke(wallet, "registerProposal", params);
+        return invoke(wallet, "registerProposal", params, TestBase.ICX.multiply(BigInteger.valueOf(100)), Constants.DEFAULT_STEPS.multiply(BigInteger.valueOf(5)));
     }
 
     public Bytes voteProposal(Wallet wallet, byte[] id, BigInteger vote) throws IOException {

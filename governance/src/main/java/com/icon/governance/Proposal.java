@@ -26,12 +26,14 @@ import java.util.Map;
 */
 public class Proposal {
     public static final int TEXT = 0;
+    public static final int MIN = TEXT;
     public static final int REVISION = 1;
     public static final int MALICIOUS_SCORE = 2;
     public static final int PREP_DISQUALIFICATION = 3;
     public static final int STEP_PRICE = 4;
     public static final int IREP = 5;
     public static final int STEP_COSTS = 6;
+    public static final int MAX = STEP_COSTS;
     public static final int FREEZE_SCORE = 0;
     public static final int UNFREEZE_SCORE = 1;
     final byte[] id;
@@ -141,11 +143,11 @@ public class Proposal {
         JsonValue json = Json.parse(jsonStr);
         JsonObject jsonObj = json.asObject();
 
-        byte[] id = Convert.hexToBytes(
+        byte[] id = Converter.hexToBytes(
                 "0x" + jsonObj.getString("id", null)
         );
 
-        Address proposer = Convert.strToAddress(
+        Address proposer = Converter.strToAddress(
                 jsonObj.getString("proposer", null)
         );
 
@@ -154,7 +156,7 @@ public class Proposal {
         String description = jsonObj.getString("description", null);
 
         int type = jsonObj.getInt("type", 0);
-        Value value = Value.makeWithJson(
+        Value value = Value.fromJson(
                 type, jsonObj.get("value").asObject()
         );
 

@@ -117,18 +117,18 @@ public class Value {
         }
     }
 
-    public static Value makeWithJson(int type, JsonObject value) {
+    public static Value fromJson(int type, JsonObject value) {
         switch (type) {
             case Proposal.TEXT:
                 return new Value(type, value.getString("value", null));
             case Proposal.MALICIOUS_SCORE:
                 return new Value(
                         type,
-                        Convert.strToAddress(value.getString("address" ,null)),
-                        Convert.hexToInt(value.getString("type", null))
+                        Converter.strToAddress(value.getString("address" ,null)),
+                        Converter.hexToInt(value.getString("type", null)).intValue()
                 );
             case Proposal.PREP_DISQUALIFICATION:
-                return new Value(type, Convert.strToAddress(value.getString("address", null)));
+                return new Value(type, Converter.strToAddress(value.getString("address", null)));
             case Proposal.REVISION:
             case Proposal.STEP_PRICE:
             case Proposal.IREP:
