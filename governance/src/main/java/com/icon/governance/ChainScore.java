@@ -4,8 +4,8 @@ import score.Address;
 import score.Context;
 
 import java.math.BigInteger;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
 class PRepInfo {
     private final String name;
@@ -99,6 +99,18 @@ class ChainScore {
         Context.call(CHAIN_SCORE, "validateIRep", irep);
     }
 
+    Map<String, Object> getMainPReps() {
+        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getMainPReps");
+    }
+
+    Map<String, Object> getSubPReps() {
+        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getSubPReps");
+    }
+
+    Map<String, Object> getPRepTerm() {
+        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getPRepTerm");
+    }
+
     PRepInfo[] getMainPRepsInfo() {
         Map<String, Object> mainPreps = getMainPReps();
         return getPRepInfolist(mainPreps);
@@ -128,15 +140,4 @@ class ChainScore {
         return prepInfo;
     }
 
-    Map<String, Object> getMainPReps() {
-        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getMainPReps");
-    }
-
-    Map<String, Object> getSubPReps() {
-        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getSubPReps");
-    }
-
-    Map<String, Object> getPRepTerm() {
-        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getPRepTerm");
-    }
 }

@@ -18,30 +18,56 @@ package foundation.icon.test.cases;
 
 import com.eclipsesource.json.JsonObject;
 import foundation.icon.icx.IconService;
+import foundation.icon.icx.KeyWallet;
+import foundation.icon.icx.Wallet;
 import foundation.icon.icx.data.Address;
 import foundation.icon.icx.data.Bytes;
 import foundation.icon.icx.transport.http.HttpProvider;
 import foundation.icon.icx.transport.jsonrpc.RpcObject;
-import foundation.icon.test.Env;
-import foundation.icon.test.ResultTimeoutException;
-import foundation.icon.test.TestBase;
-import foundation.icon.test.TransactionHandler;
+import foundation.icon.test.*;
 import foundation.icon.test.score.ChainScore;
 import foundation.icon.test.score.Delegation;
 import foundation.icon.test.score.GovernanceScore;
+import foundation.icon.test.score.HelloWorld;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.Iterator;
 
 public class GovernanceTest extends TestBase {
     private static TransactionHandler txHandler;
     private static ChainScore chainScore;
     private static GovernanceScore governanceScore;
+    private static HelloWorld helloWorldScore;
+    private static KeyWallet[] wallets;
     private static Env.Chain chain = Env.getDefaultChain();
+
+    private static void bond(Wallet wallet, BigInteger amount) throws IOException, ResultTimeoutException {
+        //set Stake
+        var result0 = chainScore.setStake(wallet, amount);
+
+        // set delegation
+        Delegation[] delegations = new Delegation[]{
+                new Delegation(wallet.getAddress(), amount.divide(BigInteger.TWO))};
+        var result1 = chainScore.setDelegation(wallet, delegations);
+        var transactionResult = txHandler.getResult(result0);
+        assertSuccess(transactionResult);
+        transactionResult = txHandler.getResult(result1);
+        assertSuccess(transactionResult);
+
+        // set bond
+        Address[] addresses = new Address[]{wallet.getAddress()};
+        var result2 = chainScore.setBonderList(wallet, addresses);
+        transactionResult = txHandler.getResult(result2);
+        assertSuccess(transactionResult);
+        var result3 = chainScore.setBond(wallet, delegations);
+        transactionResult = txHandler.getResult(result3);
+
+        assertSuccess(transactionResult);
+
+    }
 
     @BeforeAll
     static void setup() throws Exception {
@@ -65,30 +91,40 @@ public class GovernanceTest extends TestBase {
        var transactionResult = txHandler.getResult(result);
        assertSuccess(transactionResult);
 
-        //set Stake
-        result = chainScore.setStake(chain.godWallet, stakeAmount);
+       bond(chain.godWallet, stakeAmount);
+
+        // init wallets
+        wallets = new KeyWallet[2];
+        BigInteger amount = ICX.multiply(BigInteger.valueOf(3000));
+        for (int i = 0; i < wallets.length; i++) {
+            wallets[i] = KeyWallet.create();
+            txHandler.transfer(wallets[i].getAddress(), amount);
+        }
+        for (KeyWallet wallet : wallets) {
+            ensureIcxBalance(txHandler, wallet.getAddress(), BigInteger.ZERO, amount);
+        }
+        stakeAmount = ICX.multiply(BigInteger.valueOf(500));
+
+        // register P-Rep
+        result = chainScore.registerPRep(
+                wallets[0],
+                "prep0",
+                "prep0@prep.com",
+                "USA",
+                "NY",
+                "https://prep.com",
+                "https://prep.com/prep.json",
+                "prep.com:7100",
+                wallets[0].getAddress());
         transactionResult = txHandler.getResult(result);
         assertSuccess(transactionResult);
 
-        // set delegation
-        Delegation[] delegations = new Delegation[]{
-                new Delegation(chain.godWallet.getAddress(), stakeAmount.divide(BigInteger.TWO))};
-        result = chainScore.setDelegation(chain.godWallet, delegations);
-        transactionResult = txHandler.getResult(result);
-        assertSuccess(transactionResult);
-
-        // set bond
-        Address[] addresses = new Address[]{chain.godWallet.getAddress()};
-        result = chainScore.setBonderList(chain.godWallet, addresses);
-        transactionResult = txHandler.getResult(result);
-        assertSuccess(transactionResult);
-
-        result = chainScore.setBond(chain.godWallet, delegations);
-        transactionResult = txHandler.getResult(result);
-        assertSuccess(transactionResult);
+        bond(wallets[0], stakeAmount);
 
         // update governance
-        governanceScore = GovernanceScore.update(txHandler);
+        governanceScore = GovernanceScore.update(txHandler, chain.godWallet);
+        //deploy SCORE for malicious proposal test
+        helloWorldScore = HelloWorld.install(txHandler, chain.godWallet);
         txHandler.waitNextTerm();
     }
 
@@ -153,6 +189,69 @@ public class GovernanceTest extends TestBase {
         approveProposal(title, desc, priceProposalType, jsonValue, true);
         priceResponse = chainScore.getStepPrice();
         assert priceResponse.compareTo(newPrice) == 0;
+    }
+
+    @Test
+    public void testMaliciousScoreForGovernance() throws IOException, ResultTimeoutException {
+        BigInteger freeze = BigInteger.ZERO;
+        RpcObject governanceStatus = chainScore.getScoreStatus(Constants.GOVERNANCE_ADDRESS);
+        checkScoreStatus(governanceStatus, false);
+
+        // invalid proposal - try to freeze governance
+        JsonObject jsonValue = new JsonObject();
+        jsonValue.add("address", Constants.GOVERNANCE_ADDRESS.toString());
+        jsonValue.add("type", "0x" + freeze.toString(16));
+        approveProposal("fail case", "can not freeze governance", BigInteger.TWO, jsonValue, false);
+
+        governanceStatus = chainScore.getScoreStatus(Constants.GOVERNANCE_ADDRESS);
+        checkScoreStatus(governanceStatus, false);
+    }
+
+    @Test
+    public void testMaliciousScore() throws IOException, ResultTimeoutException {
+        BigInteger maliciousScoreProposalType = BigInteger.TWO;
+        BigInteger freeze = BigInteger.ZERO;
+        BigInteger unfreeze = BigInteger.ONE;
+        RpcObject helloStatus = chainScore.getScoreStatus(helloWorldScore.getAddress());
+        checkScoreStatus(helloStatus, false);
+
+        //freeze score
+        JsonObject jsonValue = new JsonObject();
+        jsonValue.add("address", helloWorldScore.getAddress().toString());
+        jsonValue.add("type", "0x" + freeze.toString(16));
+        approveProposal("malicious score", "success", maliciousScoreProposalType, jsonValue, true);
+
+        helloStatus = chainScore.getScoreStatus(helloWorldScore.getAddress());
+        checkScoreStatus(helloStatus, true);
+
+        //unfreeze score
+        jsonValue = new JsonObject();
+        jsonValue.add("address", helloWorldScore.getAddress().toString());
+        jsonValue.add("type", "0x" + unfreeze.toString(16));
+        approveProposal("unfreeze score", "success", maliciousScoreProposalType, jsonValue, true);
+
+        helloStatus = chainScore.getScoreStatus(helloWorldScore.getAddress());
+        checkScoreStatus(helloStatus, false);
+    }
+
+    private void checkScoreStatus(RpcObject scoreStatus, boolean blockedExpected) {
+        boolean blocked = scoreStatus.getItem("blocked").asBoolean();
+        assert blocked == blockedExpected;
+    }
+
+    @Test
+    public void testDisqualifyPRep () throws IOException, ResultTimeoutException {
+        BigInteger disqualifyPRepType = BigInteger.valueOf(3);
+
+        // disqualify Account not prep
+        JsonObject jsonValue = new JsonObject();
+        jsonValue.add("address", wallets[1].getAddress().toString());
+        approveProposal("disqualify prep", "fail", disqualifyPRepType, jsonValue, false);
+
+        // disqualify prep Account
+        jsonValue = new JsonObject();
+        jsonValue.add("address", wallets[0].getAddress().toString());
+        approveProposal("disqualify prep", "success", disqualifyPRepType, jsonValue, true);
     }
 
     @Test
@@ -287,8 +386,7 @@ public class GovernanceTest extends TestBase {
         assert desc.equals(proposal.getItem("description").asString());
         RpcObject retProposalValue = proposal.getItem("value").asObject();
 
-        for(Iterator<String> iterator = jsonValue.names().iterator(); iterator.hasNext();) {
-            String key = iterator.next();
+        for (String key : jsonValue.names()) {
             var val = jsonValue.get(key).asString();
             assert val.equals(retProposalValue.getItem(key).asString());
         }

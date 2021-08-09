@@ -38,7 +38,7 @@ public class NetworkProposal {
         } else {
             p = proposalDict.get(id);
         }
-        if (p == null) Context.revert("No registered proposal");
+        Context.require(p != null, "No registered proposal");
         return p;
     }
 
@@ -135,18 +135,10 @@ public class NetworkProposal {
     public void cancelProposal(byte[] id, Address sender) {
         Proposal p = getProposal(id);
         var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
-        if (p == null) {
-            Context.revert("No registered proposal");
-        }
-        if (p.expireBlockHeight.compareTo(blockHeight) < 0) {
-            Context.revert("This proposal has already expired");
-        }
-        if (!sender.equals(p.proposer)) {
-            Context.revert("No permission - only for proposer");
-        }
-        if (p.status != VOTING_STATUS) {
-            Context.revert("Can not be canceled - only voting proposal");
-        }
+        Context.require(p != null, "no registered proposal");
+        Context.require(p.expireBlockHeight.compareTo(blockHeight) >= 0, "This proposal has already expired");
+        Context.require(sender.equals(p.proposer), "No permission - only for proposer");
+        Context.require(p.status == VOTING_STATUS, "Can not be canceled - only voting proposal");
         p.status = CANCELED_STATUS;
         proposalDict.set(id, p);
     }
@@ -157,12 +149,8 @@ public class NetworkProposal {
             PRepInfo prep
     ) {
         var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
-        if (p.expireBlockHeight.compareTo(blockHeight) < 0) {
-            Context.revert("This proposal has already expired");
-        }
-        if (p.status == CANCELED_STATUS) {
-            Context.revert("This proposal has already canceled");
-        }
+        Context.require(p.expireBlockHeight.compareTo(blockHeight) >= 0, "This proposal has already expired");
+        Context.require(p.status != CANCELED_STATUS, "This proposal has canceled");
 
         p.updateVote(prep, vote);
         int status = VOTING_STATUS;
@@ -171,6 +159,9 @@ public class NetworkProposal {
                     p.vote.amountOfAgreed().divide(p.totalBondedDelegation).floatValue() >= APPROVE_RATE) {
                 p.status = APPROVED_STATUS;
                 status = APPROVED_STATUS;
+            } else if (p.vote.sizeofNoVote() == 0) {
+                p.status = DISAPPROVED_STATUS;
+                status = DISAPPROVED_STATUS;
             }
         } else {
             if ((float)p.vote.sizeofDisagreed() / p.totalVoter >= DISAPPROVE_RATE &&

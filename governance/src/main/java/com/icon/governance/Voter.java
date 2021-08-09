@@ -370,6 +370,10 @@ public class Voter {
         return disagree.size();
     }
 
+    public int sizeofNoVote() {
+        return noVote.size();
+    }
+
     public BigInteger amountOfAgreed() {
         return agree.getAmount();
     }

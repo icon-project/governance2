@@ -3,6 +3,7 @@ package com.icon.governance;
 
 import com.eclipsesource.json.JsonObject;
 import score.Address;
+import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
 
@@ -13,7 +14,7 @@ public class Value {
     private final int proposalType;
     private String text;
     private Address address;
-    private int type;
+    private BigInteger type;
     private BigInteger value;
 
     public Value(int p, String text) {
@@ -22,7 +23,7 @@ public class Value {
         this.proposalType = p;
     }
 
-    public Value(int p, Address address, int type) {
+    public Value(int p, Address address, BigInteger type) {
         // MaliciousScore
         this.address = address;
         this.type = type;
@@ -55,12 +56,16 @@ public class Value {
         return v;
     }
 
-    public int type() {
+    public int proposalType() {
         return proposalType;
     }
 
     public BigInteger value() {
         return value;
+    }
+
+    public BigInteger type() {
+        return type;
     }
 
     public Address address() {
@@ -103,7 +108,7 @@ public class Value {
         if (proposalType == Proposal.TEXT) {
             return new Value(proposalType, r.readString());
         } else if (proposalType == Proposal.MALICIOUS_SCORE) {
-            return new Value(proposalType, r.readAddress(), r.readInt());
+            return new Value(proposalType, r.readAddress(), r.readBigInteger());
         } else if (proposalType == Proposal.PREP_DISQUALIFICATION) {
             return new Value(proposalType, r.readAddress());
         } else if (
@@ -125,16 +130,14 @@ public class Value {
                 return new Value(
                         type,
                         Converter.strToAddress(value.getString("address" ,null)),
-                        Converter.hexToInt(value.getString("type", null)).intValue()
+                        Converter.hexToInt(value.getString("type", null))
                 );
             case Proposal.PREP_DISQUALIFICATION:
                 return new Value(type, Converter.strToAddress(value.getString("address", null)));
             case Proposal.REVISION:
             case Proposal.STEP_PRICE:
             case Proposal.IREP:
-                var v = value.getString("value", null);
-                v = v.substring(2);
-                return new Value(type, new BigInteger(v, 16));
+                return new Value(type, Converter.hexToInt(value.getString("type", null)));
         }
         throw new IllegalArgumentException("Invalid value type");
     }

@@ -27,6 +27,7 @@ import foundation.icon.test.TransactionHandler;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Map;
 
 import static foundation.icon.test.TestBase.ICX;
 
@@ -46,6 +47,14 @@ public class ChainScore extends Score {
 
     public BigInteger getRevision() throws IOException {
         return call("getRevision", null).asInteger();
+    }
+
+    public RpcObject getScoreStatus(Address address) throws  IOException {
+        RpcObject params = new RpcObject.Builder()
+                .put("address", new RpcValue(address))
+                .build();
+
+        return call("getScoreStatus", params).asObject();
     }
 
     public Bytes registerPRep(

@@ -32,12 +32,13 @@ public class GovernanceScore extends Score {
         super(other);
     }
 
-    public static GovernanceScore update(TransactionHandler txHandler)
+    public static GovernanceScore update(TransactionHandler txHandler, Wallet owner)
             throws ResultTimeoutException, TransactionFailureException, IOException {
         LOG.infoEntering("deploy", "Governance");
         RpcObject params = new RpcObject.Builder()
                 .build();
         Score score = txHandler.deploy(
+                owner,
                 getFilePath("governance"),
                 Constants.GOVERNANCE_ADDRESS,
                 params,

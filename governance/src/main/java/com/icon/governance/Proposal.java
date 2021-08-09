@@ -194,10 +194,6 @@ public class Proposal {
         );
     }
 
-    public void validateVote(int vote) {
-        if (vote != Voter.AGREE_VOTE && vote != Voter.DISAGREE_VOTE) Context.revert("Invalid vote parameter: "+vote);
-    }
-
     public void updateVote(PRepInfo p, int vote) {
         var voter = p.getAddress();
         if (this.vote.agreed(voter) || this.vote.disagreed(voter)) {

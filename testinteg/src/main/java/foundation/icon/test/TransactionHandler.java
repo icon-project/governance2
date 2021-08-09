@@ -42,14 +42,14 @@ public class TransactionHandler {
         this.chain = chain;
     }
 
-    public Score deploy(String scorePath, Address to, RpcObject params, BigInteger steps)
+    public Score deploy(Wallet owner, String scorePath, Address to, RpcObject params, BigInteger steps)
             throws IOException, ResultTimeoutException, TransactionFailureException {
         if (scorePath.endsWith(".jar")) {
             byte[] data = Files.readAllBytes(Path.of(scorePath));
-            return getScore(doDeploy(chain.godWallet, data, to, params, steps, Constants.CONTENT_TYPE_JAVA));
+            return getScore(doDeploy(owner, data, to, params, steps, Constants.CONTENT_TYPE_JAVA));
         } else {
             byte[] data = ZipFile.zipContent(scorePath);
-            return getScore(doDeploy(chain.godWallet, data, to, params, steps, Constants.CONTENT_TYPE_PYTHON));
+            return getScore(doDeploy(owner, data, to, params, steps, Constants.CONTENT_TYPE_PYTHON));
         }
     }
 

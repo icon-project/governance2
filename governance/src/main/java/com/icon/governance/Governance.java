@@ -66,8 +66,8 @@ public class Governance {
         }
     }
 
-    private void processMaliciousProposal(Address address, int type) {
-        if (type == Proposal.FREEZE_SCORE) {
+    private void processMaliciousProposal(Address address, BigInteger type) {
+        if (type.intValue() == Proposal.FREEZE_SCORE) {
             blockScore(address);
         } else {
             unblockScore(address);
@@ -99,19 +99,18 @@ public class Governance {
     public List<Map<String, ?>> getProposals(@Optional String type, @Optional String status) {
         int typeIntValue;
         int statusIntValue;
-        if (type == null) typeIntValue = NetworkProposal.GET_PROPOSALS_FILTER_ALL;
-        else {
+        if (type == null) {
+            typeIntValue = NetworkProposal.GET_PROPOSALS_FILTER_ALL;
+        } else {
             typeIntValue = Converter.hexToInt(type).intValue();
-            if (typeIntValue < NetworkProposal.STATUS_MIN || typeIntValue > NetworkProposal.STATUS_MAX) {
-                Context.revert("invalid type : " + typeIntValue);
-            }
+            Context.require(typeIntValue >= Proposal.MIN && typeIntValue <= Proposal.MAX, "invalid type : " + typeIntValue);
         }
-        if (status == null) statusIntValue = NetworkProposal.GET_PROPOSALS_FILTER_ALL;
-        else {
+        if (status == null) {
+            statusIntValue = NetworkProposal.GET_PROPOSALS_FILTER_ALL;
+        } else {
             statusIntValue = Converter.hexToInt(status).intValue();
-            if (statusIntValue < NetworkProposal.STATUS_MIN || statusIntValue > NetworkProposal.STATUS_MAX) {
-                Context.revert("invalid status : " + statusIntValue);
-            }
+            Context.require(statusIntValue >= NetworkProposal.STATUS_MIN && statusIntValue <= NetworkProposal.STATUS_MAX,
+                    "invalid status : " + statusIntValue);
         }
         return List.of(networkProposal.getProposals(typeIntValue, statusIntValue));
     }
@@ -125,14 +124,11 @@ public class Governance {
             byte[] value
     ) {
         var fee = Context.getValue();
-        if (fee.compareTo(fee()) != 0) {
-            Context.revert("have to pay 100ICX to register proposal");
-        }
+        Context.require(fee.compareTo(proposalRegisterFee()) == 0, "have to pay 100ICX to register Proposal");
         Address proposer = Context.getCaller();
-        PRepInfo[] prepsInfo = chainScore.getMainPRepsInfo();
-        var prep = getPRepInfoFromList(proposer, prepsInfo);
-        if (prep == null)
-            Context.revert("No permission - only for main prep");
+        PRepInfo[] mainPRepsInfo = chainScore.getMainPRepsInfo();
+        var prep = getPRepInfoFromList(proposer, mainPRepsInfo);
+        Context.require(prep != null, "No permission - only for main prep");
 
         int intTypeValue = type.intValue();
         String stringValue = new String(value);
@@ -147,7 +143,7 @@ public class Governance {
                 description,
                 intTypeValue,
                 v,
-                prepsInfo,
+                mainPRepsInfo,
                 term
         );
         NetworkProposalRegistered(title, description, intTypeValue, value, proposer);
@@ -158,23 +154,18 @@ public class Governance {
         Address sender = Context.getCaller();
         PRepInfo[] prepsInfo = chainScore.getMainPRepsInfo();
         var prep = getPRepInfoFromList(sender, prepsInfo);
-        if (prep == null)
-            Context.revert("No permission - only for main prep");
+        Context.require(prep != null, "No permission - only for main prep");
 
         Proposal p = networkProposal.getProposal(id);
-        if (p == null) {
-            Context.revert("No registered proposal");
-        }
-        p.validateVote(vote);
+        Context.require(p != null, "no registered proposal");
+        Context.require(vote == Voter.AGREE_VOTE || vote == Voter.DISAGREE_VOTE, "Invalid vote value : " + vote);
 
         var status = networkProposal.voteProposal(p, vote, prep);
         NetworkProposalVoted(id, vote, sender);
 
         if (status == NetworkProposal.APPROVED_STATUS) {
-            approveProposal(p.value);
             NetworkProposalApproved(id);
-        } else if (status == NetworkProposal.DISAPPROVED_STATUS) {
-            NetworkProposalDisapproved(id);
+            approveProposal(p.value);
         }
     }
 
@@ -183,7 +174,7 @@ public class Governance {
         PRepInfo[] prepsInfo = chainScore.getMainPRepsInfo();
         Address sender = Context.getCaller();
 
-        if (getPRepInfoFromList(sender, prepsInfo) == null) Context.revert("No Permission: only main prep");
+        Context.require(getPRepInfoFromList(sender, prepsInfo) != null, "No Permission: only for main prep");
 
         networkProposal.cancelProposal(id, sender);
         NetworkProposalCanceled(id);
@@ -198,7 +189,7 @@ public class Governance {
         return null;
     }
 
-    private BigInteger fee() {
+    private BigInteger proposalRegisterFee() {
         BigInteger result = BigInteger.ONE;
         for (int i = 0; i < 20; i++) {
             result = result.multiply(BigInteger.TEN);
@@ -210,7 +201,7 @@ public class Governance {
         var address = value.address();
         var v = value.value();
         var type = value.type();
-        switch (value.type()) {
+        switch (value.proposalType()) {
             case Proposal.TEXT:
                 return;
             case Proposal.REVISION:
@@ -238,7 +229,7 @@ public class Governance {
                 validateRevision(value.value());
                 return;
             case Proposal.MALICIOUS_SCORE:
-                validateMaliciousScore(value.address(), value.type());
+                validateMaliciousScore(value.address(), value.type().intValue());
                 return;
             case Proposal.PREP_DISQUALIFICATION:
                 validateDisqualifyPRep(value.address());
@@ -256,14 +247,12 @@ public class Governance {
 
     private void validateRevision(BigInteger revision) {
         var prev = chainScore.getRevision();
-        if (revision.compareTo(prev) <= 0) {
-            Context.revert("can't decrease revision");
-        }
+        Context.require(revision.compareTo(prev) > 0, "can not decrease revision");
     }
 
     private void validateMaliciousScore(Address address, int type) {
         if (type != Proposal.FREEZE_SCORE && type != Proposal.UNFREEZE_SCORE) {
-            Context.revert("invalid value type" + type);
+            Context.revert("invalid value type : " + type);
         } else if (type == Proposal.FREEZE_SCORE) {
             if (address.equals(Governance.address)) {
                 Context.revert("Can not freeze governance SCORE");
@@ -274,9 +263,8 @@ public class Governance {
     private void validateDisqualifyPRep(Address address) {
         PRepInfo[] mainPreps = chainScore.getMainPRepsInfo();
         PRepInfo[] subPreps = chainScore.getSubPRepsInfo();
-        if (getPRepInfoFromList(address, mainPreps) == null && getPRepInfoFromList(address, subPreps) == null) {
-            Context.revert(address.toString() + " is not p-rep");
-        }
+        Context.require(getPRepInfoFromList(address, mainPreps) != null || getPRepInfoFromList(address, subPreps) != null,
+                address.toString() + "is not p-rep");
     }
 
     private void validateStepPRice(BigInteger price) {
@@ -285,9 +273,7 @@ public class Governance {
         var max = prevPrice.multiply(BigInteger.valueOf(125)).divide(hundred);
         var min = prevPrice.multiply(BigInteger.valueOf(75)).divide(hundred);
 
-        if (price.compareTo(min) < 0 || price.compareTo(max) > 0) {
-            Context.revert("invalid step price : " + price);
-        }
+        Context.require(price.compareTo(min) >= 0 && price.compareTo(max) <= 0, "Invalid step price: " + price);
     }
 
     /*
@@ -328,8 +314,5 @@ public class Governance {
 
     @EventLog(indexed=0)
     public void NetworkProposalApproved(byte[] id) {}
-
-    @EventLog(indexed=0)
-    public void NetworkProposalDisapproved(byte[] id) {}
 
 }
