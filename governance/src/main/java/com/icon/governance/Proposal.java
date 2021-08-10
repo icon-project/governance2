@@ -139,7 +139,6 @@ public class Proposal {
 
     public static Proposal loadJson(byte[] data) {
         String jsonStr = new String(data);
-        Context.println(jsonStr);
         JsonValue json = Json.parse(jsonStr);
         JsonObject jsonObj = json.asObject();
 

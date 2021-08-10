@@ -6,6 +6,7 @@ import score.Context;
 import score.DictDB;
 
 import java.math.BigInteger;
+import scorex.util.ArrayList;
 import java.util.Map;
 
 /*
@@ -45,30 +46,36 @@ public class NetworkProposal {
     public Map<String, Object>[] getProposals(int typeCondition, int statusCondition) {
         var listKeySize = proposalListKeys.size();
         var keysSize = proposalKeys.size();
-        Map<String, Object>[] proposals = new Map[listKeySize + keysSize];
+        var proposalList = new ArrayList<Map<String, Object>>();
+        Map<String, Object>[] proposals;
 
         for (int i=0; i < listKeySize; i++) {
             var key = proposalListKeys.get(i);
-            var proposal = Proposal.loadJson(proposalList.get(key));
-            filterProposal(typeCondition, statusCondition, proposals, i, proposal);
+            var proposal = Proposal.loadJson(this.proposalList.get(key));
+            filterProposal(typeCondition, statusCondition, proposalList, proposal);
         }
 
         for (int i=0; i < keysSize; i++) {
             var key = proposalKeys.get(i);
             var proposal = proposalDict.get(key);
-            filterProposal(typeCondition, statusCondition, proposals, listKeySize + i, proposal);
+            filterProposal(typeCondition, statusCondition, proposalList, proposal);
         }
 
+        proposals = new Map[proposalList.size()];
+        for (int i = 0; i < proposalList.size(); i++) {
+            proposals[i] = proposalList.get(i);
+        }
         return proposals;
     }
 
-    private void filterProposal(int typeCondition, int statusCondition, Map<String, Object>[] proposals, int i, Proposal proposal) {
+    private void filterProposal(int typeCondition, int statusCondition, ArrayList<Map<String, Object>> proposals, Proposal proposal) {
         int type = proposal.type;
         int status = proposal.status;
-        if ((typeCondition == type || typeCondition == NetworkProposal.GET_PROPOSALS_FILTER_ALL) &&
-                (statusCondition == status) || statusCondition == NetworkProposal.GET_PROPOSALS_FILTER_ALL) {
+        int all = NetworkProposal.GET_PROPOSALS_FILTER_ALL;
+        var condition = ((typeCondition == type || typeCondition == all) && (statusCondition == status || statusCondition == all));
+        if (condition) {
             var proposalMap = proposal.toMap();
-            proposals[i] = proposalMap;
+            proposals.add(proposalMap);
         }
     }
 
