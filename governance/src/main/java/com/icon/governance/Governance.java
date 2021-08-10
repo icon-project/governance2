@@ -18,6 +18,7 @@ public class Governance {
     private final static ChainScore chainScore = new ChainScore();
     private final static Address address = Address.fromString("cx0000000000000000000000000000000000000001");
     private final static NetworkProposal networkProposal = new NetworkProposal();
+    private final static BigInteger proposalRegisterFee = Governance.proposalRegisterFee();
 
     private void setRevision(BigInteger code) {
         chainScore.setRevision(code);
@@ -124,7 +125,7 @@ public class Governance {
             byte[] value
     ) {
         var fee = Context.getValue();
-        Context.require(fee.compareTo(proposalRegisterFee()) == 0, "have to pay 100ICX to register Proposal");
+        Context.require(fee.compareTo(Governance.proposalRegisterFee) == 0, "have to pay 100ICX to register Proposal");
         Address proposer = Context.getCaller();
         PRepInfo[] mainPRepsInfo = chainScore.getMainPRepsInfo();
         var prep = getPRepInfoFromList(proposer, mainPRepsInfo);
@@ -154,29 +155,42 @@ public class Governance {
         Address sender = Context.getCaller();
         PRepInfo[] prepsInfo = chainScore.getMainPRepsInfo();
         var prep = getPRepInfoFromList(sender, prepsInfo);
-        Context.require(prep != null, "No permission - only for main prep");
 
         Proposal p = networkProposal.getProposal(id);
         Context.require(p != null, "no registered proposal");
         Context.require(vote == Voter.AGREE_VOTE || vote == Voter.DISAGREE_VOTE, "Invalid vote value : " + vote);
 
-        var status = networkProposal.voteProposal(p, vote, prep);
+        var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
+        Context.require(p.expireBlockHeight.compareTo(blockHeight) >= 0, "This proposal has already expired");
+        Context.require(p.status != NetworkProposal.CANCELED_STATUS, "This proposal has canceled");
+
+        Context.require(p.isInNoVote(sender), "No permission - only for main prep were main prep when network registered");
+        Context.require(!p.agreed(sender) && !p.disagreed(sender), "Already voted");
+
+        var event = networkProposal.voteProposal(p, vote, prep);
         NetworkProposalVoted(id, vote, sender);
 
-        if (status == NetworkProposal.APPROVED_STATUS) {
+        if (event == NetworkProposal.EVENT_APPROVED) {
             NetworkProposalApproved(id);
             approveProposal(p.value);
+        } else if (event == NetworkProposal.EVENT_DISAPPROVED) {
+            NetworkProposalDisapproved(id);
         }
     }
 
     @External
     public void cancelProposal(byte[] id) {
-        PRepInfo[] prepsInfo = chainScore.getMainPRepsInfo();
         Address sender = Context.getCaller();
 
-        Context.require(getPRepInfoFromList(sender, prepsInfo) != null, "No Permission: only for main prep");
+        Proposal p = networkProposal.getProposal(id);
 
-        networkProposal.cancelProposal(id, sender);
+        var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
+        Context.require(p != null, "no registered proposal");
+        Context.require(p.expireBlockHeight.compareTo(blockHeight) >= 0, "This proposal has already expired");
+        Context.require(sender.equals(p.proposer), "No permission - only for proposer");
+        Context.require(p.status == NetworkProposal.VOTING_STATUS, "Can not be canceled - only voting proposal");
+
+        networkProposal.cancelProposal(p);
         NetworkProposalCanceled(id);
     }
 
@@ -189,7 +203,7 @@ public class Governance {
         return null;
     }
 
-    private BigInteger proposalRegisterFee() {
+    private static BigInteger proposalRegisterFee() {
         BigInteger result = BigInteger.ONE;
         for (int i = 0; i < 20; i++) {
             result = result.multiply(BigInteger.TEN);
@@ -314,5 +328,8 @@ public class Governance {
 
     @EventLog(indexed=0)
     public void NetworkProposalApproved(byte[] id) {}
+
+    @EventLog(indexed=0)
+    public void NetworkProposalDisapproved(byte[] id) {}
 
 }

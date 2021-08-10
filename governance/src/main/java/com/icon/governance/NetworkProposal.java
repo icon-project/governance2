@@ -30,6 +30,9 @@ public class NetworkProposal {
     public final static int GET_PROPOSALS_FILTER_ALL = 100;
     public final static float APPROVE_RATE = 0.66f;
     public final static float DISAPPROVE_RATE = 0.33f;
+    public final static int EVENT_NONE = 0;
+    public final static int EVENT_APPROVED = 1;
+    public final static int EVENT_DISAPPROVED = 2;
 
     public Proposal getProposal(byte[] id) {
         byte[] data = proposalList.getOrDefault(id, new byte[0]);
@@ -139,15 +142,9 @@ public class NetworkProposal {
         proposalKeys.add(id);
     }
 
-    public void cancelProposal(byte[] id, Address sender) {
-        Proposal p = getProposal(id);
-        var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
-        Context.require(p != null, "no registered proposal");
-        Context.require(p.expireBlockHeight.compareTo(blockHeight) >= 0, "This proposal has already expired");
-        Context.require(sender.equals(p.proposer), "No permission - only for proposer");
-        Context.require(p.status == VOTING_STATUS, "Can not be canceled - only voting proposal");
+    public void cancelProposal(Proposal p) {
         p.status = CANCELED_STATUS;
-        proposalDict.set(id, p);
+        proposalDict.set(p.id, p);
     }
 
     public int voteProposal(
@@ -155,29 +152,29 @@ public class NetworkProposal {
             int vote,
             PRepInfo prep
     ) {
-        var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
-        Context.require(p.expireBlockHeight.compareTo(blockHeight) >= 0, "This proposal has already expired");
-        Context.require(p.status != CANCELED_STATUS, "This proposal has canceled");
-
         p.updateVote(prep, vote);
-        int status = VOTING_STATUS;
+        int votingEvent = EVENT_NONE;
+        int currentStatus = p.status;
         if (vote == Voter.AGREE_VOTE) {
-            if ((float)p.vote.sizeofAgreed() / p.totalVoter >= APPROVE_RATE &&
-                    p.vote.amountOfAgreed().divide(p.totalBondedDelegation).floatValue() >= APPROVE_RATE) {
+            if ((float)p.sizeofAgreed() / p.totalVoter >= APPROVE_RATE &&
+                    p.amountOfAgreed().divide(p.totalBondedDelegation).floatValue() >= APPROVE_RATE) {
                 p.status = APPROVED_STATUS;
-                status = APPROVED_STATUS;
-            } else if (p.vote.sizeofNoVote() == 0) {
+                votingEvent = EVENT_APPROVED;
+            } else if (p.sizeofNoVote() == 0) {
                 p.status = DISAPPROVED_STATUS;
-                status = DISAPPROVED_STATUS;
+                votingEvent = EVENT_DISAPPROVED;
             }
         } else {
-            if ((float)p.vote.sizeofDisagreed() / p.totalVoter >= DISAPPROVE_RATE &&
-            p.vote.amountOfDisagreed().divide(p.totalBondedDelegation).floatValue() >= DISAPPROVE_RATE) {
+            if ((float)p.sizeofDisagreed() / p.totalVoter >= DISAPPROVE_RATE &&
+            p.amountOfDisagreed().divide(p.totalBondedDelegation).floatValue() >= DISAPPROVE_RATE) {
                 p.status = DISAPPROVED_STATUS;
-                status = DISAPPROVED_STATUS;
+                votingEvent = EVENT_DISAPPROVED;
             }
         }
         proposalDict.set(p.id, p);
-        return status;
+        if (currentStatus == VOTING_STATUS) {
+            return votingEvent;
+        }
+        return EVENT_NONE;
     }
 }

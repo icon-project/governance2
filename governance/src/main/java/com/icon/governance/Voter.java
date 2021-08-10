@@ -358,10 +358,6 @@ public class Voter {
         );
     }
 
-    public int size() {
-        return agree.size() + disagree.size() + noVote.size();
-    }
-
     public int sizeofAgreed() {
         return agree.size();
     }
@@ -386,7 +382,7 @@ public class Voter {
         this.agree.readJson(jsonValue);
     }
 
-    private void buildDisAgreeWithJson(JsonValue jsonValue) {
+    private void buildDisagreeWithJson(JsonValue jsonValue) {
         this.disagree.readJson(jsonValue);
     }
 
@@ -396,7 +392,7 @@ public class Voter {
 
     private void build(JsonObject jso) {
         this.buildAgreeWithJson(jso.get("agree"));
-        this.buildDisAgreeWithJson(jso.get("disagree"));
+        this.buildDisagreeWithJson(jso.get("disagree"));
         this.buildNoVoteWithJson(jso.get("noVote"));
     }
 
@@ -420,6 +416,7 @@ public class Voter {
         }
         return false;
     }
+
     public boolean isInNoVote(Address voter) {
         for (Address a : noVote.list) {
             if (a.equals(voter)) return true;

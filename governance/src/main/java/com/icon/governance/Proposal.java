@@ -194,13 +194,6 @@ public class Proposal {
     }
 
     public void updateVote(PRepInfo p, int vote) {
-        var voter = p.getAddress();
-        if (this.vote.agreed(voter) || this.vote.disagreed(voter)) {
-            Context.revert("Already voted");
-        }
-        if (!this.vote.isInNoVote(voter)) {
-            Context.revert("No permission - only for main prep when network proposal registered");
-        }
         if (vote == Voter.AGREE_VOTE) {
             voteAgree(p);
         } else {
@@ -259,5 +252,37 @@ public class Proposal {
         vote.noVote.setAddressList(updatedList);
         var amount = vote.noVote.getAmount();
         vote.noVote.setAmount(amount.subtract(prep.getBondedDelegation()));
+    }
+
+    boolean agreed(Address prep) {
+        return vote.agreed(prep);
+    }
+
+    boolean disagreed(Address prep) {
+        return vote.disagreed(prep);
+    }
+
+    boolean isInNoVote(Address prep) {
+        return vote.isInNoVote(prep);
+    }
+
+    int sizeofAgreed() {
+        return vote.sizeofAgreed();
+    }
+
+    int sizeofDisagreed() {
+        return vote.sizeofDisagreed();
+    }
+
+    BigInteger amountOfAgreed() {
+        return vote.amountOfAgreed();
+    }
+
+    BigInteger amountOfDisagreed() {
+        return vote.amountOfDisagreed();
+    }
+
+    int sizeofNoVote() {
+        return vote.sizeofNoVote();
     }
 }
