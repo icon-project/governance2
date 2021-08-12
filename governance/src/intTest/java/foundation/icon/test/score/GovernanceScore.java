@@ -82,7 +82,7 @@ public class GovernanceScore extends Score {
                 .build();
         LOG.info("vote proposal done");
         LOG.infoExiting();
-        return invoke(wallet, "voteProposal", params);
+        return invoke(wallet, "voteProposal", params, BigInteger.ZERO, Constants.DEFAULT_STEPS.multiply(BigInteger.valueOf(5)));
     }
 
     public Bytes cancelProposal(Wallet wallet, byte[] id) throws IOException {

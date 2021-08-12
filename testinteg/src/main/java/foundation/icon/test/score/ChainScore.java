@@ -41,6 +41,10 @@ public class ChainScore extends Score {
         return call("getStepPrice", null).asInteger();
     }
 
+    public RpcObject getStepCosts() throws IOException {
+        return call("getStepCosts", null).asObject();
+    }
+
     public BigInteger getIRep() throws IOException {
         return call("getIRep", null).asInteger();
     }

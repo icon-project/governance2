@@ -65,8 +65,8 @@ class ChainScore {
         return (BigInteger) Context.call(CHAIN_SCORE, "getStepPrice");
     }
 
-    void setStepCosts(String type, BigInteger cost) {
-        Context.call(CHAIN_SCORE, "setStepCosts", type, cost);
+    void setStepCost(String type, BigInteger cost) {
+        Context.call(CHAIN_SCORE, "setStepCost", type, cost);
     }
 
     void disqualifyPRep(Address address) {

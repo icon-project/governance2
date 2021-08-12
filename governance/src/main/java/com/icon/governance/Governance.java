@@ -31,7 +31,7 @@ public class Governance {
     }
 
     private void setStepCosts(String type, BigInteger cost) {
-        chainScore.setStepCosts(type, cost);
+        chainScore.setStepCost(type, cost);
         StepCostChanged(type, cost);
     }
 
@@ -232,12 +232,18 @@ public class Governance {
                 return;
             case Proposal.IREP:
                 setIRep(v);
+            case Proposal.STEP_COSTS:
+                var stepCosts = value.stepCosts();
+                for (Value.StepCosts.StepCost s : stepCosts.stepCosts) {
+                    setStepCosts(s.type, s.cost);
+                }
         }
     }
 
     public void validateProposal(int type, Value value) {
         switch (type) {
             case Proposal.TEXT:
+            case Proposal.STEP_COSTS:
                 return;
             case Proposal.REVISION:
                 validateRevision(value.value());
