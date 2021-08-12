@@ -3,6 +3,7 @@ package com.icon.governance;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonValue;
 import score.Address;
+import score.ArrayDB;
 import score.Context;
 import score.annotation.EventLog;
 import score.annotation.External;
@@ -19,6 +20,7 @@ public class Governance {
     private final static Address address = Address.fromString("cx0000000000000000000000000000000000000001");
     private final static NetworkProposal networkProposal = new NetworkProposal();
     private final static BigInteger proposalRegisterFee = Governance.proposalRegisterFee();
+    private final ArrayDB<Address> auditors = Context.newArrayDB("auditor_list", Address.class);
 
     private void setRevision(BigInteger code) {
         chainScore.setRevision(code);
@@ -75,16 +77,57 @@ public class Governance {
         }
     }
 
+    private boolean isAuditor(Address address) {
+        var auditorSize = auditors.size();
+        for (int i = 0; i < auditorSize; i++) {
+            var auditor = auditors.get(i);
+            if (address.equals(auditor)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @External
     public void acceptScore(byte[] txHash) {
+        var caller = Context.getCaller();
+        Context.require(isAuditor(caller), "Invalid sender: no permission");
         chainScore.acceptScore(txHash);
         Accepted(txHash);
     }
 
     @External
     public void rejectScore(byte[] txHash, String reason) {
+        var caller = Context.getCaller();
+        Context.require(isAuditor(caller), "Invalid sender: no permission");
         chainScore.rejectScore(txHash, reason);
         Rejected(txHash, reason);
+    }
+
+    @External
+    public void addAuditor(Address address) {
+        var caller = Context.getCaller();
+        Context.require(!caller.isContract(), "Invalid EOA Address: " + caller );
+        Context.require(caller.equals(Context.getOwner()), "Invalid sender: not owner");
+        Context.require(!isAuditor(address), "Invalid address: already auditor");
+        auditors.add(address);
+    }
+
+    @External
+    public void removeAuditor(Address address) {
+        var caller = Context.getCaller();
+        Context.require(!caller.isContract(), "Invalid EOA Address: " + caller );
+        Context.require(caller.equals(Context.getOwner()), "Invalid sender: not owner");
+
+        var top = auditors.pop();
+        var auditorSize = auditors.size();
+        for (int i = 0; i < auditorSize; i++) {
+            var auditor = auditors.get(i);
+            if (address.equals(auditor)) {
+                auditors.set(i, top);
+                break;
+            }
+        }
     }
 
     @External(readonly = true)
