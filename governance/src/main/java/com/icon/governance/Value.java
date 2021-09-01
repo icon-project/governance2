@@ -18,6 +18,7 @@ public class Value {
     private BigInteger type;
     private BigInteger value;
     private StepCosts stepCosts;
+    private RewardFunds rewardFunds;
 
     public Value(int p, String text) {
         // Text
@@ -47,6 +48,11 @@ public class Value {
     public Value(int p, StepCosts value) {
         this.proposalType = p;
         this.stepCosts = value;
+    }
+
+    public Value(int p, RewardFunds value) {
+        this.proposalType = p;
+        this.rewardFunds = value;
     }
 
     public static void writeObject(ObjectWriter w, Value v) {
@@ -83,24 +89,34 @@ public class Value {
         return stepCosts;
     }
 
+    public RewardFunds rewardFunds() {
+        return rewardFunds;
+    }
+
     private void set(ObjectWriter w) {
         w.write(proposalType);
-
-        if (proposalType == Proposal.TEXT) {
-            w.write(text);
-        } else if (proposalType == Proposal.MALICIOUS_SCORE) {
-            w.write(address);
-            w.write(type);
-        } else if (proposalType == Proposal.PREP_DISQUALIFICATION) {
-            w.write(address);
-        } else if (
-                proposalType == Proposal.REVISION
-                        || proposalType == Proposal.STEP_PRICE
-                        || proposalType == Proposal.IREP
-        ){
-            w.write(value);
-        } else if (proposalType == Proposal.STEP_COSTS) {
-            w.write(stepCosts);
+        switch (proposalType) {
+            case Proposal.TEXT:
+                w.write(text);
+                return;
+            case Proposal.MALICIOUS_SCORE:
+                w.write(address);
+                w.write(type);
+                return;
+            case Proposal.PREP_DISQUALIFICATION:
+                w.write(address);
+                return;
+            case Proposal.REVISION:
+            case Proposal.STEP_PRICE:
+            case Proposal.IREP:
+            case Proposal.REWARD_FUND:
+                w.write(value);
+                return;
+            case Proposal.STEP_COSTS:
+                w.write(stepCosts);
+                return;
+            case Proposal.REWARD_FUNDS_RATE:
+                w.write(rewardFunds);
         }
     }
     public int size() {
@@ -111,6 +127,8 @@ public class Value {
             case Proposal.STEP_PRICE:
             case Proposal.IREP:
             case Proposal.STEP_COSTS:
+            case Proposal.REWARD_FUNDS_RATE:
+            case Proposal.REWARD_FUND:
                 return 2;
             case Proposal.MALICIOUS_SCORE:
                 return 3;
@@ -119,21 +137,24 @@ public class Value {
     }
 
     public static Value make(int proposalType, ObjectReader r) {
-        if (proposalType == Proposal.TEXT) {
-            return new Value(proposalType, r.readString());
-        } else if (proposalType == Proposal.MALICIOUS_SCORE) {
-            return new Value(proposalType, r.readAddress(), r.readBigInteger());
-        } else if (proposalType == Proposal.PREP_DISQUALIFICATION) {
-            return new Value(proposalType, r.readAddress());
-        } else if (proposalType == Proposal.REVISION ||
-                proposalType == Proposal.STEP_PRICE ||
-                proposalType == Proposal.IREP) {
-            return new Value(proposalType, r.readBigInteger());
-        } else if (proposalType == Proposal.STEP_COSTS) {
-            var v = new Value(proposalType, r.read(StepCosts.class));
-            return v;
-        } else{
-            throw new IllegalArgumentException("proposalType not exist");
+        switch (proposalType) {
+            case Proposal.TEXT:
+                return new Value(proposalType, r.readString());
+            case Proposal.PREP_DISQUALIFICATION:
+                return new Value(proposalType, r.readAddress());
+            case Proposal.MALICIOUS_SCORE:
+                return new Value(proposalType, r.readAddress(), r.readBigInteger());
+            case Proposal.REVISION:
+            case Proposal.STEP_PRICE:
+            case Proposal.IREP:
+            case Proposal.REWARD_FUND:
+                return new Value(proposalType, r.readBigInteger());
+            case Proposal.STEP_COSTS:
+                return new Value(proposalType, r.read(StepCosts.class));
+            case Proposal.REWARD_FUNDS_RATE:
+                return new Value(proposalType, r.read(RewardFunds.class));
+            default:
+                throw new IllegalArgumentException("proposalType not exist");
         }
     }
 
@@ -152,9 +173,12 @@ public class Value {
             case Proposal.REVISION:
             case Proposal.STEP_PRICE:
             case Proposal.IREP:
-                return new Value(type, Converter.hexToInt(value.getString("type", null)));
+            case Proposal.REWARD_FUND:
+                return new Value(type, Converter.hexToInt(value.getString("value", null)));
             case Proposal.STEP_COSTS:
                 return new Value(type, StepCosts.fromJson(value.get("costs").asArray()));
+            case Proposal.REWARD_FUNDS_RATE:
+                return new Value(type, RewardFunds.fromJson(value.get("rewardFunds").asArray()));
         }
         throw new IllegalArgumentException("Invalid value type");
     }
@@ -173,9 +197,12 @@ public class Value {
             case Proposal.REVISION:
             case Proposal.STEP_PRICE:
             case Proposal.IREP:
+            case Proposal.REWARD_FUND:
                 return Map.of("value", value);
             case Proposal.STEP_COSTS:
                 return stepCosts.toMap();
+            case Proposal.REWARD_FUNDS_RATE:
+                return rewardFunds.toMap();
         }
         throw new IllegalArgumentException("Invalid value type");
     }
@@ -292,4 +319,101 @@ public class Value {
 
     }
 
+    public static class RewardFunds {
+        final static String I_PREP = "Iprep";
+        final static String I_CPS = "Icps";
+        final static String I_RELAY = "Irelay";
+        final static String I_VOTER = "Ivoter";
+        final static String[] VALUES = {I_PREP, I_CPS, I_RELAY, I_VOTER};
+        RewardFund[] rewardFunds;
+
+        public static class RewardFund {
+            String type;
+            BigInteger value;
+            public RewardFund() {}
+
+            public static void writeObject(ObjectWriter w, RewardFund s) {
+                w.beginList(2);
+                w.write(s.type);
+                w.write(s.value);
+                w.end();
+            }
+
+            public static RewardFund readObject(ObjectReader r) {
+                r.beginList();
+                var s = new RewardFund();
+                s.type = r.readString();
+                s.value = r.readBigInteger();
+                r.end();
+                return s;
+            }
+
+            Map<String, BigInteger> toMap() {
+                return Map.of(type, value);
+            }
+        }
+
+        public RewardFunds(RewardFund[] rewardFunds) {
+            this.rewardFunds = rewardFunds;
+        }
+
+        public static RewardFunds fromJson(JsonArray array) {
+            RewardFund[] rewardFunds = new RewardFund[array.size()];
+            for (int i=0; i < array.size(); i++) {
+                var value = array.get(i);
+                var object = value.asObject();
+                var keys = object.names();
+                Context.require(keys.size() == 1, "RewardFund map must have one field.");
+                var key = keys.get(0);
+                Context.require(isValidFundKey(key), key + "is not valid reward fund type");
+                var v = Converter.hexToInt(object.getString(key, ""));
+                rewardFunds[i] = new RewardFund();
+                rewardFunds[i].type = key;
+                rewardFunds[i].value = v;
+            }
+            return new RewardFunds(rewardFunds);
+        }
+
+        public static void writeObject(ObjectWriter w, RewardFunds values) {
+            w.beginList(2);
+            w.write(values.rewardFunds.length);
+            var rewardValues = values.rewardFunds;
+            for (RewardFund s : rewardValues) {
+                w.write(s);
+            }
+            w.end();
+        }
+
+        public static RewardFunds readObject(ObjectReader r) {
+            r.beginList();
+            int size = r.readInt();
+            RewardFund[] rewardFundList = new RewardFund[size];
+
+            for (int i = 0; i < size; i++) {
+                RewardFund s = r.read(RewardFund.class);
+                rewardFundList[i] = s;
+            }
+            var rewardFunds = new RewardFunds(rewardFundList);
+
+            r.end();
+            return rewardFunds;
+        }
+
+        static boolean isValidFundKey(String type) {
+            for (String t : VALUES) {
+                if (type.equals(t)) return true;
+            }
+            return false;
+        }
+
+        public Map<String, Object> toMap() {
+            var length = rewardFunds.length;
+            var entries = new Map[length];
+            for (int i = 0; i < length; i++) {
+                entries[i] = rewardFunds[i].toMap();
+            }
+            return Map.of("values", entries);
+        }
+
+    }
 }

@@ -78,10 +78,6 @@ public class TransactionHandler {
         return new Score(this, new Address(result.getScoreAddress()));
     }
 
-    public Env.Chain getChain() {
-        return this.chain;
-    }
-
     public BigInteger getNetworkId() {
         return BigInteger.valueOf(chain.networkId);
     }

@@ -65,6 +65,22 @@ class ChainScore {
         return (BigInteger) Context.call(CHAIN_SCORE, "getStepPrice");
     }
 
+    BigInteger getStepCost(String t) {
+        return (BigInteger) Context.call(CHAIN_SCORE, "getStepCost", t);
+    }
+
+    Map<String, Object> getStepCosts() {
+        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getStepCosts");
+    }
+
+    BigInteger getMaxStepLimit(String t) {
+        return (BigInteger) Context.call(CHAIN_SCORE, "getMaxStepLimit", t);
+    }
+
+    Map<String, Object> getScoreStatus() {
+        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getScoreStatus");
+    }
+
     void setStepCost(String type, BigInteger cost) {
         Context.call(CHAIN_SCORE, "setStepCost", type, cost);
     }
@@ -97,6 +113,18 @@ class ChainScore {
 
     void validateIRep(BigInteger irep) {
         Context.call(CHAIN_SCORE, "validateIRep", irep);
+    }
+
+    void validateRewardFund(BigInteger rewardFund) {
+        Context.call(CHAIN_SCORE, "validateRewardFund", rewardFund);
+    }
+
+    void setRewardFund(BigInteger rewardFund) {
+        Context.call(CHAIN_SCORE, "setRewardFund", rewardFund);
+    }
+
+    void setRewardFundsRate(List<Map<String, ?>> ratio) {
+        Context.call(CHAIN_SCORE, "setRewardFundsRate", ratio);
     }
 
     Map<String, Object> getMainPReps() {

@@ -42,6 +42,17 @@ public class Governance {
         IRepChanged(irep);
     }
 
+    private void setRewardFund(BigInteger rewardFund) {
+        chainScore.setRewardFund(rewardFund);
+        RewardFundChanged(rewardFund);
+    }
+
+    private void setRewardFundsRate(List<Map<String, ?>> ratio) {
+        chainScore.setRewardFundsRate(ratio);
+//        for
+//        RewardFundsRateChanged();
+    }
+
     private void blockScore(Address address) {
         chainScore.blockScore(address);
         MaliciousScore(address, false);
@@ -86,6 +97,31 @@ public class Governance {
             }
         }
         return false;
+    }
+
+    @External(readonly = true)
+    public BigInteger getRevision() {
+        return chainScore.getRevision();
+    }
+
+    @External(readonly = true)
+    public BigInteger getStepCost(String t) {
+        return chainScore.getStepCost(t);
+    }
+
+    @External(readonly = true)
+    public Map<String, Object> getStepCosts() {
+        return chainScore.getStepCosts();
+    }
+
+    @External(readonly = true)
+    public BigInteger getMaxStepLimit(String t) {
+        return chainScore.getMaxStepLimit(t);
+    }
+
+    @External(readonly = true)
+    public Map<String, Object> getScoreStatus() {
+        return chainScore.getScoreStatus();
     }
 
     @External
@@ -280,6 +316,21 @@ public class Governance {
                 for (Value.StepCosts.StepCost s : stepCosts.stepCosts) {
                     setStepCosts(s.type, s.cost);
                 }
+                return;
+            case Proposal.REWARD_FUND:
+                setRewardFund(v);
+                return;
+            case Proposal.REWARD_FUNDS_RATE:
+                var rewardRatio = value.rewardFunds();
+                Map<String, Object>[] r = new Map[rewardRatio.rewardFunds.length];
+                for (int i = 0; i < rewardRatio.rewardFunds.length; i++) {
+                    var rewardRateInfo = rewardRatio.rewardFunds[i];
+                    r[i] = Map.of(
+                            "fund", rewardRateInfo.type,
+                            "value", rewardRateInfo.value
+                    );
+                }
+                setRewardFundsRate(List.of(r));
         }
     }
 
@@ -302,6 +353,12 @@ public class Governance {
                 return;
             case Proposal.IREP:
                 chainScore.validateIRep(value.value());
+                return;
+            case Proposal.REWARD_FUND:
+                chainScore.validateRewardFund(value.value());
+                return;
+            case Proposal.REWARD_FUNDS_RATE:
+                validateRewardFundsRate(value.rewardFunds());
                 return;
             default:
                 Context.revert("undefined proposal type");
@@ -339,6 +396,15 @@ public class Governance {
         Context.require(price.compareTo(min) >= 0 && price.compareTo(max) <= 0, "Invalid step price: " + price);
     }
 
+    private void validateRewardFundsRate(Value.RewardFunds rewardFunds) {
+        var values = rewardFunds.rewardFunds;
+        var sum = BigInteger.ZERO;
+        for (Value.RewardFunds.RewardFund value : values) {
+            sum = sum.add(value.value);
+        }
+        Context.require(sum.compareTo(BigInteger.valueOf(100)) == 0, "sum of reward funds must be 100");
+    }
+
     /*
      * Events
      */
@@ -365,6 +431,12 @@ public class Governance {
 
     @EventLog(indexed=1)
     public void IRepChanged(BigInteger irep) {}
+
+    @EventLog(indexed=1)
+    public void RewardFundChanged(BigInteger rewardFund) {}
+
+    @EventLog(indexed=2)
+    public void RewardFundsRateChanged(String type, BigInteger ratio) {}
 
     @EventLog(indexed=0)
     public void NetworkProposalRegistered(String title, String description, int type, byte[] value, Address proposer) {}

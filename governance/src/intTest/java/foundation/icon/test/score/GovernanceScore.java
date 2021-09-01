@@ -99,4 +99,9 @@ public class GovernanceScore extends Score {
         RpcObject params = new RpcObject.Builder().build();
         return call("getPRepTerm", params).asObject();
     }
+
+    public BigInteger getRevision() throws IOException {
+        RpcObject params = new RpcObject.Builder().build();
+        return call("getRevision", params).asInteger();
+    }
 }
