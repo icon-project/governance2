@@ -19,6 +19,7 @@ public class Value {
     private BigInteger value;
     private StepCosts stepCosts;
     private RewardFunds rewardFunds;
+    private byte[] data;
 
     public Value(int p, String text) {
         // Text
@@ -40,9 +41,23 @@ public class Value {
     }
 
     public Value(int p, BigInteger value) {
-        // StepPrice, IRep, Revision
+        // StepPrice, IRep, Revision, RewardFund
         this.value = value;
         this.proposalType = p;
+    }
+
+    public Value(int p, Address address, byte[] data) {
+        // Network SCORE update
+        this.proposalType = p;
+        this.data = data;
+        this.address = address;
+    }
+
+    public Value(int p, String text, Address address) {
+        // Network SCORE designation
+        this.proposalType = p;
+        this.address = address;
+        this.text = text;
     }
 
     public Value(int p, StepCosts value) {
@@ -77,12 +92,20 @@ public class Value {
         return value;
     }
 
+    public byte[] data() {
+        return data;
+    }
+
     public BigInteger type() {
         return type;
     }
 
     public Address address() {
         return address;
+    }
+
+    public String text() {
+        return text;
     }
 
     public StepCosts stepCosts() {
@@ -112,11 +135,19 @@ public class Value {
             case Proposal.REWARD_FUND:
                 w.write(value);
                 return;
+            case Proposal.NETWORK_SCORE_UPDATE:
+                w.write(address);
+                w.write(data);
+                return;
             case Proposal.STEP_COSTS:
                 w.write(stepCosts);
                 return;
-            case Proposal.REWARD_FUNDS_RATE:
+            case Proposal.REWARD_FUNDS_ALLOCATION:
                 w.write(rewardFunds);
+                return;
+            case Proposal.NETWORK_SCORE_DESIGNATION:
+                w.write(text);
+                w.write(address);
         }
     }
     public int size() {
@@ -127,10 +158,12 @@ public class Value {
             case Proposal.STEP_PRICE:
             case Proposal.IREP:
             case Proposal.STEP_COSTS:
-            case Proposal.REWARD_FUNDS_RATE:
+            case Proposal.REWARD_FUNDS_ALLOCATION:
             case Proposal.REWARD_FUND:
                 return 2;
             case Proposal.MALICIOUS_SCORE:
+            case Proposal.NETWORK_SCORE_UPDATE:
+            case Proposal.NETWORK_SCORE_DESIGNATION:
                 return 3;
         }
         throw new IllegalArgumentException("proposalType not exist");
@@ -151,8 +184,12 @@ public class Value {
                 return new Value(proposalType, r.readBigInteger());
             case Proposal.STEP_COSTS:
                 return new Value(proposalType, r.read(StepCosts.class));
-            case Proposal.REWARD_FUNDS_RATE:
+            case Proposal.REWARD_FUNDS_ALLOCATION:
                 return new Value(proposalType, r.read(RewardFunds.class));
+            case Proposal.NETWORK_SCORE_DESIGNATION:
+                return new Value(proposalType, r.readString(), r.readAddress());
+            case Proposal.NETWORK_SCORE_UPDATE:
+                return new Value(proposalType, r.readAddress(), r.readByteArray());
             default:
                 throw new IllegalArgumentException("proposalType not exist");
         }
@@ -177,8 +214,21 @@ public class Value {
                 return new Value(type, Converter.hexToInt(value.getString("value", null)));
             case Proposal.STEP_COSTS:
                 return new Value(type, StepCosts.fromJson(value.get("costs").asArray()));
-            case Proposal.REWARD_FUNDS_RATE:
+            case Proposal.REWARD_FUNDS_ALLOCATION:
                 return new Value(type, RewardFunds.fromJson(value.get("rewardFunds").asArray()));
+            case Proposal.NETWORK_SCORE_DESIGNATION:
+                return new Value(
+                        type,
+                        value.getString("role", null),
+                        Converter.strToAddress(value.getString("address", null)
+                        )
+                );
+            case Proposal.NETWORK_SCORE_UPDATE:
+                return new Value(
+                        type,
+                        Converter.strToAddress(value.getString("address", null)),
+                        Converter.hexToBytes(value.getString("content", null))
+                );
         }
         throw new IllegalArgumentException("Invalid value type");
     }
@@ -199,9 +249,19 @@ public class Value {
             case Proposal.IREP:
             case Proposal.REWARD_FUND:
                 return Map.of("value", value);
+            case Proposal.NETWORK_SCORE_DESIGNATION:
+                return Map.of(
+                        "role", text,
+                        "address", address
+                );
+            case Proposal.NETWORK_SCORE_UPDATE:
+                return Map.of(
+                        "address", address,
+                        "code", data
+                );
             case Proposal.STEP_COSTS:
                 return stepCosts.toMap();
-            case Proposal.REWARD_FUNDS_RATE:
+            case Proposal.REWARD_FUNDS_ALLOCATION:
                 return rewardFunds.toMap();
         }
         throw new IllegalArgumentException("Invalid value type");

@@ -26,16 +26,15 @@ import foundation.icon.icx.data.Bytes;
 import foundation.icon.icx.transport.http.HttpProvider;
 import foundation.icon.icx.transport.jsonrpc.RpcObject;
 import foundation.icon.test.*;
-import foundation.icon.test.score.ChainScore;
-import foundation.icon.test.score.Delegation;
-import foundation.icon.test.score.GovernanceScore;
-import foundation.icon.test.score.HelloWorld;
+import foundation.icon.test.score.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class GovernanceTest extends TestBase {
     private static TransactionHandler txHandler;
@@ -44,6 +43,7 @@ public class GovernanceTest extends TestBase {
     private static HelloWorld helloWorldScore;
     private static KeyWallet[] wallets;
     private static Env.Chain chain = Env.getDefaultChain();
+    private static Address cpsAddress;
 
     private static void stake(Wallet wallet, BigInteger amount) throws IOException, ResultTimeoutException {
         var result = chainScore.setStake(wallet, amount);
@@ -86,7 +86,7 @@ public class GovernanceTest extends TestBase {
         var delegationAmount = stakeAmount.divide(BigInteger.TWO);
 
         // register P-Rep
-        var result = chainScore.registerPRep(
+        var txHash = chainScore.registerPRep(
                 chain.godWallet,
                 "god",
                 "god@god.com",
@@ -96,7 +96,7 @@ public class GovernanceTest extends TestBase {
                 "https://god.com/god.json",
                 "god.com:7100",
                 chain.godWallet.getAddress());
-       var transactionResult = txHandler.getResult(result);
+       var transactionResult = txHandler.getResult(txHash);
        assertSuccess(transactionResult);
 
        stake(chain.godWallet, stakeAmount);
@@ -116,7 +116,7 @@ public class GovernanceTest extends TestBase {
         delegationAmount = stakeAmount.divide(BigInteger.TWO);
 
         // register P-Rep
-        result = chainScore.registerPRep(
+        txHash = chainScore.registerPRep(
                 wallets[0],
                 "prep0",
                 "prep0@prep.com",
@@ -126,7 +126,7 @@ public class GovernanceTest extends TestBase {
                 "https://prep.com/prep.json",
                 "prep.com:7100",
                 wallets[0].getAddress());
-        transactionResult = txHandler.getResult(result);
+        transactionResult = txHandler.getResult(txHash);
         assertSuccess(transactionResult);
 
         stake(wallets[0], stakeAmount);
@@ -137,6 +137,16 @@ public class GovernanceTest extends TestBase {
         //deploy SCORE for malicious proposal test
         helloWorldScore = HelloWorld.install(txHandler, chain.godWallet);
         txHandler.waitNextTerm();
+
+        var scorePkg = "hello-world";
+        var scorePath = Score.getFilePath(scorePkg);
+        byte[] data = Files.readAllBytes(Path.of(scorePath));
+        txHash = governanceScore.deploySample(chain.godWallet, data);
+        transactionResult = txHandler.getResult(txHash);
+        var eventlog = transactionResult.getEventLogs().get(0);
+        var scoreAddress = eventlog.getIndexed().get(1);
+        cpsAddress = scoreAddress.asAddress();
+        System.out.println("@@@" + cpsAddress.toString());
 
         // setRevision ICON2
         BigInteger prevRevision = governanceScore.getRevision();
@@ -393,6 +403,19 @@ public class GovernanceTest extends TestBase {
         jsonValue.add("rewardFunds", jsonArray);
 
         approveProposal(title, desc, rewardFundProposalType, jsonValue, true);
+    }
+
+    @Test
+    public void testDesignateNetworkScore() throws IOException, ResultTimeoutException {
+        BigInteger designationNetworkScore = BigInteger.valueOf(9);
+        String title = "network score designate proposal";
+        String desc = "designate network score proposal";
+
+        JsonObject jsonValue = new JsonObject();
+        jsonValue.add("role", "cps");
+        jsonValue.add("address", cpsAddress.toString());
+
+        approveProposal(title, desc, designationNetworkScore, jsonValue, true);
     }
 
     private static void cancelProposal(String title, String desc, BigInteger type, JsonObject jsonValue, boolean success) throws IOException, ResultTimeoutException {

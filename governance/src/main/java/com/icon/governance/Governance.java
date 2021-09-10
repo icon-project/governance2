@@ -47,10 +47,9 @@ public class Governance {
         RewardFundChanged(rewardFund);
     }
 
-    private void setRewardFundsRate(List<Map<String, ?>> ratio) {
-        chainScore.setRewardFundsRate(ratio);
-//        for
-//        RewardFundsRateChanged();
+    private void setRewardFundsRate(BigInteger iprep, BigInteger icps, BigInteger irelay, BigInteger ivoter) {
+        chainScore.setRewardFundsRate(iprep, icps, irelay, ivoter);
+        RewardFundsRatioChanged();
     }
 
     private void blockScore(Address address) {
@@ -273,6 +272,13 @@ public class Governance {
         NetworkProposalCanceled(id);
     }
 
+    @External
+    public void deploy(byte[] content) {
+        // TODO : for testing network SCORE functions(designation, update)
+        var scoreAddress = Context.deploy(content);
+        ScoreDeployed(scoreAddress);
+    }
+
     private PRepInfo getPRepInfoFromList(Address address, PRepInfo[] prepsInfo) {
         for (PRepInfo prep : prepsInfo) {
             if (address.equals(prep.getAddress())) {
@@ -320,17 +326,28 @@ public class Governance {
             case Proposal.REWARD_FUND:
                 setRewardFund(v);
                 return;
-            case Proposal.REWARD_FUNDS_RATE:
+            case Proposal.REWARD_FUNDS_ALLOCATION:
                 var rewardRatio = value.rewardFunds();
-                Map<String, Object>[] r = new Map[rewardRatio.rewardFunds.length];
+                BigInteger iprep = BigInteger.ZERO;
+                BigInteger icps = BigInteger.ZERO;
+                BigInteger irelay = BigInteger.ZERO;
+                BigInteger ivoter = BigInteger.ZERO;
                 for (int i = 0; i < rewardRatio.rewardFunds.length; i++) {
                     var rewardRateInfo = rewardRatio.rewardFunds[i];
-                    r[i] = Map.of(
-                            "fund", rewardRateInfo.type,
-                            "value", rewardRateInfo.value
-                    );
+                    if (rewardRateInfo.type.compareTo(Value.RewardFunds.I_PREP) == 0) iprep = rewardRateInfo.value;
+                    if (rewardRateInfo.type.compareTo(Value.RewardFunds.I_CPS) == 0) icps = rewardRateInfo.value;
+                    if (rewardRateInfo.type.compareTo(Value.RewardFunds.I_RELAY) == 0) irelay = rewardRateInfo.value;
+                    if (rewardRateInfo.type.compareTo(Value.RewardFunds.I_VOTER) == 0) ivoter = rewardRateInfo.value;
                 }
-                setRewardFundsRate(List.of(r));
+                setRewardFundsRate(iprep, icps, irelay, ivoter);
+                return;
+            case Proposal.NETWORK_SCORE_DESIGNATION:
+                chainScore.setNetworkScore(value.text(), address);
+                NetWorkScoreDesignated(address);
+                return;
+            case Proposal.NETWORK_SCORE_UPDATE:
+                Context.deploy(address, value.data());
+                NetWorkScoreUpdated(address);
         }
     }
 
@@ -338,6 +355,8 @@ public class Governance {
         switch (type) {
             case Proposal.TEXT:
             case Proposal.STEP_COSTS:
+            case Proposal.NETWORK_SCORE_UPDATE:
+            case Proposal.NETWORK_SCORE_DESIGNATION:
                 return;
             case Proposal.REVISION:
                 validateRevision(value.value());
@@ -357,7 +376,7 @@ public class Governance {
             case Proposal.REWARD_FUND:
                 chainScore.validateRewardFund(value.value());
                 return;
-            case Proposal.REWARD_FUNDS_RATE:
+            case Proposal.REWARD_FUNDS_ALLOCATION:
                 validateRewardFundsRate(value.rewardFunds());
                 return;
             default:
@@ -435,8 +454,14 @@ public class Governance {
     @EventLog(indexed=1)
     public void RewardFundChanged(BigInteger rewardFund) {}
 
-    @EventLog(indexed=2)
-    public void RewardFundsRateChanged(String type, BigInteger ratio) {}
+    @EventLog(indexed=0)
+    public void RewardFundsRatioChanged() {}
+
+    @EventLog(indexed=1)
+    public void NetWorkScoreUpdated(Address address) {}
+
+    @EventLog(indexed=1)
+    public void NetWorkScoreDesignated(Address address) {}
 
     @EventLog(indexed=0)
     public void NetworkProposalRegistered(String title, String description, int type, byte[] value, Address proposer) {}
@@ -452,5 +477,8 @@ public class Governance {
 
     @EventLog(indexed=0)
     public void NetworkProposalDisapproved(byte[] id) {}
+
+    @EventLog(indexed=1)
+    public void ScoreDeployed(Address address) {}
 
 }

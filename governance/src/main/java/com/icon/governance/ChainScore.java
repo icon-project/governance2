@@ -1,5 +1,6 @@
 package com.icon.governance;
 
+import com.sun.net.httpserver.Filter;
 import score.Address;
 import score.Context;
 
@@ -123,8 +124,12 @@ class ChainScore {
         Context.call(CHAIN_SCORE, "setRewardFund", rewardFund);
     }
 
-    void setRewardFundsRate(List<Map<String, ?>> ratio) {
-        Context.call(CHAIN_SCORE, "setRewardFundsRate", ratio);
+    void setRewardFundsRate(BigInteger iprep, BigInteger icps, BigInteger irelay, BigInteger ivoter) {
+        Context.call(CHAIN_SCORE, "setRewardFundAllocation", iprep, icps, irelay, ivoter);
+    }
+
+    void setNetworkScore(String role, Address address) {
+        Context.call(CHAIN_SCORE, "setNetworkScore", role, address);
     }
 
     Map<String, Object> getMainPReps() {

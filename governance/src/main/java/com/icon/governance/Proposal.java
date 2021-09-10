@@ -34,8 +34,10 @@ public class Proposal {
     public static final int IREP = 5;
     public static final int STEP_COSTS = 6;
     public static final int REWARD_FUND = 7;
-    public static final int REWARD_FUNDS_RATE = 8;
-    public static final int MAX = REWARD_FUNDS_RATE;
+    public static final int REWARD_FUNDS_ALLOCATION = 8;
+    public static final int NETWORK_SCORE_DESIGNATION = 9;
+    public static final int NETWORK_SCORE_UPDATE = 10;
+    public static final int MAX = NETWORK_SCORE_UPDATE;
     public static final int FREEZE_SCORE = 0;
     public static final int UNFREEZE_SCORE = 1;
     final byte[] id;

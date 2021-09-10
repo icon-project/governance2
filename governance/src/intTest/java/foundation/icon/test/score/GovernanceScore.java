@@ -71,7 +71,7 @@ public class GovernanceScore extends Score {
                 .build();
         LOG.info("register proposal done : " + title);
         LOG.infoExiting();
-        return invoke(wallet, "registerProposal", params, TestBase.ICX.multiply(BigInteger.valueOf(100)), Constants.DEFAULT_STEPS.multiply(BigInteger.valueOf(5)));
+        return invoke(wallet, "registerProposal", params, TestBase.ICX.multiply(BigInteger.valueOf(100)), Constants.DEFAULT_STEPS.multiply(BigInteger.valueOf(500)));
     }
 
     public Bytes voteProposal(Wallet wallet, byte[] id, BigInteger vote) throws IOException {
@@ -82,7 +82,7 @@ public class GovernanceScore extends Score {
                 .build();
         LOG.info("vote proposal done");
         LOG.infoExiting();
-        return invoke(wallet, "voteProposal", params, BigInteger.ZERO, Constants.DEFAULT_STEPS.multiply(BigInteger.valueOf(5)));
+        return invoke(wallet, "voteProposal", params, BigInteger.ZERO, Constants.DEFAULT_STEPS.multiply(BigInteger.valueOf(5000000)));
     }
 
     public Bytes cancelProposal(Wallet wallet, byte[] id) throws IOException {
@@ -103,5 +103,15 @@ public class GovernanceScore extends Score {
     public BigInteger getRevision() throws IOException {
         RpcObject params = new RpcObject.Builder().build();
         return call("getRevision", params).asInteger();
+    }
+
+    public Bytes deploySample(Wallet wallet, byte[] content) throws IOException {
+        LOG.infoEntering("deploy hello world");
+        RpcObject params = new RpcObject.Builder()
+                .put("content", new RpcValue(content))
+                .build();
+        LOG.info("deploy hello world done");
+        LOG.infoExiting();
+        return invoke(wallet, "deploy", params, BigInteger.ZERO, Constants.DEFAULT_STEPS.multiply(BigInteger.valueOf(5000000)));
     }
 }

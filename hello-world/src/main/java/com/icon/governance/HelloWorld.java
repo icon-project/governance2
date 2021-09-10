@@ -23,8 +23,8 @@ import score.annotation.Payable;
 public class HelloWorld {
     private final String name;
 
-    public HelloWorld(String name) {
-        this.name = name;
+    public HelloWorld() {
+        this.name = "alice";
     }
 
     @External(readonly=true)
