@@ -23,7 +23,7 @@ import java.util.Map;
     DisApprove - 0.33
 */
 
-public class Voter {
+public class VoteInfo {
     final static int AGREE_VOTE = 1;
     final static int DISAGREE_VOTE = 0;
     Agree agree;
@@ -307,13 +307,13 @@ public class Voter {
         }
     }
 
-    public Voter() {
+    public VoteInfo() {
         this.agree = new Agree();
         this.disagree = new Disagree();
         this.noVote = new NoVote();
     }
 
-    public Voter(
+    public VoteInfo(
             Agree a,
             Disagree d,
             NoVote n
@@ -323,7 +323,7 @@ public class Voter {
         this.noVote = n;
     }
 
-    public static void writeObject(ObjectWriter w, Voter v) {
+    public static void writeObject(ObjectWriter w, VoteInfo v) {
         w.beginList(3);
         w.write(v.agree);
         w.write(v.disagree);
@@ -331,9 +331,9 @@ public class Voter {
         w.end();
     }
 
-    public static Voter readObject(ObjectReader r) {
+    public static VoteInfo readObject(ObjectReader r) {
         r.beginList();
-        var v = new Voter(
+        var v = new VoteInfo(
                 r.read(Agree.class),
                 r.read(Disagree.class),
                 r.read(NoVote.class)
@@ -396,9 +396,9 @@ public class Voter {
         this.buildNoVoteWithJson(jso.get("noVote"));
     }
 
-    public static Voter makeVoterWithJson(JsonValue jsonValue) {
+    public static VoteInfo makeVoterWithJson(JsonValue jsonValue) {
         JsonObject voteJson = jsonValue.asObject();
-        Voter v = new Voter();
+        VoteInfo v = new VoteInfo();
         v.build(voteJson);
         return v;
     }

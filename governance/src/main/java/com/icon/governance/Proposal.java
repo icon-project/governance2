@@ -50,7 +50,7 @@ public class Proposal {
     BigInteger startBlockHeight;
     BigInteger expireBlockHeight;
     int status;
-    Voter vote;
+    VoteInfo vote;
     int totalVoter;
     BigInteger totalBondedDelegation;
 
@@ -65,7 +65,7 @@ public class Proposal {
             BigInteger  startBlockHeight,
             BigInteger  expireBlockHeight,
             int status,
-            Voter vote,
+            VoteInfo vote,
             int         totalVoter,
             BigInteger  totalBondedDelegation
     ){
@@ -115,7 +115,7 @@ public class Proposal {
                 r.readBigInteger(),
                 r.readBigInteger(),
                 r.readInt(),
-                r.read(Voter.class),
+                r.read(VoteInfo.class),
                 r.readInt(),
                 r.readBigInteger()
         );
@@ -172,7 +172,7 @@ public class Proposal {
         ).toBigInteger();
 
         int status = jsonObj.getInt("status", 0);
-        Voter vote = Voter.makeVoterWithJson(jsonObj.get("vote"));
+        VoteInfo vote = VoteInfo.makeVoterWithJson(jsonObj.get("vote"));
 
         int totalVoter = jsonObj.getInt("total_voter", 0);
 
@@ -198,7 +198,7 @@ public class Proposal {
     }
 
     public void updateVote(PRepInfo p, int vote) {
-        if (vote == Voter.AGREE_VOTE) {
+        if (vote == VoteInfo.AGREE_VOTE) {
             voteAgree(p);
         } else {
             voteDisagree(p);
@@ -206,8 +206,8 @@ public class Proposal {
     }
 
     private void voteAgree(PRepInfo voter) {
-        Voter.Vote[] updatedAgree = new Voter.Vote[vote.agree.voteList.length + 1];
-        Voter.Vote v = new Voter.Vote(
+        VoteInfo.Vote[] updatedAgree = new VoteInfo.Vote[vote.agree.voteList.length + 1];
+        VoteInfo.Vote v = new VoteInfo.Vote(
                 Context.getTransactionHash(),
                 BigInteger.valueOf(Context.getTransactionTimestamp()),
                 voter.getAddress(),
@@ -225,8 +225,8 @@ public class Proposal {
     }
 
     private void voteDisagree(PRepInfo voter) {
-        Voter.Vote[] updatedDisagree = new Voter.Vote[vote.disagree.voteList.length + 1];
-        Voter.Vote v = new Voter.Vote(
+        VoteInfo.Vote[] updatedDisagree = new VoteInfo.Vote[vote.disagree.voteList.length + 1];
+        VoteInfo.Vote v = new VoteInfo.Vote(
                 Context.getTransactionHash(),
                 BigInteger.valueOf(Context.getTransactionTimestamp()),
                 voter.getAddress(),
@@ -288,5 +288,9 @@ public class Proposal {
 
     int sizeofNoVote() {
         return vote.sizeofNoVote();
+    }
+
+    Address[] getNonVoters() {
+        return vote.noVote.getAddressList();
     }
 }

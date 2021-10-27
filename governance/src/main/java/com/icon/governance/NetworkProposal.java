@@ -88,7 +88,7 @@ public class NetworkProposal {
             int type,
             Value value,
             PRepInfo[] prepsInfo,
-            Map<String, Object> term
+            BigInteger expireHeight
     ) {
         var id = Context.getTransactionHash();
         var proposer = Context.getCaller();
@@ -97,7 +97,7 @@ public class NetworkProposal {
         String proposerName = "";
         Address[] preps = new Address[prepsInfo.length];
 
-        Voter v = new Voter();
+        VoteInfo v = new VoteInfo();
 
         for (int i=0; i < prepsInfo.length; i++) {
             var prep = prepsInfo[i];
@@ -112,16 +112,7 @@ public class NetworkProposal {
         v.setAmountForNoVote(totalBondedDelegation);
         v.setNoVoteList(preps);
 
-        /*
-            currentTermEnd: endBlockHeight
-            4-terms: termPeriod * 4
-            currentTermEnd + 4terms = 5terms
-         */
-        BigInteger expireVotingPeriod = (BigInteger) term.get("period");
-        expireVotingPeriod = expireVotingPeriod.multiply(BigInteger.valueOf(4));
-        expireVotingPeriod = expireVotingPeriod.add((BigInteger) term.get("endBlockHeight"));
-
-        Context.println("NetworkProposal(" + " ExpireVoting: " + expireVotingPeriod);
+        Context.println("NetworkProposal(" + " ExpireVoting: " + expireHeight);
 
         Proposal proposal = new Proposal(
                 id,
@@ -132,7 +123,7 @@ public class NetworkProposal {
                 type,
                 value,
                 blockHeight,
-                expireVotingPeriod,
+                expireHeight,
                 VOTING_STATUS,
                 v,
                 prepsInfo.length,
@@ -155,7 +146,7 @@ public class NetworkProposal {
         p.updateVote(prep, vote);
         int votingEvent = EVENT_NONE;
         int currentStatus = p.status;
-        if (vote == Voter.AGREE_VOTE) {
+        if (vote == VoteInfo.AGREE_VOTE) {
             if ((float)p.sizeofAgreed() / p.totalVoter >= APPROVE_RATE &&
                     p.amountOfAgreed().divide(p.totalBondedDelegation).floatValue() >= APPROVE_RATE) {
                 p.status = APPROVED_STATUS;

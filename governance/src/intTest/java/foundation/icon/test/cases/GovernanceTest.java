@@ -146,7 +146,6 @@ public class GovernanceTest extends TestBase {
         var eventlog = transactionResult.getEventLogs().get(0);
         var scoreAddress = eventlog.getIndexed().get(1);
         cpsAddress = scoreAddress.asAddress();
-        System.out.println("@@@" + cpsAddress.toString());
 
         // setRevision ICON2
         BigInteger prevRevision = governanceScore.getRevision();
@@ -156,7 +155,7 @@ public class GovernanceTest extends TestBase {
         String desc = "revision proposal";
 
         JsonObject jsonValue = new JsonObject();
-        BigInteger newRevision = prevRevision.add(BigInteger.valueOf(1));
+        BigInteger newRevision = BigInteger.valueOf(15);
         jsonValue.add("value", "0x" + newRevision.toString(16));
 
         approveProposal(title, desc, revisionProposalType, jsonValue, true);
@@ -402,7 +401,7 @@ public class GovernanceTest extends TestBase {
         jsonArray.add(voterMap);
         jsonValue.add("rewardFunds", jsonArray);
 
-        approveProposal(title, desc, rewardFundProposalType, jsonValue, true);
+        registerProposal(title, desc, rewardFundProposalType, jsonValue, true);
     }
 
     @Test

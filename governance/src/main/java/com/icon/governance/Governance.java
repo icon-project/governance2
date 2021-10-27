@@ -2,9 +2,7 @@ package com.icon.governance;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonValue;
-import score.Address;
-import score.ArrayDB;
-import score.Context;
+import score.*;
 import score.annotation.EventLog;
 import score.annotation.External;
 import score.annotation.Optional;
@@ -21,6 +19,7 @@ public class Governance {
     private final static NetworkProposal networkProposal = new NetworkProposal();
     private final static BigInteger proposalRegisterFee = Governance.proposalRegisterFee();
     private final ArrayDB<Address> auditors = Context.newArrayDB("auditor_list", Address.class);
+    private final DictDB<BigInteger, TimerInfo> timerInfo = Context.newDictDB("timerInfo", TimerInfo.class);
 
     private void setRevision(BigInteger code) {
         chainScore.setRevision(code);
@@ -217,14 +216,38 @@ public class Governance {
         validateProposal(intTypeValue, v);
 
         var term = chainScore.getPRepTerm();
+
+        /*
+            currentTermEnd: endBlockHeight
+            4-terms: termPeriod * 4
+            currentTermEnd + 4terms = 5terms
+         */
+        BigInteger expireVotingHeight = (BigInteger) term.get("period");
+        expireVotingHeight = expireVotingHeight.multiply(BigInteger.valueOf(4));
+        expireVotingHeight = expireVotingHeight.add((BigInteger) term.get("endBlockHeight"));
+
         networkProposal.registerProposal(
                 title,
                 description,
                 intTypeValue,
                 v,
                 mainPRepsInfo,
-                term
+                expireVotingHeight
         );
+        var revision = chainScore.getRevision();
+        if (revision.compareTo(BigInteger.valueOf(14)) >= 0) {
+            BigInteger penaltyHeight = BigInteger.valueOf(1).add(expireVotingHeight);
+            TimerInfo ti = timerInfo.getOrDefault(penaltyHeight, null);
+            if (ti == null) {
+                ti = new TimerInfo(new TimerInfo.ProposalIds());
+                ti.addProposalId(Context.getTransactionHash());
+                timerInfo.set(penaltyHeight, ti);
+                chainScore.addTimer(penaltyHeight);
+            } else {
+                ti.addProposalId(Context.getTransactionHash());
+                timerInfo.set(penaltyHeight, ti);
+            }
+        }
         NetworkProposalRegistered(title, description, intTypeValue, value, proposer);
     }
 
@@ -236,7 +259,7 @@ public class Governance {
 
         Proposal p = networkProposal.getProposal(id);
         Context.require(p != null, "no registered proposal");
-        Context.require(vote == Voter.AGREE_VOTE || vote == Voter.DISAGREE_VOTE, "Invalid vote value : " + vote);
+        Context.require(vote == VoteInfo.AGREE_VOTE || vote == VoteInfo.DISAGREE_VOTE, "Invalid vote value : " + vote);
 
         var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
         Context.require(p.expireBlockHeight.compareTo(blockHeight) >= 0, "This proposal has already expired");
@@ -272,11 +295,24 @@ public class Governance {
         NetworkProposalCanceled(id);
     }
 
+    // TODO : for testing network SCORE functions(designation, update)
     @External
     public void deploy(byte[] content) {
-        // TODO : for testing network SCORE functions(designation, update)
         var scoreAddress = Context.deploy(content);
         ScoreDeployed(scoreAddress);
+    }
+
+    @External
+    public void onTimer() {
+        Address sender = Context.getCaller();
+        Context.require(sender.equals(ChainScore.CHAIN_SCORE), "only chain SCORE can call onTimer");
+        var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
+        var ti = timerInfo.getOrDefault(blockHeight, null);
+        for (byte[] id : ti.proposalIds.ids) {
+            var proposal = networkProposal.getProposal(id);
+            var novoters = proposal.getNonVoters();
+            chainScore.penalizeNonvoters(List.of(novoters));
+        }
     }
 
     private PRepInfo getPRepInfoFromList(Address address, PRepInfo[] prepsInfo) {
@@ -423,6 +459,69 @@ public class Governance {
         }
         Context.require(sum.compareTo(BigInteger.valueOf(100)) == 0, "sum of reward funds must be 100");
     }
+
+    public static class TimerInfo {
+        ProposalIds proposalIds;
+
+        public TimerInfo() {}
+
+        public TimerInfo(ProposalIds proposalIds) {
+            this.proposalIds = proposalIds;
+        }
+
+        void addProposalId(byte[] id) {
+            byte[][] ids = new byte[proposalIds.ids.length + 1][];
+            System.arraycopy(proposalIds.ids, 0, ids, 0, proposalIds.ids.length);
+            ids[proposalIds.ids.length] = id;
+            proposalIds.ids = ids;
+        }
+
+        public static void writeObject(ObjectWriter w, TimerInfo ti) {
+            w.beginList(1);
+            w.write(ti.proposalIds);
+            w.end();
+        }
+
+        public static TimerInfo readObject(ObjectReader r) {
+            r.beginList();
+            var t = new TimerInfo();
+            t.proposalIds = r.read(ProposalIds.class);
+            return t;
+        }
+
+        public static class ProposalIds {
+            byte[][] ids;
+
+            ProposalIds() {
+                ids = new byte[0][0];
+            }
+
+            public static void writeObject(ObjectWriter w, ProposalIds p) {
+                w.beginList(2);
+                w.write(p.ids.length);
+                for (byte[] id : p.ids) {
+                    w.write(id);
+                }
+                w.end();
+            }
+
+            public static ProposalIds readObject(ObjectReader r) {
+                r.beginList();
+                var p = new ProposalIds();
+                int length = r.readInt();
+                byte[][] ids = new byte[length][];
+
+                for (int i = 0; i < length; i++) {
+                    byte[] id = r.read(byte[].class);
+                    ids[i] = id;
+                }
+                r.end();
+                p.ids = ids;
+                return p;
+            }
+        }
+    }
+
 
     /*
      * Events

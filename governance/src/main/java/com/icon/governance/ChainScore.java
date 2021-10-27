@@ -1,6 +1,5 @@
 package com.icon.governance;
 
-import com.sun.net.httpserver.Filter;
 import score.Address;
 import score.Context;
 
@@ -102,6 +101,14 @@ class ChainScore {
     void rejectScore(byte[] txHash, String reason) {
         validateHash(txHash);
         Context.call(CHAIN_SCORE, "rejectScore", txHash, reason);
+    }
+
+    void addTimer(BigInteger blockHeight) {
+        Context.call(CHAIN_SCORE, "addTimer", blockHeight);
+    }
+
+    void penalizeNonvoters(List<Address> preps) {
+        Context.call(CHAIN_SCORE, "penalizeNonvoters", preps);
     }
 
     void blockScore(Address address) {
