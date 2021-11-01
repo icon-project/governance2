@@ -21,6 +21,10 @@ public class Governance {
     private final ArrayDB<Address> auditors = Context.newArrayDB("auditor_list", Address.class);
     private final DictDB<BigInteger, TimerInfo> timerInfo = Context.newDictDB("timerInfo", TimerInfo.class);
 
+    public Governance() {
+        setRevision(BigInteger.valueOf(15));
+    }
+
     private void setRevision(BigInteger code) {
         chainScore.setRevision(code);
         RevisionChanged(code);
@@ -100,6 +104,11 @@ public class Governance {
     @External(readonly = true)
     public BigInteger getRevision() {
         return chainScore.getRevision();
+    }
+
+    @External(readonly = true)
+    public String getVersion() {
+        return "2.0.0";
     }
 
     @External(readonly = true)
@@ -235,7 +244,7 @@ public class Governance {
                 expireVotingHeight
         );
         var revision = chainScore.getRevision();
-        if (revision.compareTo(BigInteger.valueOf(14)) >= 0) {
+        if (revision.compareTo(BigInteger.valueOf(15)) >= 0) {
             BigInteger penaltyHeight = BigInteger.valueOf(1).add(expireVotingHeight);
             TimerInfo ti = timerInfo.getOrDefault(penaltyHeight, null);
             if (ti == null) {

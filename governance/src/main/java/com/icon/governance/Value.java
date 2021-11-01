@@ -208,6 +208,14 @@ public class Value {
             case Proposal.PREP_DISQUALIFICATION:
                 return new Value(type, Converter.strToAddress(value.getString("address", null)));
             case Proposal.REVISION:
+                var code = value.getString("code", null);
+                BigInteger revision;
+                if (code != null) {
+                     revision = Converter.hexToInt(code);
+                } else {
+                     revision = Converter.hexToInt(value.getString("value", null));
+                }
+                return new Value(type, revision);
             case Proposal.STEP_PRICE:
             case Proposal.IREP:
             case Proposal.REWARD_FUND:

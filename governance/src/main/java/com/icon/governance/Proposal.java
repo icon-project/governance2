@@ -124,14 +124,12 @@ public class Proposal {
     }
 
     public Map<String, Object> toMap() {
+        var contents = Map.of("description", description, "title", title, "type", type, "value", value.toMap());
         return Map.ofEntries(
                 Map.entry("id", id),
                 Map.entry("proposer", proposer),
                 Map.entry("proposer_name", proposerName),
-                Map.entry("title", title),
-                Map.entry("description", description),
-                Map.entry("type", type),
-                Map.entry("value", value.toMap()),
+                Map.entry("contents", contents),
                 Map.entry("start_block_height", startBlockHeight),
                 Map.entry("end_block_height", expireBlockHeight),
                 Map.entry("status", status),
