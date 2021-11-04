@@ -204,16 +204,16 @@ public class Proposal {
     }
 
     private void voteAgree(PRepInfo voter) {
-        VoteInfo.Vote[] updatedAgree = new VoteInfo.Vote[vote.agree.voteList.length + 1];
+        VoteInfo.Vote[] updatedAgree = new VoteInfo.Vote[vote.sizeofAgreed() + 1];
         VoteInfo.Vote v = new VoteInfo.Vote(
                 Context.getTransactionHash(),
                 BigInteger.valueOf(Context.getTransactionTimestamp()),
                 voter.getAddress(),
                 voter.getName(),
-                BigInteger.valueOf(Context.getTransactionTimestamp())
+                voter.getBondedDelegation()
         );
-        System.arraycopy(vote.agree.voteList, 0, updatedAgree, 0, vote.agree.voteList.length);
-        updatedAgree[vote.agree.voteList.length] = v;
+        System.arraycopy(vote.agree.voteList, 0, updatedAgree, 0, vote.sizeofAgreed());
+        updatedAgree[vote.sizeofAgreed()] = v;
         vote.agree.setVoteList(updatedAgree);
 
         var votedAmount = vote.agree.getAmount();
@@ -223,16 +223,16 @@ public class Proposal {
     }
 
     private void voteDisagree(PRepInfo voter) {
-        VoteInfo.Vote[] updatedDisagree = new VoteInfo.Vote[vote.disagree.voteList.length + 1];
+        VoteInfo.Vote[] updatedDisagree = new VoteInfo.Vote[vote.sizeofDisagreed() + 1];
         VoteInfo.Vote v = new VoteInfo.Vote(
                 Context.getTransactionHash(),
                 BigInteger.valueOf(Context.getTransactionTimestamp()),
                 voter.getAddress(),
                 voter.getName(),
-                BigInteger.valueOf(Context.getTransactionTimestamp())
+                voter.getBondedDelegation()
         );
-        System.arraycopy(vote.disagree.voteList, 0, updatedDisagree, 0, vote.disagree.voteList.length);
-        updatedDisagree[vote.disagree.voteList.length] = v;
+        System.arraycopy(vote.disagree.voteList, 0, updatedDisagree, 0, vote.sizeofDisagreed());
+        updatedDisagree[vote.sizeofDisagreed()] = v;
         vote.disagree.setVoteList(updatedDisagree);
 
         var votedAmount = vote.disagree.getAmount();
@@ -243,13 +243,13 @@ public class Proposal {
 
     private  void updateNoVote(PRepInfo prep) {
         var addresses = vote.noVote.getAddressList();
-        int size = vote.noVote.size();
-        Address[] updatedList = new Address[size - 1];
+        int size = vote.sizeofNoVote();
+        int index = 0;
+        var updatedList = new Address[size-1];
         for (int i = 0; i < size; i++) {
-            if (prep.getAddress().equals(addresses[i])) {
-                continue;
+            if (!prep.getAddress().equals(addresses[i])) {
+                updatedList[index++] = addresses[i];
             }
-            updatedList[i] = addresses[i];
         }
         vote.noVote.setAddressList(updatedList);
         var amount = vote.noVote.getAmount();

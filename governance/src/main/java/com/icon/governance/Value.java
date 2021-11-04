@@ -293,7 +293,7 @@ public class Value {
                 STEP_TYPE_DEFAULT, STEP_TYPE_CONTRACT_CALL, STEP_TYPE_CONTRACT_CREATE, STEP_TYPE_CONTRACT_UPDATE, STEP_TYPE_CONTRACT_DESTRUCT, STEP_TYPE_CONTRACT_SET,
                 STEP_TYPE_GET, STEP_TYPE_SET, STEP_TYPE_REPLACE, STEP_TYPE_DELETE, STEP_TYPE_INPUT, STEP_TYPE_EVENT_LOG, STEP_TYPE_API_CALL
         };
-        StepCost[] stepCosts;
+        StepCost[] costs;
 
         public static class StepCost {
             String type;
@@ -323,8 +323,8 @@ public class Value {
             }
         }
 
-        public StepCosts(StepCost[] stepCosts) {
-            this.stepCosts = stepCosts;
+        public StepCosts(StepCost[] costs) {
+            this.costs = costs;
         }
 
         public static StepCosts fromJson(JsonArray array) {
@@ -346,8 +346,8 @@ public class Value {
 
         public static void writeObject(ObjectWriter w, StepCosts costs) {
             w.beginList(2);
-            w.write(costs.stepCosts.length);
-            var stepCostList = costs.stepCosts;
+            w.write(costs.costs.length);
+            var stepCostList = costs.costs;
             for (StepCost s : stepCostList) {
                 w.write(s);
             }
@@ -377,10 +377,10 @@ public class Value {
         }
 
         public Map<String, Object> toMap() {
-            var length = stepCosts.length;
+            var length = costs.length;
             var entries = new Map[length];
             for (int i = 0; i < length; i++) {
-                entries[i] = stepCosts[i].toMap();
+                entries[i] = costs[i].toMap();
             }
             return Map.of("costs", entries);
         }
@@ -388,10 +388,10 @@ public class Value {
     }
 
     public static class RewardFunds {
-        final static String I_PREP = "Iprep";
-        final static String I_CPS = "Icps";
-        final static String I_RELAY = "Irelay";
-        final static String I_VOTER = "Ivoter";
+        final static String I_PREP = "iprep";
+        final static String I_CPS = "icps";
+        final static String I_RELAY = "irelay";
+        final static String I_VOTER = "ivoter";
         final static String[] VALUES = {I_PREP, I_CPS, I_RELAY, I_VOTER};
         RewardFund[] rewardFunds;
 

@@ -57,12 +57,12 @@ public class Governance {
 
     private void blockScore(Address address) {
         chainScore.blockScore(address);
-        MaliciousScore(address, false);
+        MaliciousScore(address, 0);
     }
 
     private void unblockScore(Address address) {
         chainScore.unblockScore(address);
-        MaliciousScore(address, true);
+        MaliciousScore(address, 1);
     }
 
     private void disqualifyPRep(Address address) {
@@ -109,6 +109,11 @@ public class Governance {
     @External(readonly = true)
     public String getVersion() {
         return "2.0.0";
+    }
+
+    @External(readonly = true)
+    public BigInteger getStepPrice() {
+        return chainScore.getStepPrice();
     }
 
     @External(readonly = true)
@@ -321,6 +326,10 @@ public class Governance {
             var proposal = networkProposal.getProposal(id);
             var novoters = proposal.getNonVoters();
             chainScore.penalizeNonvoters(List.of(novoters));
+            if (proposal.status == NetworkProposal.VOTING_STATUS) {
+                networkProposal.onExpireProposal(proposal);
+                NetworkProposalDisapproved(proposal.id);
+            }
         }
     }
 
@@ -364,7 +373,7 @@ public class Governance {
                 setIRep(v);
             case Proposal.STEP_COSTS:
                 var stepCosts = value.stepCosts();
-                for (Value.StepCosts.StepCost s : stepCosts.stepCosts) {
+                for (Value.StepCosts.StepCost s : stepCosts.costs) {
                     setStepCosts(s.type, s.cost);
                 }
                 return;
@@ -464,6 +473,9 @@ public class Governance {
         var values = rewardFunds.rewardFunds;
         var sum = BigInteger.ZERO;
         for (Value.RewardFunds.RewardFund value : values) {
+            if (BigInteger.ZERO.compareTo(value.value) > 0) {
+                Context.revert("reward fund < 0");
+            }
             sum = sum.add(value.value);
         }
         Context.require(sum.compareTo(BigInteger.valueOf(100)) == 0, "sum of reward funds must be 100");
@@ -551,7 +563,7 @@ public class Governance {
     public void RevisionChanged(BigInteger revisionCode) {}
 
     @EventLog(indexed=0)
-    public void MaliciousScore(Address address, boolean unFreeze) {}
+    public void MaliciousScore(Address address, int unFreeze) {}
 
     @EventLog(indexed=0)
     public void PRepDisqualified(Address address, boolean success, String reason) {}
