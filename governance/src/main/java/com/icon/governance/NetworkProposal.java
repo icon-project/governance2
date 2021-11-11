@@ -171,7 +171,7 @@ public class NetworkProposal {
         return EVENT_NONE;
     }
 
-    void onExpireProposal(Proposal p) {
+    void disapproveProposal(Proposal p) {
         p.status = DISAPPROVED_STATUS;
         proposalDict.set(p.id, p);
     }

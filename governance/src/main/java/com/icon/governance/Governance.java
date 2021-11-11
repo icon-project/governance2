@@ -306,6 +306,17 @@ public class Governance {
         Context.require(p.status == NetworkProposal.VOTING_STATUS, "Can not be canceled - only voting proposal");
 
         networkProposal.cancelProposal(p);
+        var timerHeight = BigInteger.ONE.add(p.expireBlockHeight);
+        var ti = timerInfo.getOrDefault(timerHeight, null);
+        if (ti != null) {
+            if (ti.proposalIds.ids.length == 1) {
+                timerInfo.set(timerHeight, null);
+                chainScore.removeTimer(timerHeight);
+            } else {
+                ti.removeProposalId(id);
+                timerInfo.set(timerHeight, ti);
+            }
+        }
         NetworkProposalCanceled(id);
     }
 
@@ -327,10 +338,11 @@ public class Governance {
             var novoters = proposal.getNonVoters();
             chainScore.penalizeNonvoters(List.of(novoters));
             if (proposal.status == NetworkProposal.VOTING_STATUS) {
-                networkProposal.onExpireProposal(proposal);
+                networkProposal.disapproveProposal(proposal);
                 NetworkProposalDisapproved(proposal.id);
             }
         }
+        timerInfo.set(blockHeight, null);
     }
 
     private PRepInfo getPRepInfoFromList(Address address, PRepInfo[] prepsInfo) {
@@ -494,6 +506,25 @@ public class Governance {
             byte[][] ids = new byte[proposalIds.ids.length + 1][];
             System.arraycopy(proposalIds.ids, 0, ids, 0, proposalIds.ids.length);
             ids[proposalIds.ids.length] = id;
+            proposalIds.ids = ids;
+        }
+
+        void removeProposalId(byte[] id) {
+            byte[][] ids = new byte[proposalIds.ids.length - 1][];
+            for (int i = 0; i < proposalIds.ids.length; i++) {
+                boolean equal = true;
+                for (int j = 0; j < id.length; j++) {
+                    if (id[j] != proposalIds.ids[i][j]) {
+                        equal = false;
+                        break;
+                    }
+                }
+                if (equal) {
+                    proposalIds.ids[i] = proposalIds.ids[proposalIds.ids.length - 1];
+                    break;
+                }
+            }
+            System.arraycopy(proposalIds.ids, 0, ids, 0, proposalIds.ids.length - 1);
             proposalIds.ids = ids;
         }
 

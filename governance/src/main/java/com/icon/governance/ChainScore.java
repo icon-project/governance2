@@ -107,6 +107,10 @@ class ChainScore {
         Context.call(CHAIN_SCORE, "addTimer", blockHeight);
     }
 
+    void removeTimer(BigInteger blockHeight) {
+        Context.call(CHAIN_SCORE, "removeTimer", blockHeight);
+    }
+
     void penalizeNonvoters(List<Address> preps) {
         Context.call(CHAIN_SCORE, "penalizeNonvoters", preps);
     }
