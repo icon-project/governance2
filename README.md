@@ -51,11 +51,9 @@ NAME: Not an empty string
   * [getStepPrice](#getstepprice)
   * [getStepCosts](#getstepcosts)
   * [getMaxStepLimit](#getmaxsteplimit)
-  * ~~isDeployer~~ (deprecated)
   * [isInScoreBlackList](#isinscoreblacklist)
   * [getVersion](#getVersion)
   * [isInImportWhiteList](#isinimportwhitelist)
-  * [getServiceConfig](#getserviceconfig)
   * [getRevision](#getrevision)
   * [getProposal](#getproposal)
   * [getProposals](#getproposals)
@@ -64,17 +62,6 @@ NAME: Not an empty string
   * [rejectScore](#rejectscore)
   * [addAuditor](#addauditor)
   * [removeAuditor](#removeauditor)
-  * ~~setStepPrice~~ (deprecated)
-  * ~~setStepCost~~ (deprecated)
-  * ~~setMaxStepLimit~~ (deprecated)
-  * ~~addDeployer~~ (deprecated)
-  * ~~removeDeployer~~ (deprecated)
-  * ~~addToScoreBlackList~~ (deprecated)
-  * ~~removeFromScoreBlackList~~ (deprecated)
-  * ~~addImportWhiteList~~ (deprecated)
-  * ~~removeImportWhiteList~~ (deprecated)
-  * ~~updateServiceConfig~~ (deprecated)
-  * ~~setRevision~~ (deprecated)
   * [registerProposal](#registerproposal)
   * [cancelProposal](#cancelproposal)
   * [voteProposal](#voteproposal)
@@ -538,48 +525,6 @@ None
   "jsonrpc": "2.0",
   "id": 100,
   "result": "0x0"
-}
-```
-
-## getServiceConfig
-
-* Returns table about server config.
-
-### Parameters
-
-None
-
-### Examples
-
-#### Request
-
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 100,
-  "method": "icx_call",
-  "params": {
-    "to": "cx0000000000000000000000000000000000000001",
-    "dataType": "call",
-    "data": {
-      "method": "getServiceConfig"
-    }
-  }
-}
-```
-
-#### Response
-
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 100,
-  "result": {
-    "FEE": "0x1",
-    "AUDIT": "0x1",
-    "DEPLOYER_WHITE_LIST": "0x0",
-    "SCORE_PACKAGE_VALIDATOR": "0x1"
-  }
 }
 ```
 

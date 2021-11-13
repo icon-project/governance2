@@ -65,10 +65,6 @@ class ChainScore {
         return (BigInteger) Context.call(CHAIN_SCORE, "getStepPrice");
     }
 
-    BigInteger getStepCost(String t) {
-        return (BigInteger) Context.call(CHAIN_SCORE, "getStepCost", t);
-    }
-
     Map<String, Object> getStepCosts() {
         return (Map<String, Object>) Context.call(CHAIN_SCORE, "getStepCosts");
     }
@@ -79,6 +75,10 @@ class ChainScore {
 
     Map<String, Object> getScoreStatus() {
         return (Map<String, Object>) Context.call(CHAIN_SCORE, "getScoreStatus");
+    }
+
+    List<Address> getBlockedScores() {
+        return (List<Address>) Context.call(CHAIN_SCORE, "getBlockedScores");
     }
 
     void setStepCost(String type, BigInteger cost) {
