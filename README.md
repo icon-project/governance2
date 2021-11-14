@@ -69,11 +69,7 @@ NAME: Not an empty string
   * [Accepted](#accepted)
   * [Rejected](#rejected)
   * [StepPriceChanged](#steppricechanged)
-  * ~~StepCostChanged~~ (deprecated)
-  * ~~MaxStepLimitChanged~~ (deprecated)
-  * ~~AddImportWhiteListLog~~ (deprecated)
-  * ~~RemoveImportWhiteList~~ (deprecated)
-  * ~~UpdateServiceConfigLog~~ (deprecated)
+  * [StepCostChanged](#stepcostchanged)
   * [RevisionChanged](#revisionchanged)
   * [MaliciousScore](#maliciousscore)
   * [PRepDisqualified](#prepdisqualified)
@@ -121,96 +117,7 @@ Query method does not change state. Read-only.
 }
 ```
 
-#### Response: SCORE install case
-
-```json
-// Response - install requested: under auditing
-{
-  "jsonrpc": "2.0",
-  "id": 100,
-  "result": {
-    "next": {
-      "status": "pending",
-      "deployTxHash": "0xe0f6dc6607aa9b5550cd1e6d57549f67fe9718654cde15258922d0f88ff58b27"
-    }
-  }
-}
-```
-
-```json
-// Response - audit completed: accepted
-{
-  "jsonrpc": "2.0",
-  "id": 100,
-  "result": {
-    "current": {
-      "status": "active",
-      "deployTxHash": "0xe0f6dc6607aa9b5550cd1e6d57549f67fe9718654cde15258922d0f88ff58b27",
-      "auditTxHash": "0x644dd57fbb65b49a49bcaf5e7685e01d53dc321f1cfb7dbbf8f4306265745292"
-    }
-  }
-}
-```
-
-```json
-// Response - audit completed: rejected
-{
-  "jsonrpc": "2.0",
-  "id": 100,
-  "result": {
-    "next": {
-      "status": "rejected",
-      "deployTxHash": "0xe0f6dc6607aa9b5550cd1e6d57549f67fe9718654cde15258922d0f88ff58b27",
-      "auditTxHash": "0x644dd57fbb65b49a49bcaf5e7685e01d53dc321f1cfb7dbbf8f4306265745292"
-    }
-  }
-}
-```
-
-#### Response: SCORE update case
-
-```json
-// Response - update requested: under auditing
-{
-  "jsonrpc": "2.0",
-  "id": 100,
-  "result": {
-    "current": {
-      "status": "active",
-      "deployTxHash": "0xe0f6dc6607aa9b5550cd1e6d57549f67fe9718654cde15258922d0f88ff58b207",
-      "auditTxHash": "0x644dd57fbb65b49a49bcaf5e7685e01d53dc321f1cfb7dbbf8f4306265745292"
-    },
-    "next": {
-      "status": "pending",
-      "deployTxHash": "0xe0f6dc6607aa9b5550cd1e6d57549f67fe9718654cde15258922d0f88ff58b207"
-    }
-  }
-}
-```
-
-```json
-// Response - update requested, audit completed: rejected
-{
-  "jsonrpc": "2.0",
-  "id": 100,
-  "result": {
-    "current": {
-      "status": "active",
-      "deployTxHash": "0xe0f6dc6607aa9b5550cd1e6d57549f67fe9718654cde15258922d0f88ff58b27",
-      "auditTxHash": "0x644dd57fbb65b49a49bcaf5e7685e01d53dc321f1cfb7dbbf8f4306265745292"
-    },
-    "next": {
-      "status": "rejected",
-      "deployTxHash": "0xe0f6dc6607aa9b5550cd1e6d57549f67fe9718654cde15258922d0f88ff58b27",
-      "auditTxHash": "0x644dd57fbb65b49a49bcaf5e7685e01d53dc321f1cfb7dbbf8f4306265745292"
-    }
-  }
-}
-```
-
-#### Response: (Fee 2.0) SCORE deposit status
-
-`depositInfo` field will be shown when there is a deposit in the SCORE.
+#### Response
 
 ```json
 {
@@ -223,18 +130,6 @@ Query method does not change state. Read-only.
     },
     "depositInfo": {
       "scoreAddress": "cx216e1468b780ac1b54c328d19ea23a35a6899e55",
-      "deposits": [
-        {
-          "id": "0x64b118d4a3c2b3b93362a0f3ea06e5519de42449523465265b85509041e69011",
-          "sender": "hxe7af5fcfd8dfc67530a01a0e403882687528dfcb",
-          "depositAmount": "0x10f0cf064dd59200000",
-          "depositUsed": "0x0",
-          "created": "0x16",
-          "expires": "0x13c696",
-          "virtualStepIssued": "0x9502f9000",
-          "virtualStepUsed": "0x329a6"
-        }
-      ],
       "availableVirtualStep": "0x9502c665a",
       "availableDeposit": "0xf3f20b8dfa69d00000"
     }
@@ -562,7 +457,7 @@ None
   "jsonrpc": "2.0",
   "id": 100,
   "result": {
-    "code": "0x4",
+    "code": "0xf",
     "name": "1.3.0"
   }
 }
@@ -974,7 +869,9 @@ Invoke method can initiate state transition.
 | value | [T\_INT](#T_INT) | An integer of the I-Rep in loop |
 
 *Step Costs*<br>
-All fields are optional but at least one field is required.
+| Key | Value Type         | Description                          |
+| :---- | :--------------- | ------------------------------------ |
+| costs | [T\_LIST\[T\_DICT\]](#T_LIST) | List of step costs to set in dict. <br> Fields are optional but at least one field is required. |
 
 | Key | Value Type         | Description                          |
 | :---- | :--------------- | ------------------------------------ |
@@ -991,6 +888,11 @@ All fields are optional but at least one field is required.
 | input | [T\_INT](#T_INT) | An integer of the input step cost in loop(Optional) |
 | eventLog | [T\_INT](#T_INT) | An integer of the eventlog step cost in loop(Optional) |
 | apiCall | [T\_INT](#T_INT) | An integer of the apiCall step cost in loop(Optional) |
+
+*example*
+```json
+{"costs": ["default": "0x10", "set": "0x20"]}
+```
 *Monthly Reward Fund Setting*
 
 | Key   | Value Type       | Description                          |
@@ -1002,10 +904,19 @@ Determine the allocation of the monthly reward fund
 
 | Key   | Value Type       | Description                          |
 | :---- | :--------------- | ------------------------------------ |
+| rewardFunds | [T\_LIST\[T\_DICT\]](#T_INT) | Reward fund values information to set. All values are required. |
+
+| Key   | Value Type       | Description                          |
+| :---- | :--------------- | ------------------------------------ |
 | iprep | [T\_INT](#T_INT) | The percentage allocated to the P-Rep from the monthly reward fund |
 | icps | [T\_INT](#T_INT) | The percentage allocated to the CPS from the monthly reward fund |
 | irelay | [T\_INT](#T_INT) | The percentage allocated to the BTP relay from the monthly reward fund |
 | ivoter | [T\_INT](#T_INT) | The percentage allocated to the Voter from the monthly reward fund |
+
+*example*
+```json
+{"rewardFunds": [{"iprep": "0x19"}, {"icps": "0x17"}, {"irelay": "0x1a"}, {"ivoter":  "0x1a"}]}
+```
 
 ### Examples
 
