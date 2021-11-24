@@ -21,10 +21,6 @@ public class Governance {
     private final ArrayDB<Address> auditors = Context.newArrayDB("auditor_list", Address.class);
     private final DictDB<BigInteger, TimerInfo> timerInfo = Context.newDictDB("timerInfo", TimerInfo.class);
 
-    public Governance() {
-        setRevision(BigInteger.valueOf(15));
-    }
-
     private void setRevision(BigInteger code) {
         chainScore.setRevision(code);
         RevisionChanged(code);
@@ -272,18 +268,16 @@ public class Governance {
                 expireVotingHeight
         );
         var revision = chainScore.getRevision();
-        if (revision.compareTo(BigInteger.valueOf(15)) >= 0) {
-            BigInteger penaltyHeight = BigInteger.valueOf(1).add(expireVotingHeight);
-            TimerInfo ti = timerInfo.getOrDefault(penaltyHeight, null);
-            if (ti == null) {
-                ti = new TimerInfo(new TimerInfo.ProposalIds());
-                ti.addProposalId(Context.getTransactionHash());
-                timerInfo.set(penaltyHeight, ti);
-                chainScore.addTimer(penaltyHeight);
-            } else {
-                ti.addProposalId(Context.getTransactionHash());
-                timerInfo.set(penaltyHeight, ti);
-            }
+        BigInteger penaltyHeight = BigInteger.valueOf(1).add(expireVotingHeight);
+        TimerInfo ti = timerInfo.getOrDefault(penaltyHeight, null);
+        if (ti == null) {
+            ti = new TimerInfo(new TimerInfo.ProposalIds());
+            ti.addProposalId(Context.getTransactionHash());
+            timerInfo.set(penaltyHeight, ti);
+            chainScore.addTimer(penaltyHeight);
+        } else {
+            ti.addProposalId(Context.getTransactionHash());
+            timerInfo.set(penaltyHeight, ti);
         }
         NetworkProposalRegistered(title, description, intTypeValue, value, proposer);
     }
