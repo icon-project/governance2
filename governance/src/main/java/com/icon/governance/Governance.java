@@ -123,8 +123,8 @@ public class Governance {
     }
 
     @External(readonly = true)
-    public Map<String, Object> getScoreStatus() {
-        return chainScore.getScoreStatus();
+    public Map<String, Object> getScoreStatus(Address address) {
+        return chainScore.getScoreStatus(address);
     }
 
     @External
