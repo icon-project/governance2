@@ -16,7 +16,6 @@
 
 package foundation.icon.test.cases;
 
-import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import foundation.icon.icx.IconService;
 import foundation.icon.icx.KeyWallet;
@@ -325,27 +324,17 @@ public class GovernanceTest extends TestBase {
     @Test
     public void testStepCosts() throws IOException, ResultTimeoutException {
         RpcObject prevCosts = chainScore.getStepCosts();
-        var prevDefaultCost = prevCosts.getItem("default").asInteger();
-        var prevCallCost = prevCosts.getItem("contractCall").asInteger();
 
         BigInteger stepCostProposalType = BigInteger.valueOf(6);
         String title = "stepCost proposal";
         String desc = "stepCost proposal";
 
         JsonObject jsonValue = new JsonObject();
-        JsonArray jsonArray = new JsonArray();
-        JsonObject defaultMap = new JsonObject();
-        BigInteger newDefault = BigInteger.ONE;
-        defaultMap.add("default", "0x" + newDefault.toString(16));
-        jsonArray.add(defaultMap);
-        jsonValue.add("costs", jsonArray);
+        JsonObject dict = new JsonObject();
+        dict.add("default", "0x" + BigInteger.ONE.toString(16));
+        jsonValue.add("costs", dict);
 
         approveProposal(title, desc, stepCostProposalType, jsonValue, true);
-
-        RpcObject costs = chainScore.getStepCosts();
-        var defaultCost = costs.getItem("default").asInteger();
-        var callCost = costs.getItem("contractCall").asInteger();
-
     }
 
     @Test
@@ -375,16 +364,12 @@ public class GovernanceTest extends TestBase {
         String desc = "rewardFundRate proposal";
 
         JsonObject jsonValue = new JsonObject();
-        JsonArray jsonArray = new JsonArray();
-        JsonObject prepMap = new JsonObject();
-        JsonObject voterMap = new JsonObject();
+        JsonObject dict = new JsonObject();
         BigInteger iprep = BigInteger.valueOf(30);
         BigInteger ivoter = BigInteger.valueOf(70);
-        prepMap.add("Iprep", "0x" + iprep.toString(16));
-        voterMap.add("Ivoter", "0x" + ivoter.toString(16));
-        jsonArray.add(prepMap);
-        jsonArray.add(voterMap);
-        jsonValue.add("rewardFunds", jsonArray);
+        dict.add("iprep", "0x" + iprep.toString(16));
+        dict.add("ivoter", "0x" + ivoter.toString(16));
+        jsonValue.add("rewardFunds", dict);
 
         registerProposal(title, desc, rewardFundProposalType, jsonValue, true);
     }

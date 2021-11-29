@@ -218,12 +218,13 @@ public class Value {
                 return new Value(type, revision);
             case Proposal.STEP_PRICE:
             case Proposal.IREP:
-            case Proposal.REWARD_FUND:
                 return new Value(type, Converter.hexToInt(value.getString("value", null)));
             case Proposal.STEP_COSTS:
-                return new Value(type, StepCosts.fromJson(value.get("costs").asArray()));
+                return new Value(type, StepCosts.fromJson(value.get("costs").asObject()));
+            case Proposal.REWARD_FUND:
+                return new Value(type, Converter.hexToInt(value.getString("iglobal", null)));
             case Proposal.REWARD_FUNDS_ALLOCATION:
-                return new Value(type, RewardFunds.fromJson(value.get("rewardFunds").asArray()));
+                return new Value(type, RewardFunds.fromJson(value.get("rewardFunds").asObject()));
             case Proposal.NETWORK_SCORE_DESIGNATION:
                 return new Value(
                         type,
@@ -327,16 +328,15 @@ public class Value {
             this.costs = costs;
         }
 
-        public static StepCosts fromJson(JsonArray array) {
-            StepCost[] stepCosts = new StepCost[array.size()];
-            for (int i=0; i < array.size(); i++) {
-                var value = array.get(i);
-                var object = value.asObject();
-                var keys = object.names();
-                Context.require(keys.size() == 1, "stepCost map must have one field.");
-                var key = keys.get(0);
+        public static StepCosts fromJson(JsonObject object) {
+            var keys = object.names();
+            var size = keys.size();
+            StepCost[] stepCosts = new StepCost[size];
+            for (int i = 0; i < size; i++) {
+                var key = keys.get(i);
                 Context.require(isValidStepType(key), key + "is not valid step type");
-                var cost = Converter.hexToInt(object.getString(key, ""));
+                var value = object.getString(key, "");
+                var cost = Converter.hexToInt(value);
                 stepCosts[i] = new StepCost();
                 stepCosts[i].type = key;
                 stepCosts[i].cost = cost;
@@ -425,19 +425,18 @@ public class Value {
             this.rewardFunds = rewardFunds;
         }
 
-        public static RewardFunds fromJson(JsonArray array) {
-            RewardFund[] rewardFunds = new RewardFund[array.size()];
-            for (int i=0; i < array.size(); i++) {
-                var value = array.get(i);
-                var object = value.asObject();
-                var keys = object.names();
-                Context.require(keys.size() == 1, "RewardFund map must have one field.");
-                var key = keys.get(0);
+        public static RewardFunds fromJson(JsonObject object) {
+            var keys = object.names();
+            var size = keys.size();
+            RewardFund[] rewardFunds = new RewardFund[size];
+            for (int i=0; i < object.size(); i++) {
+                var key = keys.get(i);
                 Context.require(isValidFundKey(key), key + "is not valid reward fund type");
-                var v = Converter.hexToInt(object.getString(key, ""));
+                var value = object.getString(key, "");
+                var fund = Converter.hexToInt(value);
                 rewardFunds[i] = new RewardFund();
                 rewardFunds[i].type = key;
-                rewardFunds[i].value = v;
+                rewardFunds[i].value = fund;
             }
             return new RewardFunds(rewardFunds);
         }
