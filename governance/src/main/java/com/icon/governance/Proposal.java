@@ -210,14 +210,14 @@ public class Proposal {
                 BigInteger.valueOf(Context.getTransactionTimestamp()),
                 voter.getAddress(),
                 voter.getName(),
-                voter.getBondedDelegation()
+                voter.power()
         );
         System.arraycopy(vote.agree.voteList, 0, updatedAgree, 0, vote.sizeofAgreed());
         updatedAgree[vote.sizeofAgreed()] = v;
         vote.agree.setVoteList(updatedAgree);
 
         var votedAmount = vote.agree.getAmount();
-        vote.agree.setAmount(votedAmount.add(voter.getBondedDelegation()));
+        vote.agree.setAmount(votedAmount.add(voter.power()));
 
         updateNoVote(voter);
     }
@@ -229,14 +229,14 @@ public class Proposal {
                 BigInteger.valueOf(Context.getTransactionTimestamp()),
                 voter.getAddress(),
                 voter.getName(),
-                voter.getBondedDelegation()
+                voter.power()
         );
         System.arraycopy(vote.disagree.voteList, 0, updatedDisagree, 0, vote.sizeofDisagreed());
         updatedDisagree[vote.sizeofDisagreed()] = v;
         vote.disagree.setVoteList(updatedDisagree);
 
         var votedAmount = vote.disagree.getAmount();
-        vote.disagree.setAmount(votedAmount.add(voter.getBondedDelegation()));
+        vote.disagree.setAmount(votedAmount.add(voter.power()));
 
         updateNoVote(voter);
     }
@@ -253,7 +253,7 @@ public class Proposal {
         }
         vote.noVote.setAddressList(updatedList);
         var amount = vote.noVote.getAmount();
-        vote.noVote.setAmount(amount.subtract(prep.getBondedDelegation()));
+        vote.noVote.setAmount(amount.subtract(prep.power()));
     }
 
     boolean agreed(Address prep) {

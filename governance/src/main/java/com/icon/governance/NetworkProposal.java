@@ -93,7 +93,7 @@ public class NetworkProposal {
         var id = Context.getTransactionHash();
         var proposer = Context.getCaller();
         var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
-        BigInteger totalBondedDelegation = BigInteger.ZERO;
+        BigInteger totalPower = BigInteger.ZERO;
         String proposerName = "";
         Address[] preps = new Address[prepsInfo.length];
 
@@ -105,11 +105,11 @@ public class NetworkProposal {
                 proposerName = prep.getName();
             }
 
-            totalBondedDelegation = totalBondedDelegation.add(prep.getBondedDelegation());
+            totalPower = totalPower.add(prep.power());
             preps[i] = prep.getAddress();
         }
 
-        v.setAmountForNoVote(totalBondedDelegation);
+        v.setAmountForNoVote(totalPower);
         v.setNoVoteList(preps);
 
         Context.println("NetworkProposal(" + " ExpireVoting: " + expireHeight);
@@ -127,7 +127,7 @@ public class NetworkProposal {
                 VOTING_STATUS,
                 v,
                 prepsInfo.length,
-                totalBondedDelegation
+                totalPower
         );
         proposalDict.set(id, proposal);
         proposalKeys.add(id);

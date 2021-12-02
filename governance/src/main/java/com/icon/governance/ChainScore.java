@@ -11,18 +11,18 @@ class PRepInfo {
     private final String name;
     private final Address address;
     private final BigInteger delegated;
-    private final BigInteger bondedDelegation;
+    private final BigInteger power;
 
     public PRepInfo(
             String name,
             Address address,
             BigInteger delegated,
-            BigInteger bondedDelegation
+            BigInteger power
     ) {
         this.name = name;
         this.address = address;
         this.delegated = delegated;
-        this.bondedDelegation = bondedDelegation;
+        this.power = power;
     }
 
     public String getName() {
@@ -37,8 +37,8 @@ class PRepInfo {
         return delegated;
     }
 
-    public BigInteger getBondedDelegation() {
-        return bondedDelegation;
+    public BigInteger power() {
+        return power;
     }
 }
 
@@ -175,7 +175,7 @@ class ChainScore {
                     (String) item.get("name"),
                     (Address) item.get("address"),
                     (BigInteger) item.get("delegated"),
-                    (BigInteger) item.get("bondedDelegation")
+                    (BigInteger) item.get("power")
             );
 
             prepInfo[i] = itemInfo;
