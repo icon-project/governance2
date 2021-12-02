@@ -277,22 +277,27 @@ public class Value {
     }
 
     public static class StepCosts {
+        final static String STEP_TYPE_SCHEMA = "schema";
         final static String STEP_TYPE_DEFAULT = "default";
+        final static String STEP_TYPE_INPUT = "input";
         final static String STEP_TYPE_CONTRACT_CALL = "contractCall";
         final static String STEP_TYPE_CONTRACT_CREATE = "contractCreate";
         final static String STEP_TYPE_CONTRACT_UPDATE = "contractUpdate";
-        final static String STEP_TYPE_CONTRACT_DESTRUCT = "contractDestruct";
         final static String STEP_TYPE_CONTRACT_SET = "contractSet";
         final static String STEP_TYPE_GET = "get";
         final static String STEP_TYPE_SET = "set";
-        final static String STEP_TYPE_REPLACE = "replace";
         final static String STEP_TYPE_DELETE = "delete";
-        final static String STEP_TYPE_INPUT = "input";
-        final static String STEP_TYPE_EVENT_LOG = "eventLog";
         final static String STEP_TYPE_API_CALL = "apiCall";
+        final static String STEP_TYPE_GET_BASE = "getBase";
+        final static String STEP_TYPE_SET_BASE = "setBase";
+        final static String STEP_TYPE_DELETE_BASE = "deleteBase";
+        final static String STEP_TYPE_LOG_BASE = "logBase";
+        final static String STEP_TYPE_LOG = "log";
         final static String[] STEP_COSTS = {
-                STEP_TYPE_DEFAULT, STEP_TYPE_CONTRACT_CALL, STEP_TYPE_CONTRACT_CREATE, STEP_TYPE_CONTRACT_UPDATE, STEP_TYPE_CONTRACT_DESTRUCT, STEP_TYPE_CONTRACT_SET,
-                STEP_TYPE_GET, STEP_TYPE_SET, STEP_TYPE_REPLACE, STEP_TYPE_DELETE, STEP_TYPE_INPUT, STEP_TYPE_EVENT_LOG, STEP_TYPE_API_CALL
+                STEP_TYPE_SCHEMA, STEP_TYPE_DEFAULT, STEP_TYPE_CONTRACT_CALL, STEP_TYPE_CONTRACT_CREATE,
+                STEP_TYPE_CONTRACT_UPDATE, STEP_TYPE_CONTRACT_SET, STEP_TYPE_GET, STEP_TYPE_SET, STEP_TYPE_DELETE,
+                STEP_TYPE_INPUT, STEP_TYPE_API_CALL, STEP_TYPE_GET_BASE, STEP_TYPE_SET_BASE, STEP_TYPE_DELETE_BASE,
+                STEP_TYPE_LOG_BASE, STEP_TYPE_LOG
         };
         StepCost[] costs;
 
