@@ -147,10 +147,8 @@ public class NetworkProposal {
         int votingEvent = EVENT_NONE;
         int currentStatus = p.status;
         if (vote == VoteInfo.AGREE_VOTE) {
-            var agreeAmountF = p.amountOfAgreed().floatValue();
-            var totalBondDelegationF = p.totalBondedDelegation.floatValue();
             if ((float)p.sizeofAgreed() / p.totalVoter >= APPROVE_RATE &&
-                    agreeAmountF / totalBondDelegationF >= APPROVE_RATE) {
+                    p.amountOfAgreed().divide(p.totalPower).floatValue() >= APPROVE_RATE) {
                 p.status = APPROVED_STATUS;
                 votingEvent = EVENT_APPROVED;
             } else if (p.sizeofNoVote() == 0) {
@@ -159,7 +157,7 @@ public class NetworkProposal {
             }
         } else {
             if ((float)p.sizeofDisagreed() / p.totalVoter >= DISAPPROVE_RATE &&
-                    p.amountOfDisagreed().divide(p.totalBondedDelegation).floatValue() >= DISAPPROVE_RATE) {
+                    p.amountOfDisagreed().divide(p.totalPower).floatValue() >= DISAPPROVE_RATE) {
                 p.status = DISAPPROVED_STATUS;
                 votingEvent = EVENT_DISAPPROVED;
             }

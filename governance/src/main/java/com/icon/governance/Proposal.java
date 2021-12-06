@@ -52,7 +52,7 @@ public class Proposal {
     int status;
     VoteInfo vote;
     int totalVoter;
-    BigInteger totalBondedDelegation;
+    BigInteger totalPower;
 
     public Proposal(
             byte[] id,
@@ -67,7 +67,7 @@ public class Proposal {
             int status,
             VoteInfo vote,
             int         totalVoter,
-            BigInteger  totalBondedDelegation
+            BigInteger  totalPower
     ){
         this.id = id;
         this.proposer = proposer;
@@ -81,7 +81,7 @@ public class Proposal {
         this.status = status;
         this.vote = vote;
         this.totalVoter = totalVoter;
-        this.totalBondedDelegation = totalBondedDelegation;
+        this.totalPower = totalPower;
     }
 
     public static void writeObject(ObjectWriter w, Proposal p) {
@@ -98,7 +98,7 @@ public class Proposal {
         w.write(p.status);
         w.write(p.vote);
         w.write(p.totalVoter);
-        w.write(p.totalBondedDelegation);
+        w.write(p.totalPower);
         w.end();
     }
 
@@ -128,14 +128,12 @@ public class Proposal {
         return Map.ofEntries(
                 Map.entry("id", id),
                 Map.entry("proposer", proposer),
-                Map.entry("proposer_name", proposerName),
+                Map.entry("proposerName", proposerName),
                 Map.entry("contents", contents),
-                Map.entry("start_block_height", startBlockHeight),
-                Map.entry("end_block_height", expireBlockHeight),
+                Map.entry("startBlockHeight", startBlockHeight),
+                Map.entry("endBlockHeight", expireBlockHeight),
                 Map.entry("status", status),
-                Map.entry("vote", vote.toMap()),
-                Map.entry("total_voter", totalVoter),
-                Map.entry("total_bonded_delegation", totalBondedDelegation)
+                Map.entry("vote", vote.toMap())
         );
     }
 

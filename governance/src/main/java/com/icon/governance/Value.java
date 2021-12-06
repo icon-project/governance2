@@ -1,7 +1,6 @@
 package com.icon.governance;
 
 
-import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import score.Address;
 import score.Context;
@@ -150,6 +149,7 @@ public class Value {
                 w.write(address);
         }
     }
+
     public int size() {
         switch (proposalType) {
             case Proposal.TEXT:
@@ -202,7 +202,7 @@ public class Value {
             case Proposal.MALICIOUS_SCORE:
                 return new Value(
                         type,
-                        Converter.strToAddress(value.getString("address" ,null)),
+                        Converter.strToAddress(value.getString("address", null)),
                         Converter.hexToInt(value.getString("type", null))
                 );
             case Proposal.PREP_DISQUALIFICATION:
@@ -211,9 +211,9 @@ public class Value {
                 var code = value.getString("code", null);
                 BigInteger revision;
                 if (code != null) {
-                     revision = Converter.hexToInt(code);
+                    revision = Converter.hexToInt(code);
                 } else {
-                     revision = Converter.hexToInt(value.getString("value", null));
+                    revision = Converter.hexToInt(value.getString("value", null));
                 }
                 return new Value(type, revision);
             case Proposal.STEP_PRICE:
@@ -257,7 +257,7 @@ public class Value {
             case Proposal.STEP_PRICE:
             case Proposal.IREP:
             case Proposal.REWARD_FUND:
-                return Map.of("value", value);
+                return Map.of("iglobal", value);
             case Proposal.NETWORK_SCORE_DESIGNATION:
                 return Map.of(
                         "role", text,
@@ -293,17 +293,21 @@ public class Value {
         final static String STEP_TYPE_DELETE_BASE = "deleteBase";
         final static String STEP_TYPE_LOG_BASE = "logBase";
         final static String STEP_TYPE_LOG = "log";
+        final static String STEP_TYPE_CONTRACT_DESTRUCT = "contractDestruct";
+        final static String STEP_TYPE_REPLACE = "replace";
+        final static String STEP_TYPE_EVENT_LOG = "eventLog";
         final static String[] STEP_COSTS = {
                 STEP_TYPE_SCHEMA, STEP_TYPE_DEFAULT, STEP_TYPE_CONTRACT_CALL, STEP_TYPE_CONTRACT_CREATE,
                 STEP_TYPE_CONTRACT_UPDATE, STEP_TYPE_CONTRACT_SET, STEP_TYPE_GET, STEP_TYPE_SET, STEP_TYPE_DELETE,
                 STEP_TYPE_INPUT, STEP_TYPE_API_CALL, STEP_TYPE_GET_BASE, STEP_TYPE_SET_BASE, STEP_TYPE_DELETE_BASE,
-                STEP_TYPE_LOG_BASE, STEP_TYPE_LOG
+                STEP_TYPE_LOG_BASE, STEP_TYPE_LOG, STEP_TYPE_CONTRACT_DESTRUCT, STEP_TYPE_REPLACE, STEP_TYPE_EVENT_LOG,
         };
         StepCost[] costs;
 
         public static class StepCost {
             String type;
             BigInteger cost;
+
             public StepCost() {
 
             }
@@ -322,10 +326,6 @@ public class Value {
                 s.cost = r.readBigInteger();
                 r.end();
                 return s;
-            }
-
-            Map<String, Object> toMap() {
-                return Map.of(type, cost);
             }
         }
 
@@ -383,11 +383,11 @@ public class Value {
 
         public Map<String, Object> toMap() {
             var length = costs.length;
-            var entries = new Map[length];
+            Map.Entry[] entries = new Map.Entry[length];
             for (int i = 0; i < length; i++) {
-                entries[i] = costs[i].toMap();
+                entries[i] = Map.entry(costs[i].type, costs[i].cost);
             }
-            return Map.of("costs", entries);
+            return Map.of("costs", Map.ofEntries(entries));
         }
 
     }
@@ -420,10 +420,6 @@ public class Value {
                 r.end();
                 return s;
             }
-
-            Map<String, BigInteger> toMap() {
-                return Map.of(type, value);
-            }
         }
 
         public RewardFunds(RewardFund[] rewardFunds) {
@@ -434,7 +430,7 @@ public class Value {
             var keys = object.names();
             var size = keys.size();
             RewardFund[] rewardFunds = new RewardFund[size];
-            for (int i=0; i < object.size(); i++) {
+            for (int i = 0; i < object.size(); i++) {
                 var key = keys.get(i);
                 Context.require(isValidFundKey(key), key + "is not valid reward fund type");
                 var value = object.getString(key, "");
@@ -480,11 +476,11 @@ public class Value {
 
         public Map<String, Object> toMap() {
             var length = rewardFunds.length;
-            var entries = new Map[length];
+            Map.Entry[] entries = new Map.Entry[length];
             for (int i = 0; i < length; i++) {
-                entries[i] = rewardFunds[i].toMap();
+                entries[i] = Map.entry(rewardFunds[i].type, rewardFunds[i].value);
             }
-            return Map.of("values", entries);
+            return Map.of("rewardFunds", Map.ofEntries(entries));
         }
 
     }
