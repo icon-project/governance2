@@ -77,6 +77,16 @@ public class VoteInfo {
                     "amount", amount
             );
         }
+
+        public Map<String, Object> getSummary() {
+            return Map.of(
+                    "id", id,
+                    "timestamp", timestamp,
+                    "address", address,
+                    "name", name,
+                    "amount", amount
+            );
+        }
     }
 
     public abstract static class Slot {
@@ -117,7 +127,13 @@ public class VoteInfo {
                     "list", entries,
                     "amount", amount
             );
+        }
 
+        public Map<String, Object> getSummary() {
+            return Map.of(
+                    "count", voteList.length,
+                    "amount", amount
+            );
         }
 
         public void readJson(JsonValue jsonValue) {
@@ -287,6 +303,13 @@ public class VoteInfo {
             );
         }
 
+        public Map<String, Object> getSummary() {
+            return Map.of(
+                    "count", list.length,
+                    "amount", amount
+            );
+        }
+
         public void readJson(JsonValue jsonValue) {
             JsonObject obj = jsonValue.asObject();
 
@@ -355,6 +378,14 @@ public class VoteInfo {
                 "agree", agree.toMap(),
                 "disagree", disagree.toMap(),
                 "noVote", noVote.toMap()
+        );
+    }
+
+    public Map<String, Map<String, Object>> getSummary() {
+        return Map.of(
+                "agree", agree.getSummary(),
+                "disagree", disagree.getSummary(),
+                "noVote", noVote.getSummary()
         );
     }
 

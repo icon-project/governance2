@@ -203,7 +203,7 @@ public class Governance {
         if (p == null) {
             return null;
         }
-        return p.toMap();
+        return p.toMap(BigInteger.valueOf(Context.getBlockHeight()));
     }
 
     @External(readonly = true)
@@ -293,8 +293,8 @@ public class Governance {
         Context.require(vote == VoteInfo.AGREE_VOTE || vote == VoteInfo.DISAGREE_VOTE, "Invalid vote value : " + vote);
 
         var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
-        Context.require(p.expireBlockHeight.compareTo(blockHeight) >= 0, "This proposal has already expired");
-        Context.require(p.status != NetworkProposal.CANCELED_STATUS, "This proposal has canceled");
+        Context.require(p.isExpired(blockHeight) == false, "This proposal has already expired");
+        Context.require(p.getStatus(blockHeight) != NetworkProposal.CANCELED_STATUS, "This proposal has canceled");
 
         Context.require(p.isInNoVote(sender), "No permission - only for main prep were main prep when network registered");
         Context.require(!p.agreed(sender) && !p.disagreed(sender), "Already voted");
@@ -318,9 +318,9 @@ public class Governance {
 
         var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
         Context.require(p != null, "no registered proposal");
-        Context.require(p.expireBlockHeight.compareTo(blockHeight) >= 0, "This proposal has already expired");
+        Context.require(p.isExpired(blockHeight) == false, "This proposal has already expired");
+        Context.require(p.getStatus(blockHeight) == NetworkProposal.VOTING_STATUS, "Can not be canceled - only voting proposal");
         Context.require(sender.equals(p.proposer), "No permission - only for proposer");
-        Context.require(p.status == NetworkProposal.VOTING_STATUS, "Can not be canceled - only voting proposal");
 
         networkProposal.cancelProposal(p);
         var timerHeight = BigInteger.ONE.add(p.expireBlockHeight);
@@ -354,8 +354,7 @@ public class Governance {
             var proposal = networkProposal.getProposal(id);
             var novoters = proposal.getNonVoters();
             chainScore.penalizeNonvoters(List.of(novoters));
-            if (proposal.status == NetworkProposal.VOTING_STATUS) {
-                networkProposal.disapproveProposal(proposal);
+            if (proposal.isExpired(blockHeight)) {
                 NetworkProposalDisapproved(proposal.id);
             }
         }

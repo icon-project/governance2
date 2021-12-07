@@ -1,13 +1,12 @@
 package com.icon.governance;
 
 import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.JsonObject;
-
+import com.eclipsesource.json.JsonValue;
 import score.Address;
 import score.Context;
-import score.ObjectWriter;
 import score.ObjectReader;
+import score.ObjectWriter;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -62,13 +61,13 @@ public class Proposal {
             String description,
             int type,
             Value value,
-            BigInteger  startBlockHeight,
-            BigInteger  expireBlockHeight,
+            BigInteger startBlockHeight,
+            BigInteger expireBlockHeight,
             int status,
             VoteInfo vote,
-            int         totalVoter,
-            BigInteger  totalPower
-    ){
+            int totalVoter,
+            BigInteger totalPower
+    ) {
         this.id = id;
         this.proposer = proposer;
         this.proposerName = proposerName;
@@ -123,7 +122,15 @@ public class Proposal {
         return p;
     }
 
-    public Map<String, Object> toMap() {
+    public boolean isExpired(BigInteger blockHeight) {
+        return blockHeight.compareTo(expireBlockHeight) > 0 && status == NetworkProposal.VOTING_STATUS;
+    }
+
+    public int getStatus(BigInteger blockHeight) {
+        return status == NetworkProposal.VOTING_STATUS && blockHeight.compareTo(expireBlockHeight) >= 0 ? NetworkProposal.DISAPPROVED_STATUS : status;
+    }
+
+    public Map<String, Object> toMap(BigInteger blockHeight) {
         var contents = Map.of("description", description, "title", title, "type", type, "value", value.toMap());
         return Map.ofEntries(
                 Map.entry("id", id),
@@ -132,8 +139,22 @@ public class Proposal {
                 Map.entry("contents", contents),
                 Map.entry("startBlockHeight", startBlockHeight),
                 Map.entry("endBlockHeight", expireBlockHeight),
-                Map.entry("status", status),
+                Map.entry("status", getStatus(blockHeight)),
                 Map.entry("vote", vote.toMap())
+        );
+    }
+
+    public Map<String, Object> getSummary(BigInteger blockHeight) {
+        var contents = Map.of("description", description, "title", title, "type", type, "value", value.toMap());
+        return Map.ofEntries(
+                Map.entry("id", id),
+                Map.entry("proposer", proposer),
+                Map.entry("proposerName", proposerName),
+                Map.entry("contents", contents),
+                Map.entry("startBlockHeight", startBlockHeight),
+                Map.entry("endBlockHeight", expireBlockHeight),
+                Map.entry("status", getStatus(blockHeight)),
+                Map.entry("vote", vote.getSummary())
         );
     }
 
@@ -159,11 +180,11 @@ public class Proposal {
                 type, jsonObj.get("value").asObject()
         );
 
-        BigInteger  startBlockHeight = BigDecimal.valueOf(
+        BigInteger startBlockHeight = BigDecimal.valueOf(
                 jsonObj.getDouble("start_block_height", 0)
         ).toBigInteger();
 
-        BigInteger  expireBlockHeight = BigDecimal.valueOf(
+        BigInteger expireBlockHeight = BigDecimal.valueOf(
                 jsonObj.getDouble("end_block_height", 0)
         ).toBigInteger();
 
@@ -172,7 +193,7 @@ public class Proposal {
 
         int totalVoter = jsonObj.getInt("total_voter", 0);
 
-        BigInteger  totalBondedDelegation = BigDecimal.valueOf(
+        BigInteger totalBondedDelegation = BigDecimal.valueOf(
                 jsonObj.getDouble("total_delegated_amount", 0)
         ).toBigInteger();
 
@@ -239,11 +260,11 @@ public class Proposal {
         updateNoVote(voter);
     }
 
-    private  void updateNoVote(PRepInfo prep) {
+    private void updateNoVote(PRepInfo prep) {
         var addresses = vote.noVote.getAddressList();
         int size = vote.sizeofNoVote();
         int index = 0;
-        var updatedList = new Address[size-1];
+        var updatedList = new Address[size - 1];
         for (int i = 0; i < size; i++) {
             if (!prep.getAddress().equals(addresses[i])) {
                 updatedList[index++] = addresses[i];

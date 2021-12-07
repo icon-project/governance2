@@ -72,12 +72,13 @@ public class NetworkProposal {
     }
 
     private void filterProposal(int typeCondition, int statusCondition, ArrayList<Map<String, Object>> proposals, Proposal proposal) {
+        var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
         int type = proposal.type;
-        int status = proposal.status;
+        int status = proposal.getStatus(blockHeight);
         int all = NetworkProposal.GET_PROPOSALS_FILTER_ALL;
         var condition = ((typeCondition == type || typeCondition == all) && (statusCondition == status || statusCondition == all));
         if (condition) {
-            var proposalMap = proposal.toMap();
+            var proposalMap = proposal.getSummary(blockHeight);
             proposals.add(proposalMap);
         }
     }
@@ -167,10 +168,5 @@ public class NetworkProposal {
             return votingEvent;
         }
         return EVENT_NONE;
-    }
-
-    void disapproveProposal(Proposal p) {
-        p.status = DISAPPROVED_STATUS;
-        proposalDict.set(p.id, p);
     }
 }
