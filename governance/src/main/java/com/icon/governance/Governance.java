@@ -268,7 +268,7 @@ public class Governance {
                 expireVotingHeight
         );
         var revision = chainScore.getRevision();
-        BigInteger penaltyHeight = BigInteger.valueOf(1).add(expireVotingHeight);
+        BigInteger penaltyHeight = BigInteger.ONE.add(expireVotingHeight);
         TimerInfo ti = timerInfo.getOrDefault(penaltyHeight, null);
         if (ti == null) {
             ti = new TimerInfo(new TimerInfo.ProposalIds());

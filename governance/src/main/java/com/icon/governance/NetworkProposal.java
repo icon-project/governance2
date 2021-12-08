@@ -4,9 +4,9 @@ import score.Address;
 import score.ArrayDB;
 import score.Context;
 import score.DictDB;
+import scorex.util.ArrayList;
 
 import java.math.BigInteger;
-import scorex.util.ArrayList;
 import java.util.Map;
 
 /*
@@ -52,13 +52,13 @@ public class NetworkProposal {
         var proposalList = new ArrayList<Map<String, Object>>();
         Map<String, Object>[] proposals;
 
-        for (int i=0; i < listKeySize; i++) {
+        for (int i = 0; i < listKeySize; i++) {
             var key = proposalListKeys.get(i);
             var proposal = Proposal.loadJson(this.proposalList.get(key));
             filterProposal(typeCondition, statusCondition, proposalList, proposal);
         }
 
-        for (int i=0; i < keysSize; i++) {
+        for (int i = 0; i < keysSize; i++) {
             var key = proposalKeys.get(i);
             var proposal = proposalDict.get(key);
             filterProposal(typeCondition, statusCondition, proposalList, proposal);
@@ -100,7 +100,7 @@ public class NetworkProposal {
 
         VoteInfo v = new VoteInfo();
 
-        for (int i=0; i < prepsInfo.length; i++) {
+        for (int i = 0; i < prepsInfo.length; i++) {
             var prep = prepsInfo[i];
             if (proposer.equals(prep.getAddress())) {
                 proposerName = prep.getName();
@@ -148,8 +148,8 @@ public class NetworkProposal {
         int votingEvent = EVENT_NONE;
         int currentStatus = p.status;
         if (vote == VoteInfo.AGREE_VOTE) {
-            if ((float)p.sizeofAgreed() / p.totalVoter >= APPROVE_RATE &&
-                    p.amountOfAgreed().divide(p.totalPower).floatValue() >= APPROVE_RATE) {
+            if (p.sizeofAgreed() * 3 > p.totalVoter * 2 &&
+                    p.amountOfAgreed().multiply(BigInteger.valueOf(3)).compareTo(p.totalPower.multiply(BigInteger.valueOf(2))) >= 0) {
                 p.status = APPROVED_STATUS;
                 votingEvent = EVENT_APPROVED;
             } else if (p.sizeofNoVote() == 0) {
@@ -157,8 +157,8 @@ public class NetworkProposal {
                 votingEvent = EVENT_DISAPPROVED;
             }
         } else {
-            if ((float)p.sizeofDisagreed() / p.totalVoter >= DISAPPROVE_RATE &&
-                    p.amountOfDisagreed().divide(p.totalPower).floatValue() >= DISAPPROVE_RATE) {
+            if (p.sizeofDisagreed() * 3 > p.totalVoter * 2 &&
+                    p.amountOfDisagreed().multiply(BigInteger.valueOf(3)).compareTo(p.totalPower.multiply(BigInteger.valueOf(2))) >= 0) {
                 p.status = DISAPPROVED_STATUS;
                 votingEvent = EVENT_DISAPPROVED;
             }
