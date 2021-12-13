@@ -28,8 +28,6 @@ public class NetworkProposal {
     public final static int CANCELED_STATUS = 3;
     public final static int STATUS_MAX = CANCELED_STATUS;
     public final static int GET_PROPOSALS_FILTER_ALL = 100;
-    public final static float APPROVE_RATE = 0.66f;
-    public final static float DISAPPROVE_RATE = 0.33f;
     public final static int EVENT_NONE = 0;
     public final static int EVENT_APPROVED = 1;
     public final static int EVENT_DISAPPROVED = 2;
@@ -149,7 +147,7 @@ public class NetworkProposal {
         int currentStatus = p.status;
         if (vote == VoteInfo.AGREE_VOTE) {
             if (p.sizeofAgreed() * 3 > p.totalVoter * 2 &&
-                    p.amountOfAgreed().multiply(BigInteger.valueOf(3)).compareTo(p.totalPower.multiply(BigInteger.valueOf(2))) >= 0) {
+                    p.amountOfAgreed().multiply(BigInteger.valueOf(3)).compareTo(p.totalPower.multiply(BigInteger.TWO)) >= 0) {
                 p.status = APPROVED_STATUS;
                 votingEvent = EVENT_APPROVED;
             } else if (p.sizeofNoVote() == 0) {
@@ -157,8 +155,8 @@ public class NetworkProposal {
                 votingEvent = EVENT_DISAPPROVED;
             }
         } else {
-            if (p.sizeofDisagreed() * 3 > p.totalVoter * 2 &&
-                    p.amountOfDisagreed().multiply(BigInteger.valueOf(3)).compareTo(p.totalPower.multiply(BigInteger.valueOf(2))) >= 0) {
+            if (p.sizeofDisagreed() * 3 > p.totalVoter &&
+                    p.amountOfDisagreed().multiply(BigInteger.valueOf(3)).compareTo(p.totalPower.multiply(BigInteger.ONE)) >= 0) {
                 p.status = DISAPPROVED_STATUS;
                 votingEvent = EVENT_DISAPPROVED;
             }
