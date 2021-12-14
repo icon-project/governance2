@@ -127,7 +127,7 @@ public class Proposal {
     }
 
     public int getStatus(BigInteger blockHeight) {
-        return status == NetworkProposal.VOTING_STATUS && blockHeight.compareTo(expireBlockHeight) >= 0 ? NetworkProposal.DISAPPROVED_STATUS : status;
+        return isExpired(blockHeight) ? NetworkProposal.DISAPPROVED_STATUS : status;
     }
 
     public Map<String, Object> toMap(BigInteger blockHeight) {

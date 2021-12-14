@@ -146,7 +146,7 @@ public class NetworkProposal {
         int votingEvent = EVENT_NONE;
         int currentStatus = p.status;
         if (vote == VoteInfo.AGREE_VOTE) {
-            if (p.sizeofAgreed() * 3 > p.totalVoter * 2 &&
+            if (p.sizeofAgreed() * 3 >= p.totalVoter * 2 &&
                     p.amountOfAgreed().multiply(BigInteger.valueOf(3)).compareTo(p.totalPower.multiply(BigInteger.TWO)) >= 0) {
                 p.status = APPROVED_STATUS;
                 votingEvent = EVENT_APPROVED;
@@ -155,8 +155,8 @@ public class NetworkProposal {
                 votingEvent = EVENT_DISAPPROVED;
             }
         } else {
-            if (p.sizeofDisagreed() * 3 > p.totalVoter &&
-                    p.amountOfDisagreed().multiply(BigInteger.valueOf(3)).compareTo(p.totalPower.multiply(BigInteger.ONE)) >= 0) {
+            if (p.sizeofDisagreed() * 3 >= p.totalVoter &&
+                    p.amountOfDisagreed().multiply(BigInteger.valueOf(3)).compareTo(p.totalPower) >= 0) {
                 p.status = DISAPPROVED_STATUS;
                 votingEvent = EVENT_DISAPPROVED;
             }
