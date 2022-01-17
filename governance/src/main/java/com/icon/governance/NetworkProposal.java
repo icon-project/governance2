@@ -84,7 +84,6 @@ public class NetworkProposal {
     public void registerProposal(
             String title,
             String description,
-            int type,
             Value value,
             PRepInfo[] prepsInfo,
             BigInteger expireHeight
@@ -119,7 +118,7 @@ public class NetworkProposal {
                 proposerName,
                 title,
                 description,
-                type,
+                Proposal.NETWORK_PROPOSAL,
                 value,
                 blockHeight,
                 expireHeight,

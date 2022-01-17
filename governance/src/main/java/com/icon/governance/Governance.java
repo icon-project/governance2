@@ -1,6 +1,8 @@
 package com.icon.governance;
 
 import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import score.*;
 import score.annotation.EventLog;
@@ -17,7 +19,7 @@ public class Governance {
     private final static ChainScore chainScore = new ChainScore();
     private final static Address address = Address.fromString("cx0000000000000000000000000000000000000001");
     private final static NetworkProposal networkProposal = new NetworkProposal();
-    private final static BigInteger proposalRegisterFee = Governance.proposalRegisterFee();
+    public final static BigInteger proposalRegisterFee = Governance.proposalRegisterFee();
     private final ArrayDB<Address> auditors = Context.newArrayDB("auditor_list", Address.class);
     private final DictDB<BigInteger, TimerInfo> timerInfo = Context.newDictDB("timerInfo", TimerInfo.class);
 
@@ -79,7 +81,7 @@ public class Governance {
     }
 
     private void processMaliciousProposal(Address address, BigInteger type) {
-        if (type.intValue() == Proposal.FREEZE_SCORE) {
+        if (type.intValue() == Value.FREEZE_SCORE) {
             blockScore(address);
         } else {
             unblockScore(address);
@@ -231,22 +233,21 @@ public class Governance {
     public void registerProposal(
             String title,
             String description,
-            BigInteger type,
             byte[] value
     ) {
         var fee = Context.getValue();
         Context.require(fee.compareTo(Governance.proposalRegisterFee) == 0, "have to pay 100ICX to register Proposal");
+        chainScore.burn();
         Address proposer = Context.getCaller();
         PRepInfo[] mainPRepsInfo = chainScore.getMainPRepsInfo();
         var prep = getPRepInfoFromList(proposer, mainPRepsInfo);
         Context.require(prep != null, "No permission - only for main prep");
 
-        int intTypeValue = type.intValue();
         String stringValue = new String(value);
         JsonValue json = Json.parse(stringValue);
-        Value v = Value.fromJson(intTypeValue, json.asObject());
-
-        validateProposal(intTypeValue, v);
+        JsonArray values = json.asArray();
+        validateProposals(values);
+        Value v = new Value(Proposal.NETWORK_PROPOSAL, value);
 
         var term = chainScore.getPRepTerm();
 
@@ -262,12 +263,10 @@ public class Governance {
         networkProposal.registerProposal(
                 title,
                 description,
-                intTypeValue,
                 v,
                 mainPRepsInfo,
                 expireVotingHeight
         );
-        var revision = chainScore.getRevision();
         BigInteger penaltyHeight = BigInteger.ONE.add(expireVotingHeight);
         TimerInfo ti = timerInfo.getOrDefault(penaltyHeight, null);
         if (ti == null) {
@@ -279,7 +278,7 @@ public class Governance {
             ti.addProposalId(Context.getTransactionHash());
             timerInfo.set(penaltyHeight, ti);
         }
-        NetworkProposalRegistered(title, description, intTypeValue, value, proposer);
+        NetworkProposalRegistered(title, description, Proposal.NETWORK_PROPOSAL, value, proposer);
     }
 
     @External
@@ -293,7 +292,7 @@ public class Governance {
         Context.require(vote == VoteInfo.AGREE_VOTE || vote == VoteInfo.DISAGREE_VOTE, "Invalid vote value : " + vote);
 
         var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
-        Context.require(p.isExpired(blockHeight) == false, "This proposal has already expired");
+        Context.require(!p.isExpired(blockHeight), "This proposal has already expired");
         Context.require(p.getStatus(blockHeight) != NetworkProposal.CANCELED_STATUS, "This proposal has canceled");
 
         Context.require(p.isInNoVote(sender), "No permission - only for main prep were main prep when network registered");
@@ -337,13 +336,6 @@ public class Governance {
         NetworkProposalCanceled(id);
     }
 
-    // TODO : for testing network SCORE functions(designation, update)
-    @External
-    public void deploy(byte[] content) {
-        var scoreAddress = Context.deploy(content);
-        ScoreDeployed(scoreAddress);
-    }
-
     @External
     public void onTimer() {
         Address sender = Context.getCaller();
@@ -379,90 +371,145 @@ public class Governance {
     }
 
     public void approveProposal(Value value) {
-        var address = value.address();
-        var v = value.value();
-        var type = value.type();
-        switch (value.proposalType()) {
-            case Proposal.TEXT:
-                return;
-            case Proposal.REVISION:
-                setRevision(v);
-                return;
-            case Proposal.MALICIOUS_SCORE:
-                processMaliciousProposal(address, type);
-                return;
-            case Proposal.PREP_DISQUALIFICATION:
-                disqualifyPRep(address);
-                return;
-            case Proposal.STEP_PRICE:
-                setStepPrice(v);
-                return;
-            case Proposal.IREP:
-                setIRep(v);
-            case Proposal.STEP_COSTS:
-                var stepCosts = value.stepCosts();
-                for (Value.StepCosts.StepCost s : stepCosts.costs) {
-                    setStepCosts(s.type, s.cost);
+        var data = value.data();
+        String stringValue = new String(data);
+        JsonValue json = Json.parse(stringValue);
+        JsonArray values = json.asArray();
+        int length = values.size();
+        for (int i = 0; i < length; i++) {
+            var object = values.get(i).asObject();
+            var name = object.getString("name", "");
+            var valueObject = object.get("value").asObject();
+            switch (name) {
+                case Value.TEXT_TYPE:
+                    continue;
+                case Value.REVISION_TYPE:
+                    var revision = Converter.hexToInt(valueObject.getString("revision", null));
+                    setRevision(revision);
+                    return;
+                case Value.MALICIOUS_SCORE_TYPE:
+                    var type = Converter.hexToInt(valueObject.getString("type", null));
+                    processMaliciousProposal(Converter.strToAddress(valueObject.getString("address", null)), type);
+                    continue;
+                case Value.PREP_DISQUALIFICATION_TYPE:
+                    disqualifyPRep(Converter.strToAddress(valueObject.getString("address", null)));
+                    continue;
+                case Value.STEP_PRICE_TYPE:
+                    var price = Converter.hexToInt(valueObject.getString("price", ""));
+                    setStepPrice(price);
+                    continue;
+                case Value.STEP_COSTS_TYPE:
+                    var stepCosts = Value.StepCosts.fromJson(valueObject.get("costs").asObject());
+                    for (Value.StepCosts.StepCost s : stepCosts.costs) {
+                        setStepCosts(s.type, s.cost);
+                    }
+                    continue;
+                case Value.REWARD_FUND_TYPE:
+                    var iglobal = Converter.hexToInt(valueObject.getString("iglobal", null));
+                    setRewardFund(iglobal);
+                    continue;
+                case Value.REWARD_FUNDS_ALLOCATION:
+                    var rewardRatio = Value.RewardFunds.fromJson(valueObject.get("rewardFunds").asObject());
+                    BigInteger iprep = BigInteger.ZERO;
+                    BigInteger icps = BigInteger.ZERO;
+                    BigInteger irelay = BigInteger.ZERO;
+                    BigInteger ivoter = BigInteger.ZERO;
+                    for (int j = 0; j < rewardRatio.rewardFunds.length; j++) {
+                        var rewardRateInfo = rewardRatio.rewardFunds[j];
+                        if (rewardRateInfo.type.equals(Value.RewardFunds.I_PREP)) iprep = rewardRateInfo.value;
+                        if (rewardRateInfo.type.equals(Value.RewardFunds.I_CPS)) icps = rewardRateInfo.value;
+                        if (rewardRateInfo.type.equals(Value.RewardFunds.I_RELAY))
+                            irelay = rewardRateInfo.value;
+                        if (rewardRateInfo.type.equals(Value.RewardFunds.I_VOTER))
+                            ivoter = rewardRateInfo.value;
+                    }
+                    setRewardFundsRate(iprep, icps, irelay, ivoter);
+                    continue;
+                case Value.NETWORK_SCORE_DESIGNATION_TYPE: {
+                    var networkScores = valueObject.get("networkScores").asArray();
+                    int l = networkScores.size();
+                    for (int j = 0; j < l; j++) {
+                        var v = networkScores.get(j).asObject();
+                        String role = v.getString("role", null);
+                        Address address = Converter.strToAddress(v.getString("address", null));
+                        chainScore.setNetworkScore(role, address);
+                        if (address != null) NetWorkScoreDesignated(role, address);
+                        else NetWorkScoreDeallocated(role);
+                    }
+                    continue;
                 }
-                return;
-            case Proposal.REWARD_FUND:
-                setRewardFund(v);
-                return;
-            case Proposal.REWARD_FUNDS_ALLOCATION:
-                var rewardRatio = value.rewardFunds();
-                BigInteger iprep = BigInteger.ZERO;
-                BigInteger icps = BigInteger.ZERO;
-                BigInteger irelay = BigInteger.ZERO;
-                BigInteger ivoter = BigInteger.ZERO;
-                for (int i = 0; i < rewardRatio.rewardFunds.length; i++) {
-                    var rewardRateInfo = rewardRatio.rewardFunds[i];
-                    if (rewardRateInfo.type.compareTo(Value.RewardFunds.I_PREP) == 0) iprep = rewardRateInfo.value;
-                    if (rewardRateInfo.type.compareTo(Value.RewardFunds.I_CPS) == 0) icps = rewardRateInfo.value;
-                    if (rewardRateInfo.type.compareTo(Value.RewardFunds.I_RELAY) == 0) irelay = rewardRateInfo.value;
-                    if (rewardRateInfo.type.compareTo(Value.RewardFunds.I_VOTER) == 0) ivoter = rewardRateInfo.value;
+                case Value.NETWORK_SCORE_UPDATE_TYPE:
+                    Address addr = Converter.strToAddress(valueObject.getString("address", null));
+                    var content = Converter.hexToBytes(valueObject.getString("content", null));
+                    Context.deploy(addr, content);
+                    NetWorkScoreUpdated(addr);
+                    continue;
+                case Value.ACCUMULATED_VALIDATION_FAILURE_PENALTY: {
+                    var rate = Converter.hexToInt(valueObject.getString("slashingRate", null));
+                    chainScore.setConsistentValidationSlashingRate(rate);
+                    continue;
                 }
-                setRewardFundsRate(iprep, icps, irelay, ivoter);
-                return;
-            case Proposal.NETWORK_SCORE_DESIGNATION:
-                chainScore.setNetworkScore(value.text(), address);
-                NetWorkScoreDesignated(address);
-                return;
-            case Proposal.NETWORK_SCORE_UPDATE:
-                Context.deploy(address, value.data());
-                NetWorkScoreUpdated(address);
+                case Value.MISSED_NETWORK_PROPOSAL_PENALTY: {
+                    var rate = Converter.hexToInt(valueObject.getString("slashingRate", null));
+                    chainScore.setNonVoteSlashingRate(rate);
+                }
+            }
         }
     }
 
-    public void validateProposal(int type, Value value) {
-        switch (type) {
-            case Proposal.TEXT:
-            case Proposal.STEP_COSTS:
-            case Proposal.NETWORK_SCORE_UPDATE:
-            case Proposal.NETWORK_SCORE_DESIGNATION:
-                return;
-            case Proposal.REVISION:
-                validateRevision(value.value());
-                return;
-            case Proposal.MALICIOUS_SCORE:
-                validateMaliciousScore(value.address(), value.type().intValue());
-                return;
-            case Proposal.PREP_DISQUALIFICATION:
-                validateDisqualifyPRep(value.address());
-                return;
-            case Proposal.STEP_PRICE:
-                validateStepPRice(value.value());
-                return;
-            case Proposal.IREP:
-                chainScore.validateIRep(value.value());
-                return;
-            case Proposal.REWARD_FUND:
-                chainScore.validateRewardFund(value.value());
-                return;
-            case Proposal.REWARD_FUNDS_ALLOCATION:
-                validateRewardFundsRate(value.rewardFunds());
-                return;
-            default:
-                Context.revert("undefined proposal type");
+    public void validateProposals(JsonArray values) {
+        int length = values.size();
+        for (int i = 0; i < length; i++) {
+            var object = values.get(i).asObject();
+            var name = object.getString("name", "");
+            Context.require(!name.equals(""), "name field required");
+            var value = object.get("value").asObject();
+            switch (name) {
+                case Value.TEXT_TYPE:
+                    Context.require(value.getString("text", null) != null);
+                    continue;
+                case Value.REVISION_TYPE:
+                    var revision = Converter.hexToInt(value.getString("revision", null));
+                    validateRevision(revision);
+                    continue;
+                case Value.STEP_COSTS_TYPE:
+                    Value.StepCosts.fromJson(value.get("costs").asObject());
+                    continue;
+                case Value.MALICIOUS_SCORE_TYPE:
+                    var type = Converter.hexToInt(value.getString("type", null));
+                    validateMaliciousScore(Converter.strToAddress(value.getString("address", null)), type.intValue());
+                    continue;
+                case Value.PREP_DISQUALIFICATION_TYPE:
+                    validateDisqualifyPRep(Converter.strToAddress(value.getString("address", null)));
+                    continue;
+                case Value.STEP_PRICE_TYPE:
+                    var price = Converter.hexToInt(value.getString("price", null));
+                    validateStepPRice(price);
+                    continue;
+                case Value.REWARD_FUND_TYPE:
+                    var iglobal = Converter.hexToInt(value.getString("iglobal", null));
+                    chainScore.validateRewardFund(iglobal);
+                    continue;
+                case Value.REWARD_FUNDS_ALLOCATION:
+                    var funds = Value.RewardFunds.fromJson(value.get("rewardFunds").asObject());
+                    validateRewardFundsRate(funds);
+                    continue;
+                case Value.NETWORK_SCORE_DESIGNATION_TYPE:
+                    validateDesignationProposal(value);
+                    continue;
+                case Value.NETWORK_SCORE_UPDATE_TYPE:
+                    Converter.strToAddress(value.getString("address", null));
+                    Converter.hexToBytes(value.getString("content", null));
+                    continue;
+                case Value.ACCUMULATED_VALIDATION_FAILURE_PENALTY:
+                case Value.MISSED_NETWORK_PROPOSAL_PENALTY:
+                    var slashingRate = Converter.hexToInt(value.getString("slashingRate", null));
+                    Context.require(slashingRate.compareTo(BigInteger.ZERO) >= 0 && slashingRate.compareTo(BigInteger.valueOf(100)) <= 0,
+                            "slashing rate invalid");
+                    continue;
+                default:
+                    Context.revert("undefined proposal type");
+            }
         }
     }
 
@@ -472,9 +519,9 @@ public class Governance {
     }
 
     private void validateMaliciousScore(Address address, int type) {
-        if (type != Proposal.FREEZE_SCORE && type != Proposal.UNFREEZE_SCORE) {
+        if (type != Value.FREEZE_SCORE && type != Value.UNFREEZE_SCORE) {
             Context.revert("invalid value type : " + type);
-        } else if (type == Proposal.FREEZE_SCORE) {
+        } else if (type == Value.FREEZE_SCORE) {
             if (address.equals(Governance.address)) {
                 Context.revert("Can not freeze governance SCORE");
             }
@@ -507,6 +554,21 @@ public class Governance {
             sum = sum.add(value.value);
         }
         Context.require(sum.compareTo(BigInteger.valueOf(100)) == 0, "sum of reward funds must be 100");
+    }
+
+    private void validateDesignationProposal(JsonObject value) {
+        var networkScores = value.get("networkScores").asArray();
+        int length = networkScores.size();
+        for (int i = 0; i < length; i++) {
+            var v = networkScores.get(i).asObject();
+            String role = v.getString("role", null);
+            Address address = Converter.strToAddress(v.getString("address", null));
+            var ret = role.equals(Value.CPS_SCORE) || role.equals(Value.RELAY_SCORE) || role.equals(Value.GOVERNANCE_SCORE);
+            Context.require(ret, "invalid network SCORE role : " + role);
+            if (address == null) return;
+            Address owner = chainScore.getScoreOwner(address);
+            Context.require(owner.equals(Governance.address), "Only owned by governance can be designated");
+        }
     }
 
     public static class TimerInfo {
@@ -628,7 +690,10 @@ public class Governance {
     public void NetWorkScoreUpdated(Address address) {}
 
     @EventLog(indexed=1)
-    public void NetWorkScoreDesignated(Address address) {}
+    public void NetWorkScoreDesignated(String role, Address address) {}
+
+    @EventLog(indexed=1)
+    public void NetWorkScoreDeallocated(String role) {}
 
     @EventLog(indexed=0)
     public void NetworkProposalRegistered(String title, String description, int type, byte[] value, Address proposer) {}

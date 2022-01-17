@@ -123,10 +123,6 @@ class ChainScore {
         Context.call(CHAIN_SCORE, "unblockScore", address);
     }
 
-    void validateIRep(BigInteger irep) {
-        Context.call(CHAIN_SCORE, "validateIRep", irep);
-    }
-
     void validateRewardFund(BigInteger rewardFund) {
         Context.call(CHAIN_SCORE, "validateRewardFund", rewardFund);
     }
@@ -139,8 +135,24 @@ class ChainScore {
         Context.call(CHAIN_SCORE, "setRewardFundAllocation", iprep, icps, irelay, ivoter);
     }
 
+    Address getScoreOwner(Address address) {
+        return (Address)Context.call(CHAIN_SCORE, "getScoreOwner", address);
+    }
+
+    void burn() {
+        Context.call(Governance.proposalRegisterFee, CHAIN_SCORE, "burn");
+    }
+
     void setNetworkScore(String role, Address address) {
         Context.call(CHAIN_SCORE, "setNetworkScore", role, address);
+    }
+
+    void setConsistentValidationSlashingRate(BigInteger rate) {
+        Context.call(CHAIN_SCORE, "setConsistentValidationSlashingRate", rate);
+    }
+
+    void setNonVoteSlashingRate(BigInteger rate) {
+        Context.call(CHAIN_SCORE, "setNonVoteSlashingRate", rate);
     }
 
     Map<String, Object> getMainPReps() {

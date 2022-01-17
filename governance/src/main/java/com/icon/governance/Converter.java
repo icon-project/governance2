@@ -32,6 +32,7 @@ class Converter {
     }
 
     public static Address strToAddress(String value) {
+        if (value.equals("")) return null;
         return Address.fromString(value);
     }
 }

@@ -12,17 +12,34 @@ import java.util.Map;
 
 public class Value {
     private final int proposalType;
-    private String text;
+    private String stringValue;
     private Address address;
     private BigInteger type;
     private BigInteger value;
     private StepCosts stepCosts;
     private RewardFunds rewardFunds;
+    public static final int FREEZE_SCORE = 0;
+    public static final int UNFREEZE_SCORE = 1;
+    public static final String CPS_SCORE = "cps";
+    public static final String RELAY_SCORE = "relay";
+    public static final String GOVERNANCE_SCORE = "governance";
+    public static final String TEXT_TYPE = "text";
+    public static final String REVISION_TYPE = "revision";
+    public static final String MALICIOUS_SCORE_TYPE = "maliciousScore";
+    public static final String PREP_DISQUALIFICATION_TYPE = "prepDisqualification";
+    public static final String STEP_PRICE_TYPE = "stepPrice";
+    public static final String STEP_COSTS_TYPE = "stepCosts";
+    public static final String REWARD_FUND_TYPE = "rewardFund";
+    public static final String REWARD_FUNDS_ALLOCATION = "rewardFundsAllocation";
+    public static final String NETWORK_SCORE_DESIGNATION_TYPE = "networkScoreDesignation";
+    public static final String NETWORK_SCORE_UPDATE_TYPE = "networkScoreUpdate";
+    public static final String ACCUMULATED_VALIDATION_FAILURE_PENALTY = "accumulatedValidationFailureSlashingRate";
+    public static final String MISSED_NETWORK_PROPOSAL_PENALTY = "missedNetworkProposalSlashingRate";
     private byte[] data;
 
     public Value(int p, String text) {
         // Text
-        this.text = text;
+        this.stringValue = text;
         this.proposalType = p;
     }
 
@@ -56,7 +73,7 @@ public class Value {
         // Network SCORE designation
         this.proposalType = p;
         this.address = address;
-        this.text = text;
+        this.stringValue = text;
     }
 
     public Value(int p, StepCosts value) {
@@ -67,6 +84,11 @@ public class Value {
     public Value(int p, RewardFunds value) {
         this.proposalType = p;
         this.rewardFunds = value;
+    }
+
+    public Value(int p, byte[] data) {
+        this.proposalType = p;
+        this.data = data;
     }
 
     public static void writeObject(ObjectWriter w, Value v) {
@@ -83,43 +105,19 @@ public class Value {
         return v;
     }
 
-    public int proposalType() {
-        return proposalType;
-    }
-
-    public BigInteger value() {
-        return value;
-    }
-
     public byte[] data() {
         return data;
     }
 
-    public BigInteger type() {
-        return type;
-    }
-
-    public Address address() {
-        return address;
-    }
-
     public String text() {
-        return text;
-    }
-
-    public StepCosts stepCosts() {
-        return stepCosts;
-    }
-
-    public RewardFunds rewardFunds() {
-        return rewardFunds;
+        return stringValue;
     }
 
     private void set(ObjectWriter w) {
         w.write(proposalType);
         switch (proposalType) {
             case Proposal.TEXT:
-                w.write(text);
+                w.write(stringValue);
                 return;
             case Proposal.MALICIOUS_SCORE:
                 w.write(address);
@@ -134,19 +132,14 @@ public class Value {
             case Proposal.REWARD_FUND:
                 w.write(value);
                 return;
-            case Proposal.NETWORK_SCORE_UPDATE:
-                w.write(address);
-                w.write(data);
-                return;
             case Proposal.STEP_COSTS:
                 w.write(stepCosts);
                 return;
             case Proposal.REWARD_FUNDS_ALLOCATION:
                 w.write(rewardFunds);
                 return;
-            case Proposal.NETWORK_SCORE_DESIGNATION:
-                w.write(text);
-                w.write(address);
+            case Proposal.NETWORK_PROPOSAL:
+                w.write(data);
         }
     }
 
@@ -160,10 +153,9 @@ public class Value {
             case Proposal.STEP_COSTS:
             case Proposal.REWARD_FUNDS_ALLOCATION:
             case Proposal.REWARD_FUND:
+            case Proposal.NETWORK_PROPOSAL:
                 return 2;
             case Proposal.MALICIOUS_SCORE:
-            case Proposal.NETWORK_SCORE_UPDATE:
-            case Proposal.NETWORK_SCORE_DESIGNATION:
                 return 3;
         }
         throw new IllegalArgumentException("proposalType not exist");
@@ -186,10 +178,8 @@ public class Value {
                 return new Value(proposalType, r.read(StepCosts.class));
             case Proposal.REWARD_FUNDS_ALLOCATION:
                 return new Value(proposalType, r.read(RewardFunds.class));
-            case Proposal.NETWORK_SCORE_DESIGNATION:
-                return new Value(proposalType, r.readString(), r.readAddress());
-            case Proposal.NETWORK_SCORE_UPDATE:
-                return new Value(proposalType, r.readAddress(), r.readByteArray());
+            case Proposal.NETWORK_PROPOSAL:
+                return new Value(proposalType, r.readByteArray());
             default:
                 throw new IllegalArgumentException("proposalType not exist");
         }
@@ -225,19 +215,6 @@ public class Value {
                 return new Value(type, Converter.hexToInt(value.getString("iglobal", null)));
             case Proposal.REWARD_FUNDS_ALLOCATION:
                 return new Value(type, RewardFunds.fromJson(value.get("rewardFunds").asObject()));
-            case Proposal.NETWORK_SCORE_DESIGNATION:
-                return new Value(
-                        type,
-                        value.getString("role", null),
-                        Converter.strToAddress(value.getString("address", null)
-                        )
-                );
-            case Proposal.NETWORK_SCORE_UPDATE:
-                return new Value(
-                        type,
-                        Converter.strToAddress(value.getString("address", null)),
-                        Converter.hexToBytes(value.getString("content", null))
-                );
         }
         throw new IllegalArgumentException("Invalid value type");
     }
@@ -245,12 +222,9 @@ public class Value {
     public Map<String, Object> toMap() {
         switch (proposalType) {
             case Proposal.TEXT:
-                return Map.of("value", text);
+                return Map.of("value", stringValue);
             case Proposal.MALICIOUS_SCORE:
-                return Map.of(
-                        "address", address,
-                        "type", type
-                );
+                return Map.of("address", address, "type", type);
             case Proposal.PREP_DISQUALIFICATION:
                 return Map.of("address", address);
             case Proposal.REVISION:
@@ -258,20 +232,12 @@ public class Value {
             case Proposal.IREP:
             case Proposal.REWARD_FUND:
                 return Map.of("iglobal", value);
-            case Proposal.NETWORK_SCORE_DESIGNATION:
-                return Map.of(
-                        "role", text,
-                        "address", address
-                );
-            case Proposal.NETWORK_SCORE_UPDATE:
-                return Map.of(
-                        "address", address,
-                        "code", data
-                );
             case Proposal.STEP_COSTS:
                 return stepCosts.toMap();
             case Proposal.REWARD_FUNDS_ALLOCATION:
                 return rewardFunds.toMap();
+            case Proposal.NETWORK_PROPOSAL:
+                return Map.of("proposals", new String(data));
         }
         throw new IllegalArgumentException("Invalid value type");
     }
