@@ -813,65 +813,56 @@ Invoke method can initiate state transition.
 | :---------- | :--------------- | ------------------------------------------------------------ |
 | title       | [T\_STR](#T_STR) | Title of the network proposal                                |
 | description | [T\_STR](#T_STR) | Description of the network proposal                          |
-| type        | [T\_INT](#T_INT) | Type of the network proposal                                 |
-| value       | T\_DICT          | Values for each type of network proposal. Hex string of UTF-8 encoded bytes data of JSON string<br />ex. "0x" + bytes.hex(json.dumps(value_dict).encode()) |
-
-#### available values for the type
-| Value | Description |
-| :---- | ----------- |
-| 0x0   | Text        |
-| 0x1   | Revision    |
-| 0x2   | Malicious SCORE |
-| 0x3   | P-Rep disqualification |
-| 0x4   | Step price |
-| 0x5   | I-Rep |
-| 0x6   | Step costs |
-| 0x7   | Reward fund setting |
-| 0x8   | Reward fund allocation |
+| value       | T\_LIST[T\_DICT] | Values for each type of network proposal. Hex string of UTF-8 encoded bytes data of JSON string<br />ex. "0x" + bytes.hex(json.dumps(value_list).encode()) |
 
 #### Format of dict values for each type
 *Text*
 
 | Key   | Value Type       | Description |
 | :---- | :--------------- | ----------- |
-| value | [T\_STR](#T_STR) | Text value  |
+| name | [T\_STR](#T_STR) | "text"(fixed value)  |
+| value | T\_DICT |  |
+| value.text | [T\_STR](#T_STR) | Text value  |
 
 *Revision*
 
 | Key  | Value Type       | Description   |
 | :--- | :--------------- | ------------- |
-| code | [T\_INT](#T_INT) | Revision code |
-| name | [T\_STR](#T_STR) | Revision name |
+| name | [T\_STR](#T_STR) | "revision"(fixed value) |
+| value | T\_DICT | |
+| revision | [T\_INT](#T_INT) | Revision code |
 
 *Malicious SCORE*
 
 | Key     | Value Type                      | Description                |
 | :------ | :------------------------------ | -------------------------- |
-| address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | SCORE address              |
-| type    | [T\_INT](#T_INT)                | 0x0: Freeze, 0x1: Unfreeze |
+| name | [T\_STR](#T_STR) | "maliciousScore"(fixed value) |
+| value | T\_DICT | |
+| value.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | SCORE address              |
+| value.type    | [T\_INT](#T_INT)                | 0x0: Freeze, 0x1: Unfreeze |
 
 *P-Rep disqualification*
 
 | Key     | Value Type                  | Description                   |
 | :------ | :-------------------------- | ----------------------------- |
-| address | [T\_ADDR\_EOA](#T_ADDR_EOA) | EOA address of main/sub P-Rep |
+| name | [T\_STR](#T_STR) | "prepDisqualification"(fixed value) |
+| value | T\_DICT | |
+| value.address | [T\_ADDR\_EOA](#T_ADDR_EOA) | EOA address of main/sub P-Rep |
 
 *Step price*
 
 | Key   | Value Type       | Description                          |
 | :---- | :--------------- | ------------------------------------ |
-| value | [T\_INT](#T_INT) | An integer of the step price in loop |
-
-*I-Rep*
-
-| Key   | Value Type       | Description                          |
-| :---- | :--------------- | ------------------------------------ |
-| value | [T\_INT](#T_INT) | An integer of the I-Rep in loop |
+| name | [T\_STR](#T_STR) | "stepPrice"(fixed value) |
+| value | T\_DICT | |
+| value.price | [T\_INT](#T_INT) | An integer of the step price in loop |
 
 *Step Costs*<br>
 | Key | Value Type         | Description                          |
 | :---- | :--------------- | ------------------------------------ |
-| costs | [T\_LIST\[T\_DICT\]](#T_LIST) | List of step costs to set in dict. <br> Fields are optional but at least one field is required. |
+| name | [T\_STR](#T_STR) | "stepCosts"(fixed value) |
+| value | T\_DICT | |
+| value.costs | T\_DICT | step costs to set in dict. <br> Fields are optional but at least one field is required. |
 
 | Key | Value Type         | Description                          |
 | :---- | :--------------- | ------------------------------------ |
@@ -891,20 +882,29 @@ Invoke method can initiate state transition.
 
 *example*
 ```json
-{"costs": ["default": "0x10", "set": "0x20"]}
+{
+  "name": "stepCosts",
+  "value": {
+    "costs": {"default": "0x10", "set": "0x20"}
+  }
+}
 ```
 *Monthly Reward Fund Setting*
 
 | Key   | Value Type       | Description                          |
 | :---- | :--------------- | ------------------------------------ |
-| iglobal | [T\_INT](#T_INT) | The total amount of monthly reward fund in loop  |
+| name | [T\_STR](#T_STR) | "rewardFund"(fixed value) |
+| value | T\_DICT | |
+| value.iglobal | [T\_INT](#T_INT) | The total amount of monthly reward fund in loop  |
 
 *Monthly Reward Fund Allocation*<br>
 Determine the allocation of the monthly reward fund
 
 | Key   | Value Type       | Description                          |
 | :---- | :--------------- | ------------------------------------ |
-| rewardFunds | [T\_LIST\[T\_DICT\]](#T_INT) | Reward fund values information to set. All values are required. |
+| name | [T\_STR](#T_STR) | "rewardFundsAllocation"(fixed value) |
+| value | T\_DICT | |
+| value.rewardFunds | T\_DICT | Reward fund values information to set. All values are required. |
 
 | Key   | Value Type       | Description                          |
 | :---- | :--------------- | ------------------------------------ |
@@ -915,8 +915,48 @@ Determine the allocation of the monthly reward fund
 
 *example*
 ```json
-{"rewardFunds": [{"iprep": "0x19"}, {"icps": "0x17"}, {"irelay": "0x1a"}, {"ivoter":  "0x1a"}]}
+{
+  "name": "rewardFunndsAllocation", 
+  "value": {
+  "rewardFunds": {"iprep": "0x19", "icps": "0x17", "irelay": "0x1a", "ivoter":  "0x1a"}
+  }
+}
 ```
+
+*Network Score Designation*
+
+| Key   | Value Type       | Description                          |
+| :---- | :--------------- | ------------------------------------ |
+| name | [T\_STR](#T_STR) | "networkScoreDesignation"(fixed value) |
+| value | T\_DICT | |
+| value.networkScores | T\_LIST[T\_DICT] | network score values to set. if set address to empty string, deallocate network score. |
+| value.networkScores.role | [T\_STR](#T_STR) | network score values to set. |
+| value.networkScores.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | network score values to set. |
+
+*Network Score Update*
+
+| Key   | Value Type       | Description                          |
+| :---- | :--------------- | ------------------------------------ |
+| name | [T\_STR](#T_STR) | "networkScoreUpdate"(fixed value) |
+| value | T\_DICT | |
+| value.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | network score address to update |
+| value.content | [T_BIN_DATA](#T_BIN_DATA) | score code |
+
+*Set accumulated validation failure slashing rate*
+
+| Key   | Value Type       | Description                          |
+| :---- | :--------------- | ------------------------------------ |
+| name | [T\_STR](#T_STR) | "accumulatedValidationFailureSlashingRate"(fixed value) |
+| value | T\_DICT | |
+| value.slashingRate | [T\_INT](#T_INT) | slashing rate |
+
+*Set accumulated validation failure slashing rate*
+
+| Key   | Value Type       | Description                          |
+| :---- | :--------------- | ------------------------------------ |
+| name | [T\_STR](#T_STR) | "missedNetworkProposalSlashingRate"(fixed value) |
+| value | T\_DICT | |
+| value.slashingRate | [T\_INT](#T_INT) | slashing rate |
 
 ### Examples
 
@@ -1035,57 +1075,52 @@ Determine the allocation of the monthly reward fund
 
 Triggered on any successful acceptScore transaction.
 
-```python
-@eventlog(indexed=1)
-def Accepted(self, txHash: str):
-  pass
+```java
+@EventLog(indexed=1)
+public void Accepted(byte[] txHash) {}
 ```
 
 ## Rejected
 
 Triggered on any successful rejectScore transaction.
 
-```python
-@eventlog(indexed=1)
-def Rejected(self, txHash: str, reason: str):
-  pass
+```java
+@EventLog(indexed=1)
+public void Rejected(byte[] txHash, String reason) {}
 ```
 
 ## StepPriceChanged
 
 Triggered on vote transaction approving 'Step Price' network proposal.
 
-```python
-@eventlog(indexed=1)
-def StepPriceChanged(self, stepPrice: int):
-  pass
+```java
+@EventLog(indexed=1)
+public void StepPriceChanged(BigInteger stepPrice) {}
 ```
 
 ## StepCostChanged
 
 Triggered on vote transaction approving 'Step Costs' network proposal.
 
-```python
-@eventlog(indexed=1)
-def StepCostChanged(self,  type: str, stepCost: int):
-  pass
+```java
+@EventLog(indexed=1)
+public void StepCostChanged(String type, BigInteger stepCost) {}
 ```
 
 ## RevisionChanged
 
 Triggered on vote transaction approving 'Revision' network proposal.
 
-```python
-@eventlog(indexed=0)
-def RevisionChanged(self, revisionCode: int, revisionName: str):
-  pass
+```java
+@EventLog(indexed=0)
+public void RevisionChanged(BigInteger revisionCode) {}
 ```
 
 ## MaliciousSCORE
 
 Triggered on vote transaction approving 'Malicious SCORE' network proposal.
 
-```python
+```java
 @eventlog(indexed=0)
 def MaliciousScore(self, address: Address, unfreeze: int):
   pass
@@ -1095,78 +1130,88 @@ def MaliciousScore(self, address: Address, unfreeze: int):
 
 Triggered on vote transaction approving 'P-Rep Disqualification' network proposal.
 
-```python
-@eventlog(indexed=0)
-def PRepDisqualified(self, address: Address, success: bool, reason: str):
-  pass
-```
-
-## IRepChanged
-
-Triggered on vote transaction approving 'I-Rep' network proposal.
-
-```python
-@eventlog(indexed=1)
-def IRepChanged(self, irep: int):
-  pass
+```java
+@EventLog(indexed=0)
+public void PRepDisqualified(Address address, boolean success, String reason) {}
 ```
 
 ## RewardFundSettingChanged
 
 Triggered on vote transaction approving 'Reward Fund Setting' network proposal.
 
-```python
-@eventlog(indexed=0)
-def RewardFundSettingChanged(self, iglobal: int):
-  pass
+```java
+@EventLog(indexed=0)
+public void RewardFundSettingChanged(BigInteger rewardFund) {}
 ```
 
 ## RewardFundAllocationChanged
 
 Triggered on vote transaction approving 'Reward Fund Allocation' network proposal.
 
-```python
-@eventlog(indexed=0)
-def RewardFundAllocationChanged(self, iprep: int, icps: int, irelay: int, ivoter: int):
-  pass
+```java
+@EventLog(indexed=0)
+public void RewardFundAllocationChanged(BigInteger iprep, BigInteger icps, BigInteger irelay, BigInteger ivoter) {}
+```
+
+## NetworkScoreUpdated
+
+Triggered on vote transaction approving 'network score update' network proposal.
+
+```java
+@EventLog(indexed=1)
+public void NetWorkScoreUpdated(Address address) {}
+```
+
+## NetworkScoreDesignated
+
+Triggered on vote transaction approving 'network score designate' network proposal.
+
+```java
+@EventLog(indexed=1)
+public void NetWorkScoreDesignated(String role, Address address) {}
+```
+
+## NetworkScoreDeallocated
+
+Triggered on vote transaction approving 'network score designate' network proposal.
+
+```java
+@EventLog(indexed=1)
+public void NetWorkScoreDeallocated(String role) {}
 ```
 
 ## NetworkProposalRegistered
 
 Triggered on any successful registerProposal transaction.
 
-```python
-@eventlog(indexed=0)
-def NetworkProposalRegistered(self, title: str, description: str, type: int, value: bytes, proposer: Address):
-  pass
+```java
+@EventLog(indexed=0)
+public void NetworkProposalRegistered(String title, String description, int type, byte[] value, Address proposer) {}
 ```
 
 ## NetworkProposalCanceled
 
 Triggered on any successful cancelProposal transaction.
 
-```python
-@eventlog(indexed=0)
-def NetworkProposalCanceled(self, id: bytes):
-  pass
+```java
+@EventLog(indexed=0)
+public void NetworkProposalCanceled(byte[] id) {}
 ```
 
 ## NetworkProposalVoted
 
 Triggered on any successful voteProposal transaction.
 
-```python
-@eventlog(indexed=0)
-def NetworkProposalVoted(self, id: bytes, vote: int, voter: Address):
-  pass
+```java
+@EventLog(indexed=0)
+public void NetworkProposalVoted(byte[] id, int vote, Address voter) {}
 ```
 
 ## NetworkProposalApproved
 
 Triggered on any successful voteProposal transaction approving network proposal.
 
-```python
-@eventlog(indexed=0)
-def NetworkProposalApproved(self, id: bytes):
-  pass
+```java
+@EventLog(indexed=0)
+public void NetworkProposalApproved(byte[] id) {}
 ```

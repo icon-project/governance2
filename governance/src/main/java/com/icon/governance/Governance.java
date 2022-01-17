@@ -38,19 +38,14 @@ public class Governance {
         StepCostChanged(type, cost);
     }
 
-    private void setIRep(BigInteger irep) {
-        chainScore.setIRep(irep);
-        IRepChanged(irep);
-    }
-
     private void setRewardFund(BigInteger rewardFund) {
         chainScore.setRewardFund(rewardFund);
-        RewardFundChanged(rewardFund);
+        RewardFundSettingChanged(rewardFund);
     }
 
     private void setRewardFundsRate(BigInteger iprep, BigInteger icps, BigInteger irelay, BigInteger ivoter) {
         chainScore.setRewardFundsRate(iprep, icps, irelay, ivoter);
-        RewardFundsRatioChanged();
+        RewardFundAllocationChanged(iprep, icps, irelay, ivoter);
     }
 
     private void blockScore(Address address) {
@@ -677,14 +672,11 @@ public class Governance {
     @EventLog(indexed=0)
     public void PRepDisqualified(Address address, boolean success, String reason) {}
 
-    @EventLog(indexed=1)
-    public void IRepChanged(BigInteger irep) {}
-
-    @EventLog(indexed=1)
-    public void RewardFundChanged(BigInteger rewardFund) {}
+    @EventLog(indexed=0)
+    public void RewardFundSettingChanged(BigInteger rewardFund) {}
 
     @EventLog(indexed=0)
-    public void RewardFundsRatioChanged() {}
+    public void RewardFundAllocationChanged(BigInteger iprep, BigInteger icps, BigInteger irelay, BigInteger ivoter) {}
 
     @EventLog(indexed=1)
     public void NetWorkScoreUpdated(Address address) {}
@@ -709,8 +701,5 @@ public class Governance {
 
     @EventLog(indexed=0)
     public void NetworkProposalDisapproved(byte[] id) {}
-
-    @EventLog(indexed=1)
-    public void ScoreDeployed(Address address) {}
 
 }
