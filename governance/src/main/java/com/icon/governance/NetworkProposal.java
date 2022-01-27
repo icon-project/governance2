@@ -28,6 +28,8 @@ public class NetworkProposal {
     public final static int CANCELED_STATUS = 3;
     public final static int STATUS_MAX = CANCELED_STATUS;
     public final static int GET_PROPOSALS_FILTER_ALL = 100;
+    public final static int GET_PROPOSALS_MAX_SIZE = 10;
+    public final static int GET_PROPOSAL_DEFAULT_START = 0;
     public final static int EVENT_NONE = 0;
     public final static int EVENT_APPROVED = 1;
     public final static int EVENT_DISAPPROVED = 2;
@@ -44,11 +46,20 @@ public class NetworkProposal {
         return p;
     }
 
-    public Map<String, Object>[] getProposals(int typeCondition, int statusCondition) {
+    public Map<String, Object>[] getProposals(int typeCondition, int statusCondition, int start, int size) {
         var listKeySize = proposalListKeys.size();
         var keysSize = proposalKeys.size();
         var proposalList = new ArrayList<Map<String, Object>>();
         Map<String, Object>[] proposals;
+        int proposalMaxIndex = keysSize + listKeySize - 1;
+        Context.require(
+                typeCondition == GET_PROPOSALS_FILTER_ALL || typeCondition >= Proposal.MIN && typeCondition <= Proposal.MAX, "invalid type : " + typeCondition);
+        Context.require(
+                statusCondition == GET_PROPOSALS_FILTER_ALL || statusCondition >= NetworkProposal.STATUS_MIN && statusCondition <= NetworkProposal.STATUS_MAX, "invalid status : " + statusCondition);
+        Context.require(start >= 0, "Invalid start parameter: " + start);
+        Context.require(size > 0, "Invalid size parameter: " + size);
+        Context.require(
+                start <= proposalMaxIndex, "Invalid start parameter: " + start + ">" + proposalMaxIndex);
 
         for (int i = 0; i < listKeySize; i++) {
             var key = proposalListKeys.get(i);
@@ -61,10 +72,11 @@ public class NetworkProposal {
             var proposal = proposalDict.get(key);
             filterProposal(typeCondition, statusCondition, proposalList, proposal);
         }
+        size = Integer.min(size, proposalList.size() - start);
 
-        proposals = new Map[proposalList.size()];
-        for (int i = 0; i < proposalList.size(); i++) {
-            proposals[i] = proposalList.get(i);
+        proposals = new Map[size];
+        for (int i = 0; i < size; i++) {
+            proposals[i] = proposalList.get(start + i);
         }
         return proposals;
     }

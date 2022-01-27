@@ -204,23 +204,14 @@ public class Governance {
     }
 
     @External(readonly = true)
-    public List<Map<String, ?>> getProposals(@Optional String type, @Optional String status) {
-        int typeIntValue;
-        int statusIntValue;
-        if (type == null) {
-            typeIntValue = NetworkProposal.GET_PROPOSALS_FILTER_ALL;
-        } else {
-            typeIntValue = Converter.hexToInt(type).intValue();
-            Context.require(typeIntValue >= Proposal.MIN && typeIntValue <= Proposal.MAX, "invalid type : " + typeIntValue);
-        }
-        if (status == null) {
-            statusIntValue = NetworkProposal.GET_PROPOSALS_FILTER_ALL;
-        } else {
-            statusIntValue = Converter.hexToInt(status).intValue();
-            Context.require(statusIntValue >= NetworkProposal.STATUS_MIN && statusIntValue <= NetworkProposal.STATUS_MAX,
-                    "invalid status : " + statusIntValue);
-        }
-        return List.of(networkProposal.getProposals(typeIntValue, statusIntValue));
+    public List<Map<String, ?>> getProposals(
+            @Optional String type, @Optional String status, @Optional String start, @Optional String size) {
+        int typeIntValue, statusIntValue, startIntValue, sizeIntValue;
+        typeIntValue = type == null ? NetworkProposal.GET_PROPOSALS_FILTER_ALL : Converter.hexToInt(type).intValue();
+        statusIntValue = status == null ? NetworkProposal.GET_PROPOSALS_FILTER_ALL : Converter.hexToInt(status).intValue();
+        startIntValue = start == null ? NetworkProposal.GET_PROPOSAL_DEFAULT_START : Converter.hexToInt(start).intValue();
+        sizeIntValue = size == null ? NetworkProposal.GET_PROPOSALS_MAX_SIZE : Converter.hexToInt(size).intValue();
+        return List.of(networkProposal.getProposals(typeIntValue, statusIntValue, startIntValue, sizeIntValue));
     }
 
     @Payable
@@ -312,7 +303,7 @@ public class Governance {
 
         var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
         Context.require(p != null, "no registered proposal");
-        Context.require(p.isExpired(blockHeight) == false, "This proposal has already expired");
+        Context.require(!p.isExpired(blockHeight), "This proposal has already expired");
         Context.require(p.getStatus(blockHeight) == NetworkProposal.VOTING_STATUS, "Can not be canceled - only voting proposal");
         Context.require(sender.equals(p.proposer), "No permission - only for proposer");
 
