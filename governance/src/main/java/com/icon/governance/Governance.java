@@ -427,7 +427,18 @@ public class Governance {
                 case Value.NETWORK_SCORE_UPDATE_TYPE:
                     Address addr = Converter.strToAddress(valueObject.getString("address", null));
                     var content = Converter.hexToBytes(valueObject.getString("content", null));
-                    Context.deploy(addr, content);
+                    var params = valueObject.get("params");
+                    if (params == null) {
+                        Context.deploy(addr, content);
+                    } else {
+                        var p = params.asArray();
+                        var size = p.size();
+                        String[] stringParams = new String[size];
+                        for (int j = 0; j < size; j++) {
+                            stringParams[j] = p.get(j).asString();
+                        }
+                        Context.deploy(addr, content, (Object) stringParams);
+                    }
                     NetWorkScoreUpdated(addr);
                     continue;
                 case Value.ACCUMULATED_VALIDATION_FAILURE_PENALTY: {
