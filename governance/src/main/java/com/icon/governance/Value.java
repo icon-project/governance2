@@ -228,8 +228,11 @@ public class Value {
             case Proposal.PREP_DISQUALIFICATION:
                 return Map.of("address", address);
             case Proposal.REVISION:
+                return Map.of("revision", value);
             case Proposal.STEP_PRICE:
+                return Map.of("StepPrice", value);
             case Proposal.IREP:
+                return Map.of("irep", value);
             case Proposal.REWARD_FUND:
                 return Map.of("iglobal", value);
             case Proposal.STEP_COSTS:

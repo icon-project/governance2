@@ -73,7 +73,6 @@ NAME: Not an empty string
   * [RevisionChanged](#revisionchanged)
   * [MaliciousScore](#maliciousscore)
   * [PRepDisqualified](#prepdisqualified)
-  * [IRepChanged](#irepchanged)
   * [NetworkProposalRegistered](#networkproposalregistered)
   * [NetworkProposalCanceled](#networkproposalcanceled)
   * [NetworkProposalVoted](#networkproposalvoted)
@@ -555,14 +554,16 @@ None
 
 ## getProposals
 
-* Query all of the network proposals.
+* Query network proposals.
 
 ### Parameters
 
 | Key    | Value Type       | Description                    |
 | :----- | :--------------- | ------------------------------ |
-| type   | [T\_INT](#T_INT) | Type for querying (optional)   |
-| status | [T\_INT](#T_INT) | Status for querying (optional) |
+| type   | [T\_STR](#T_STR) | Type for querying (hex int, optional)   |
+| status | [T\_STR](#T_STR) | Status for querying (hex int, optional) |
+| start  | [T\_STR](#T_STR) | Starting index for querying. Default is 0, which means the latest (hex int, optional) |
+| size   | [T\_STR](#T_STR) | Size for querying. Default and maximum is 10 (hex int, optional)                     |
 
 ### Returns
 
@@ -587,7 +588,9 @@ None
       "method": "getProposals",
       "params": {
         "type": "0x3",
-        "status": "0x0"
+        "status": "0x0",
+        "start": "0x1",
+        "size": "0x3"
       }
     }
   }

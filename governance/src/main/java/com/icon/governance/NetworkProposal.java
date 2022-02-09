@@ -57,7 +57,7 @@ public class NetworkProposal {
         Context.require(
                 statusCondition == GET_PROPOSALS_FILTER_ALL || statusCondition >= NetworkProposal.STATUS_MIN && statusCondition <= NetworkProposal.STATUS_MAX, "invalid status : " + statusCondition);
         Context.require(start >= 0, "Invalid start parameter: " + start);
-        Context.require(size > 0, "Invalid size parameter: " + size);
+        Context.require(size > 0 && size <= GET_PROPOSALS_MAX_SIZE, "Invalid size parameter: " + size);
         Context.require(
                 start <= proposalMaxIndex, "Invalid start parameter: " + start + ">" + proposalMaxIndex);
 
@@ -72,11 +72,13 @@ public class NetworkProposal {
             var proposal = proposalDict.get(key);
             filterProposal(typeCondition, statusCondition, proposalList, proposal);
         }
-        size = Integer.min(size, proposalList.size() - start);
+        int totalSize = proposalList.size();
+        size = Integer.min(size, totalSize - start);
 
+        int startIndex = totalSize - start - 1;
         proposals = new Map[size];
         for (int i = 0; i < size; i++) {
-            proposals[i] = proposalList.get(start + i);
+            proposals[i] = proposalList.get(startIndex - i);
         }
         return proposals;
     }
