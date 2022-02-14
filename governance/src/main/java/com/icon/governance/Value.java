@@ -222,7 +222,7 @@ public class Value {
     public Map<String, Object> toMap() {
         switch (proposalType) {
             case Proposal.TEXT:
-                return Map.of("value", stringValue);
+                return Map.of("text", stringValue);
             case Proposal.MALICIOUS_SCORE:
                 return Map.of("address", address, "type", type);
             case Proposal.PREP_DISQUALIFICATION:

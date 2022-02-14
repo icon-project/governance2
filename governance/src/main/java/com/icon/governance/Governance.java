@@ -480,7 +480,7 @@ public class Governance {
                     validateDisqualifyPRep(Converter.strToAddress(value.getString("address", null)));
                     continue;
                 case Value.STEP_PRICE_TYPE:
-                    var price = Converter.hexToInt(value.getString("price", null));
+                    var price = Converter.hexToInt(value.getString("stepPrice", null));
                     validateStepPRice(price);
                     continue;
                 case Value.REWARD_FUND_TYPE:
