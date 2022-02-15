@@ -192,25 +192,6 @@ public class Governance {
     }
 
     @External(readonly = true)
-    public boolean isInImportWhiteList(String importStmt) {
-        importStmt = importStmt.replace("'", "\"");
-        var stmtJson = Json.parse(importStmt).asObject();
-        if (stmtJson.names().size() != 1) {
-            return false;
-        }
-        var value = stmtJson.get("iconservice");
-        if (value == null) {
-            return false;
-        } else {
-            var all = value.asArray();
-            if (all.size() != 1) {
-                return false;
-            }
-            return all.get(0).asString().equals("*");
-        }
-    }
-
-    @External(readonly = true)
     public Map<String, ?> getProposal(byte[] id) {
         Proposal p = networkProposal.getProposal(id);
         if (p == null) {

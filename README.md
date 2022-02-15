@@ -21,28 +21,9 @@ The most commonly used Value types are as follows.
 | <a id="T_HASH">T\_HASH</a>                | "0x" + 64 digits HEX string                                  | 0xc71303ef8543d04b5dc1ba6579132b143087c68db1b2168786408fcbce568238 |
 | <a id="T_INT">T\_INT</a>                  | "0x" + lowercase HEX string                                  | 0xa                                                          |
 | <a id="T_STR">T\_STR</a>                  | string                                                       | hello                                                        |
-| <a id="T_IMPORT_STMT">T\_IMPORT\_STMT</a> | Import statement string                                      | "{'json': [], 'os': ['path'], 'base.exception': ['ExceptionCode']}" |
 | <a id="T_BIN_DATA">T\_BIN\_DATA</a>       | "0x" + lowercase HEX string (the length of string should be even) | 0x34b2                                                       |
 | <a id="T_SIG">T\_SIG</a>                  | base64 encoded string                                        | VAia7YZ2Ji6igKWzjR2YsGa2m53nKPrfK7uXYW78QLE+ATehAVZPC40szvAiA6NEU5gCYB4c4qaQzqDh2ugcHgA= |
 
-## Import statement
-### Grammar
-import_stmt: "{" import_element ("," import_element)* "}" <br>
-import_element: (import_name | import_from) <br>
-import_name:  dotted_name ": []" <br>
-Import_from:  dotted_name ": [" dotted_names "]" <br>
-dotted_names: dotted_name ("," dotted_name) * <br>
-dotted_name: "'"NAME ("." NAME)*"'" <br>
-NAME: Not an empty string
-
-### Examples
-| python import                                                | import statement                                             |
-| :----------------------------------------------------------- | :----------------------------------------------------------- |
-| import json                                                  | { 'json' : [] }                                              |
-| from json import *                                           | { 'json' : [] }                                              |
-| from os import path                                          | { 'os' : ['path'] }                                          |
-| from base.exception import ExceptionCode                     | { 'base.exception' : ['ExceptionCode'] }                     |
-| import json <br> from os import path <br> from base.exception import ExceptionCode <br> | { 'json' : [], 'os' : ['path'], 'base.exception' : ['ExceptionCode'] } |
 
 # Methods List
 
@@ -53,7 +34,6 @@ NAME: Not an empty string
   * [getMaxStepLimit](#getmaxsteplimit)
   * [isInScoreBlackList](#isinscoreblacklist)
   * [getVersion](#getVersion)
-  * [isInImportWhiteList](#isinimportwhitelist)
   * [getRevision](#getrevision)
   * [getProposal](#getproposal)
   * [getProposals](#getproposals)
@@ -376,51 +356,6 @@ None
 }
 ```
 
-## isInImportWhiteList
-
-* Returns True if import statement is in the import white list.
-
-### Parameters
-
-| Key        | Value Type                        | Description      |
-| :--------- | :-------------------------------- | ---------------- |
-| importStmt | [T\_IMPORT\_STMT](#T_IMPORT_STMT) | Import statement |
-
-### Returns
-
-`T_INT` - "0x1" if the import statement is in the import white list, otherwise "0x0"
-
-### Examples
-
-#### Request
-
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 100,
-  "method": "icx_call",
-  "params": {
-    "to": "cx0000000000000000000000000000000000000001",
-    "dataType": "call",
-    "data": {
-      "method": "isInImportWhiteList",
-      "params": {
-        "importStmt": "{'json': [], 'os': ['path'], 'base.exception': ['ExceptionCode']}"
-      }
-    }
-  }
-}
-```
-
-#### Response
-
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 100,
-  "result": "0x0"
-}
-```
 
 ## getRevision
 
