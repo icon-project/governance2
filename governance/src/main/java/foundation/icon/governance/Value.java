@@ -286,14 +286,20 @@ public class Value {
                 STEP_TYPE_INPUT, STEP_TYPE_API_CALL, STEP_TYPE_GET_BASE, STEP_TYPE_SET_BASE, STEP_TYPE_DELETE_BASE,
                 STEP_TYPE_LOG_BASE, STEP_TYPE_LOG, STEP_TYPE_CONTRACT_DESTRUCT, STEP_TYPE_REPLACE, STEP_TYPE_EVENT_LOG,
         };
-        StepCost[] costs;
+
+        private final StepCost[] costs;
+
+        public StepCost[] getCosts() {
+            return costs;
+        }
 
         public static class StepCost {
-            String type;
-            BigInteger cost;
+            private final String type;
+            private final BigInteger cost;
 
-            public StepCost() {
-
+            public StepCost(String key, BigInteger cost) {
+                this.type = key;
+                this.cost = cost;
             }
 
             public static void writeObject(ObjectWriter w, StepCost s) {
@@ -305,11 +311,17 @@ public class Value {
 
             public static StepCost readObject(ObjectReader r) {
                 r.beginList();
-                var s = new StepCost();
-                s.type = r.readString();
-                s.cost = r.readBigInteger();
+                var s = new StepCost(r.readString(), r.readBigInteger());
                 r.end();
                 return s;
+            }
+
+            public String getType() {
+                return type;
+            }
+
+            public BigInteger getCost() {
+                return cost;
             }
         }
 
@@ -323,12 +335,10 @@ public class Value {
             StepCost[] stepCosts = new StepCost[size];
             for (int i = 0; i < size; i++) {
                 var key = keys.get(i);
-                Context.require(isValidStepType(key), key + "is not valid step type");
+                Context.require(isValidStepType(key), key + " is not valid step type");
                 var value = object.getString(key, "");
                 var cost = Converter.hexToInt(value);
-                stepCosts[i] = new StepCost();
-                stepCosts[i].type = key;
-                stepCosts[i].cost = cost;
+                stepCosts[i] = new StepCost(key, cost);
             }
             return new StepCosts(stepCosts);
         }
@@ -373,7 +383,6 @@ public class Value {
             }
             return Map.of("costs", Map.ofEntries(entries));
         }
-
     }
 
     public static class RewardFunds {
@@ -385,9 +394,13 @@ public class Value {
         RewardFund[] rewardFunds;
 
         public static class RewardFund {
-            String type;
-            BigInteger value;
-            public RewardFund() {}
+            private final String type;
+            private final BigInteger value;
+
+            public RewardFund(String key, BigInteger fund) {
+                this.type = key;
+                this.value = fund;
+            }
 
             public static void writeObject(ObjectWriter w, RewardFund s) {
                 w.beginList(2);
@@ -398,11 +411,17 @@ public class Value {
 
             public static RewardFund readObject(ObjectReader r) {
                 r.beginList();
-                var s = new RewardFund();
-                s.type = r.readString();
-                s.value = r.readBigInteger();
+                var s = new RewardFund(r.readString(), r.readBigInteger());
                 r.end();
                 return s;
+            }
+
+            public boolean isType(String type) {
+                return this.type.equals(type);
+            }
+
+            public BigInteger getValue() {
+                return value;
             }
         }
 
@@ -416,12 +435,10 @@ public class Value {
             RewardFund[] rewardFunds = new RewardFund[size];
             for (int i = 0; i < object.size(); i++) {
                 var key = keys.get(i);
-                Context.require(isValidFundKey(key), key + "is not valid reward fund type");
+                Context.require(isValidFundKey(key), key + " is not valid reward fund type");
                 var value = object.getString(key, "");
                 var fund = Converter.hexToInt(value);
-                rewardFunds[i] = new RewardFund();
-                rewardFunds[i].type = key;
-                rewardFunds[i].value = fund;
+                rewardFunds[i] = new RewardFund(key, fund);
             }
             return new RewardFunds(rewardFunds);
         }
@@ -466,6 +483,5 @@ public class Value {
             }
             return Map.of("rewardFunds", Map.ofEntries(entries));
         }
-
     }
 }

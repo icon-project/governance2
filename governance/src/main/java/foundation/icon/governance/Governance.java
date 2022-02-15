@@ -383,8 +383,8 @@ public class Governance {
                     continue;
                 case Value.STEP_COSTS_TYPE:
                     var stepCosts = Value.StepCosts.fromJson(valueObject.get("costs").asObject());
-                    for (Value.StepCosts.StepCost s : stepCosts.costs) {
-                        setStepCosts(s.type, s.cost);
+                    for (Value.StepCosts.StepCost s : stepCosts.getCosts()) {
+                        setStepCosts(s.getType(), s.getCost());
                     }
                     continue;
                 case Value.REWARD_FUND_TYPE:
@@ -399,12 +399,14 @@ public class Governance {
                     BigInteger ivoter = BigInteger.ZERO;
                     for (int j = 0; j < rewardRatio.rewardFunds.length; j++) {
                         var rewardRateInfo = rewardRatio.rewardFunds[j];
-                        if (rewardRateInfo.type.equals(Value.RewardFunds.I_PREP)) iprep = rewardRateInfo.value;
-                        if (rewardRateInfo.type.equals(Value.RewardFunds.I_CPS)) icps = rewardRateInfo.value;
-                        if (rewardRateInfo.type.equals(Value.RewardFunds.I_RELAY))
-                            irelay = rewardRateInfo.value;
-                        if (rewardRateInfo.type.equals(Value.RewardFunds.I_VOTER))
-                            ivoter = rewardRateInfo.value;
+                        if (rewardRateInfo.isType(Value.RewardFunds.I_PREP))
+                            iprep = rewardRateInfo.getValue();
+                        if (rewardRateInfo.isType(Value.RewardFunds.I_CPS))
+                            icps = rewardRateInfo.getValue();
+                        if (rewardRateInfo.isType(Value.RewardFunds.I_RELAY))
+                            irelay = rewardRateInfo.getValue();
+                        if (rewardRateInfo.isType(Value.RewardFunds.I_VOTER))
+                            ivoter = rewardRateInfo.getValue();
                     }
                     setRewardFundsRate(iprep, icps, irelay, ivoter);
                     continue;
@@ -542,10 +544,10 @@ public class Governance {
         var values = rewardFunds.rewardFunds;
         var sum = BigInteger.ZERO;
         for (Value.RewardFunds.RewardFund value : values) {
-            if (BigInteger.ZERO.compareTo(value.value) > 0) {
+            if (BigInteger.ZERO.compareTo(value.getValue()) > 0) {
                 Context.revert("reward fund < 0");
             }
-            sum = sum.add(value.value);
+            sum = sum.add(value.getValue());
         }
         Context.require(sum.compareTo(BigInteger.valueOf(100)) == 0, "sum of reward funds must be 100");
     }
