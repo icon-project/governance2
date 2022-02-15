@@ -7,7 +7,7 @@ dependencies {
 }
 
 optimizedJar {
-    mainClassName = 'com.icon.governance.Governance'
+    mainClassName = 'foundation.icon.governance.Governance'
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
