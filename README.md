@@ -24,6 +24,7 @@ The most commonly used Value types are as follows.
 | <a id="T_BIN_DATA">T\_BIN\_DATA</a>       | "0x" + lowercase HEX string (the length of string should be even) | 0x34b2                                                       |
 | <a id="T_SIG">T\_SIG</a>                  | base64 encoded string                                        | VAia7YZ2Ji6igKWzjR2YsGa2m53nKPrfK7uXYW78QLE+ATehAVZPC40szvAiA6NEU5gCYB4c4qaQzqDh2ugcHgA= |
 
+Rename package
 
 # Methods List
 
@@ -437,7 +438,12 @@ None
 ```
 
 #### Response
+Proposal registered in governance2.0.0 has different response format from previously registered proposal.
+The following shows the proposal registered before governance2 and the proposal registered in governance2.  
+Check [changes](https://github.com/icon-project/governance2/doc/network_proposal_changes.md)
 
+#### Response1
+registered before governance2
 ```json
 {
   "jsonrpc": "2.0",
@@ -476,11 +482,62 @@ None
       },
     },
     "contents": {
-      "title": "Disqualify P-Rep C",
-      "description": "P-Rep C does not maintain node",
-      "type": "0x3",
+      "title": "set revision",
+      "description": "set revision 18",
+      "type":"0x9",
       "value": {
-        "address": "hxbe258ceb872e08851f1f59694dac2558708ece11"
+        "proposals": "[{\"value\": {\"revision\": \"0x12\"}}]"
+      }
+    }
+  }
+}
+```
+
+#### Response2
+registered in governance2
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 100,
+  "result": {
+    "id" : "0xb903239f8543d0..",
+    "proposer" : "hxbe258ceb872e08851f1f59694dac2558708ece11",
+    "proposerName" : "P-Rep A",
+    "status" : "0x0",
+    "startBlockHeight" : "0x1",
+    "endBlockHeight" : "0x65",
+    "vote": {
+      "agree": {
+        "list":[{
+          "id": "0xb903239f854..",
+          "timestamp": "0x563a6cf330136",
+          "address": "hxe7af5fcfd8dfc67530a01a0e403882687528dfcb",
+          "name": "P-Rep B",
+          "amount": "0x1"
+        }, .. ],
+        "amount": "0x12345"
+      },
+      "disagree": {
+        "list": [{
+          "id": "0xa803239f854..",
+          "timestamp": "0x563a6cf330136",
+          "address": "hxbe258ceb872e08851f1f59694dac2558708ece11",
+          "name": "P-Rep C",
+          "amount": "0x1"
+        }, .. ],
+        "amount": "0x123"
+      },
+      "noVote": {
+        "list": ["hx31258ceb872e08851f1f59694dac2558708ece11", .. , "hx31258ceb872e08851f1f59694dac2558708eceff"],
+        "amount": "0x12312341234a"
+      },
+    },
+    "contents": {
+      "title": "set revision",
+      "description": "set revision 14",
+      "type": "0x1",
+      "value": {
+        "revision": "0xe"
       }
     }
   }
@@ -562,11 +619,11 @@ None
           }
         },
         "contents":{
-          "title":"Disqualify P-Rep C",
-          "description":"P-Rep C does not maintain node",
-          "type":"0x3",
-          "value":{
-            "address":"hxbe258ceb872e08851f1f59694dac2558708ece11"
+          "title": "set revision",
+          "description": "set revision 18",
+          "type":"0x9",
+          "value": {
+            "proposals": "[{\"value\": {\"revision\": \"0x12\"}}]"
           }
         }
       }, .. ]
