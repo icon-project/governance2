@@ -111,12 +111,12 @@ class ChainScore {
 
     void acceptScore(byte[] txHash) {
         validateHash(txHash);
-        Context.call(CHAIN_SCORE, "acceptScore", txHash);
+        Context.call(CHAIN_SCORE, "acceptScore", (Object) txHash);
     }
 
-    void rejectScore(byte[] txHash, String reason) {
+    void rejectScore(byte[] txHash) {
         validateHash(txHash);
-        Context.call(CHAIN_SCORE, "rejectScore", txHash, reason);
+        Context.call(CHAIN_SCORE, "rejectScore", (Object) txHash);
     }
 
     void addTimer(BigInteger blockHeight) {

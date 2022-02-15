@@ -152,7 +152,7 @@ public class Governance {
     public void rejectScore(byte[] txHash, String reason) {
         var caller = Context.getCaller();
         Context.require(isAuditor(caller), "Invalid sender: no permission");
-        chainScore.rejectScore(txHash, reason);
+        chainScore.rejectScore(txHash);
         Rejected(txHash, reason);
     }
 
