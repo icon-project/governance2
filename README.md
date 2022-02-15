@@ -24,7 +24,6 @@ The most commonly used Value types are as follows.
 | <a id="T_BIN_DATA">T\_BIN\_DATA</a>       | "0x" + lowercase HEX string (the length of string should be even) | 0x34b2                                                       |
 | <a id="T_SIG">T\_SIG</a>                  | base64 encoded string                                        | VAia7YZ2Ji6igKWzjR2YsGa2m53nKPrfK7uXYW78QLE+ATehAVZPC40szvAiA6NEU5gCYB4c4qaQzqDh2ugcHgA= |
 
-Rename package
 
 # Methods List
 
@@ -440,10 +439,10 @@ None
 #### Response
 Proposal registered in governance2.0.0 has different response format from previously registered proposal.
 The following shows the proposal registered before governance2 and the proposal registered in governance2.  
-Check [changes](https://github.com/icon-project/governance2/doc/network_proposal_changes.md)
+Check [changes](https://github.com/icon-project/governance2/blob/main/doc/network_proposal_changes.md)
 
 #### Response1
-registered before governance2
+registered in governance2
 ```json
 {
   "jsonrpc": "2.0",
@@ -486,7 +485,7 @@ registered before governance2
       "description": "set revision 18",
       "type":"0x9",
       "value": {
-        "proposals": "[{\"value\": {\"revision\": \"0x12\"}}]"
+        "list": "[{\"value\": {\"revision\": \"0x12\"}}]"
       }
     }
   }
@@ -494,7 +493,7 @@ registered before governance2
 ```
 
 #### Response2
-registered in governance2
+registered before governance2
 ```json
 {
   "jsonrpc": "2.0",
@@ -623,7 +622,7 @@ registered in governance2
           "description": "set revision 18",
           "type":"0x9",
           "value": {
-            "proposals": "[{\"value\": {\"revision\": \"0x12\"}}]"
+            "list": "[{\"value\": {\"revision\": \"0x12\"}}]"
           }
         }
       }, .. ]

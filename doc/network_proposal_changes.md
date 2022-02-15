@@ -56,9 +56,7 @@ If you query the proposals registered before governance2, The response will be i
 
 In the new format, the type of proposal is list.  
 The proposal type is identified by the `name` of the dict element in the `list(result.contents.value.proposals)`.  
-Value of name must be one of (text, revision, maliciousScore, prepDisqualification, stepPrice, stepCosts, rewardFund,
-rewardFundsAllocation, networkScoreDesignation, networkScoreUpdate, accumulatedValidationFailureSlashingRate,
-missedNetworkProposalSlashingRate)
+For possible values of `name`, refer to the [link](https://github.com/icon-project/governance2#registerproposal).
 
 ```json
 {
@@ -70,7 +68,7 @@ missedNetworkProposalSlashingRate)
       "title": "test title 2",
       "type": "0x9",
       "value": {
-        "proposals": "[{\"value\": {\"text\": \"hello world\"}, \"name\": \"text\"}]"
+        "list": "[{\"value\": {\"text\": \"hello world\"}, \"name\": \"text\"}]"
       }
     },
     "endBlockHeight": "0x23",
@@ -115,10 +113,11 @@ This table is a mapping for `type` and `name`.
 |0x7|rewardFund|
 |0x8|rewardFundsAllocation|
 
-### Changes in value
+### Changes in value for old proposals
 
-Some proposals format have been changed. Some key in the `value` has been changed or has been deleted.  
-Even for proposals registered before governance2.0.0, It will send response in new format. Below shows changes for proposals.
+Some proposal's contents have been changed. Some key in the `value` has been changed or has been deleted.  
+Even for proposals registered before governance2.0.0, It will send response **in different format from previous format.**  
+Below shows changes for proposals.
 
 **text proposal**  
 The `value` key in value has been *changed* to `text`.
@@ -148,7 +147,7 @@ The `value` key in value has been *changed* to `text`.
   }
 }
 ```
-**step price proposal**
+**step price proposal**  
 The `value` key has been *changed* to `stepPrice`.
 ```json
 {
@@ -157,7 +156,7 @@ The `value` key has been *changed* to `stepPrice`.
     "title": "Step price",
     "type": "0x4",
     "value": {
-      "StepPrice": "0x37e11d600"
+      "stepPrice": "0x37e11d600"
     }
   }
 }
