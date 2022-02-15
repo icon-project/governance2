@@ -468,9 +468,6 @@ public class Governance {
                     var revision = Converter.hexToInt(value.getString("revision", null));
                     validateRevision(revision);
                     continue;
-                case Value.STEP_COSTS_TYPE:
-                    Value.StepCosts.fromJson(value.get("costs").asObject());
-                    continue;
                 case Value.MALICIOUS_SCORE_TYPE:
                     var type = Converter.hexToInt(value.getString("type", null));
                     validateMaliciousScore(Converter.strToAddress(value.getString("address", null)), type.intValue());
@@ -481,6 +478,9 @@ public class Governance {
                 case Value.STEP_PRICE_TYPE:
                     var price = Converter.hexToInt(value.getString("stepPrice", null));
                     validateStepPRice(price);
+                    continue;
+                case Value.STEP_COSTS_TYPE:
+                    Value.StepCosts.fromJson(value.get("costs").asObject());
                     continue;
                 case Value.REWARD_FUND_TYPE:
                     var iglobal = Converter.hexToInt(value.getString("iglobal", null));
