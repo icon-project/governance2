@@ -825,7 +825,7 @@ Invoke method can initiate state transition.
 | :--- | :--------------- | ------------- |
 | name | [T\_STR](#T_STR) | "revision"(fixed value) |
 | value | T\_DICT | |
-| revision | [T\_INT](#T_INT) | Revision code |
+| value.revision | [T\_INT](#T_INT) | Revision code |
 
 *Malicious SCORE*
 
