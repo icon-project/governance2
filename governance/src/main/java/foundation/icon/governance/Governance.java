@@ -131,8 +131,8 @@ public class Governance {
     }
 
     @External(readonly = true)
-    public BigInteger getMaxStepLimit(String t) {
-        return chainScore.getMaxStepLimit(t);
+    public BigInteger getMaxStepLimit(String contextType) {
+        return chainScore.getMaxStepLimit(contextType);
     }
 
     @External(readonly = true)
