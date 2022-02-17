@@ -12,3 +12,20 @@ optimizedJar {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
 }
+
+deployJar {
+    endpoints {
+        berlin {
+            uri = 'https://berlin.net.solidwallet.io/api/v3'
+            nid = 0x7
+            to = 'cx0000000000000000000000000000000000000001'
+        }
+        local {
+            uri = 'http://localhost:9082/api/v3'
+            nid = 0x3
+            to = 'cx0000000000000000000000000000000000000001'
+        }
+    }
+    keystore = rootProject.hasProperty('keystoreName') ? "$keystoreName" : ''
+    password = rootProject.hasProperty('keystorePass') ? "$keystorePass" : ''
+}
