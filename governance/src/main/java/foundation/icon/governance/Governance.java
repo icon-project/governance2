@@ -378,7 +378,7 @@ public class Governance {
                     disqualifyPRep(Converter.strToAddress(valueObject.getString("address", null)));
                     continue;
                 case Value.STEP_PRICE_TYPE:
-                    var price = Converter.hexToInt(valueObject.getString("price", ""));
+                    var price = Converter.hexToInt(valueObject.getString("stepPrice", ""));
                     setStepPrice(price);
                     continue;
                 case Value.STEP_COSTS_TYPE:

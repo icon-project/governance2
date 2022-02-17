@@ -43,7 +43,6 @@ class Converter {
             return new BigInteger("-" + value.substring(3), 16);
         } else {
             throw new IllegalArgumentException("Invalid hex value");
-
         }
     }
 
