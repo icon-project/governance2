@@ -68,7 +68,7 @@ For possible values of `name`, refer to the [link](https://github.com/icon-proje
       "title": "test title 2",
       "type": "0x9",
       "value": {
-        "list": "[{\"value\": {\"text\": \"hello world\"}, \"name\": \"text\"}]"
+        "data": "[{\"value\": {\"text\": \"hello world\"}, \"name\": \"text\"}]"
       }
     },
     "endBlockHeight": "0x23",

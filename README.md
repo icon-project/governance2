@@ -485,7 +485,7 @@ registered in governance2
       "description": "set revision 18",
       "type":"0x9",
       "value": {
-        "list": "[{\"value\": {\"revision\": \"0x12\"}}]"
+        "data": "[{\"value\": {\"revision\": \"0x12\"}}]"
       }
     }
   }
@@ -622,7 +622,7 @@ registered before governance2
           "description": "set revision 18",
           "type":"0x9",
           "value": {
-            "list": "[{\"value\": {\"revision\": \"0x12\"}}]"
+            "data": "[{\"value\": {\"revision\": \"0x12\"}}]"
           }
         }
       }, .. ]
@@ -976,7 +976,6 @@ Determine the allocation of the monthly reward fund
       "params": {
         "title": "Disqualify P-Rep A",
         "description": "P-Rep A does not maintain node",
-        "type": "0x3",
         "value": "0x7b2261646472657373223a2022.."
       }
     }

@@ -255,7 +255,7 @@ public class Value {
             case Proposal.REWARD_FUNDS_ALLOCATION:
                 return rewardFunds.toMap();
             case Proposal.NETWORK_PROPOSAL:
-                return Map.of("list", new String(data));
+                return Map.of("data", new String(data));
         }
         throw new IllegalArgumentException("Invalid value type");
     }
