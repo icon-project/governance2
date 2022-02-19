@@ -21,8 +21,10 @@ import score.Address;
 import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
+import scorex.util.ArrayList;
 
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Map;
 
 public class Value {
@@ -430,16 +432,19 @@ public class Value {
         }
 
         public static RewardFunds fromJson(JsonObject object) {
+            var validKeys = new ArrayList<>(List.of(VALUES));
             var keys = object.names();
             var size = keys.size();
             RewardFund[] rewardFunds = new RewardFund[size];
-            for (int i = 0; i < object.size(); i++) {
+            for (int i = 0; i < size; i++) {
                 var key = keys.get(i);
-                Context.require(isValidFundKey(key), key + " is not valid reward fund type");
+                Context.require(validKeys.contains(key), "InvalidFundType");
+                validKeys.remove(key);
                 var value = object.getString(key, "");
                 var fund = Converter.hexToInt(value);
                 rewardFunds[i] = new RewardFund(key, fund);
             }
+            Context.require(validKeys.size() == 0, "InvalidFundType");
             return new RewardFunds(rewardFunds);
         }
 
@@ -466,13 +471,6 @@ public class Value {
 
             r.end();
             return rewardFunds;
-        }
-
-        static boolean isValidFundKey(String type) {
-            for (String t : VALUES) {
-                if (type.equals(t)) return true;
-            }
-            return false;
         }
 
         public Map<String, Object> toMap() {
