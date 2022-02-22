@@ -460,45 +460,60 @@ public class Governance {
             var name = object.getString("name", "");
             Context.require(!name.equals(""), "name field required");
             var value = object.get("value").asObject();
+            var keys = object.names();
+            Context.require(keys.size() == 2);
+            keys = value.names();
+            var size = keys.size();
             switch (name) {
                 case Value.TEXT_TYPE:
+                    Context.require(size == 1);
                     Context.require(value.getString("text", null) != null);
                     continue;
                 case Value.REVISION_TYPE:
+                    Context.require(size == 1);
                     var revision = Converter.hexToInt(value.getString("revision", null));
                     validateRevision(revision);
                     continue;
                 case Value.MALICIOUS_SCORE_TYPE:
+                    Context.require(size == 2);
                     var type = Converter.hexToInt(value.getString("type", null));
                     validateMaliciousScore(Converter.strToAddress(value.getString("address", null)), type.intValue());
                     continue;
                 case Value.PREP_DISQUALIFICATION_TYPE:
+                    Context.require(size == 1);
                     validateDisqualifyPRep(Converter.strToAddress(value.getString("address", null)));
                     continue;
                 case Value.STEP_PRICE_TYPE:
+                    Context.require(size == 1);
                     var price = Converter.hexToInt(value.getString("stepPrice", null));
                     validateStepPRice(price);
                     continue;
                 case Value.STEP_COSTS_TYPE:
+                    Context.require(size == 1);
                     Value.StepCosts.fromJson(value.get("costs").asObject());
                     continue;
                 case Value.REWARD_FUND_TYPE:
+                    Context.require(size == 1);
                     var iglobal = Converter.hexToInt(value.getString("iglobal", null));
                     chainScore.validateRewardFund(iglobal);
                     continue;
                 case Value.REWARD_FUNDS_ALLOCATION:
+                    Context.require(size == 1);
                     var funds = Value.RewardFunds.fromJson(value.get("rewardFunds").asObject());
                     validateRewardFundsRate(funds);
                     continue;
                 case Value.NETWORK_SCORE_DESIGNATION_TYPE:
+                    Context.require(size == 1);
                     validateDesignationProposal(value);
                     continue;
                 case Value.NETWORK_SCORE_UPDATE_TYPE:
+                    Context.require(size == 2);
                     Converter.strToAddress(value.getString("address", null));
                     Converter.hexToBytes(value.getString("content", null));
                     continue;
                 case Value.ACCUMULATED_VALIDATION_FAILURE_PENALTY:
                 case Value.MISSED_NETWORK_PROPOSAL_PENALTY:
+                    Context.require(size == 1);
                     var slashingRate = Converter.hexToInt(value.getString("slashingRate", null));
                     Context.require(slashingRate.compareTo(BigInteger.ZERO) >= 0 && slashingRate.compareTo(BigInteger.valueOf(100)) <= 0,
                             "slashing rate invalid");
