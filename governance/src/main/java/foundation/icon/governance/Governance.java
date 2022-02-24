@@ -436,8 +436,8 @@ public class Governance {
                         String role = v.getString("role", null);
                         Address address = Converter.strToAddress(v.getString("address", null));
                         chainScore.setNetworkScore(role, address);
-                        if (address != null) NetWorkScoreDesignated(role, address);
-                        else NetWorkScoreDeallocated(role);
+                        if (address != null) NetworkScoreDesignated(role, address);
+                        else NetworkScoreDeallocated(role);
                     }
                     continue;
                 }
@@ -456,7 +456,7 @@ public class Governance {
                         }
                         Context.deploy(addr, content, (Object) stringParams);
                     }
-                    NetWorkScoreUpdated(addr);
+                    NetworkScoreUpdated(addr);
                     continue;
                 case Value.ACCUMULATED_VALIDATION_FAILURE_PENALTY: {
                     var rate = Converter.hexToInt(valueObject.getString("slashingRate", null));
@@ -504,7 +504,7 @@ public class Governance {
                 case Value.STEP_PRICE_TYPE:
                     Context.require(size == 1);
                     var price = Converter.hexToInt(value.getString("stepPrice", null));
-                    validateStepPRice(price);
+                    validateStepPrice(price);
                     continue;
                 case Value.STEP_COSTS_TYPE:
                     Context.require(size == 1);
@@ -564,7 +564,7 @@ public class Governance {
                 address.toString() + "is not p-rep");
     }
 
-    private void validateStepPRice(BigInteger price) {
+    private void validateStepPrice(BigInteger price) {
         var prevPrice = chainScore.getStepPrice();
         var hundred = BigInteger.valueOf(100);
         var max = prevPrice.multiply(BigInteger.valueOf(125)).divide(hundred);
@@ -713,13 +713,13 @@ public class Governance {
     public void RewardFundAllocationChanged(BigInteger iprep, BigInteger icps, BigInteger irelay, BigInteger ivoter) {}
 
     @EventLog(indexed=1)
-    public void NetWorkScoreUpdated(Address address) {}
+    public void NetworkScoreUpdated(Address address) {}
 
     @EventLog(indexed=1)
-    public void NetWorkScoreDesignated(String role, Address address) {}
+    public void NetworkScoreDesignated(String role, Address address) {}
 
     @EventLog(indexed=1)
-    public void NetWorkScoreDeallocated(String role) {}
+    public void NetworkScoreDeallocated(String role) {}
 
     @EventLog(indexed=0)
     public void NetworkProposalRegistered(String title, String description, int type, byte[] value, Address proposer) {}

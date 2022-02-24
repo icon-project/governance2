@@ -849,7 +849,7 @@ Invoke method can initiate state transition.
 | :---- | :--------------- | ------------------------------------ |
 | name | [T\_STR](#T_STR) | "stepPrice"(fixed value) |
 | value | T\_DICT | |
-| value.price | [T\_INT](#T_INT) | An integer of the step price in loop |
+| value.stepPrice | [T\_INT](#T_INT) | An integer of the step price in loop |
 
 *Step Costs*<br>
 | Key | Value Type         | Description                          |
@@ -910,9 +910,9 @@ Determine the allocation of the monthly reward fund
 *example*
 ```json
 {
-  "name": "rewardFunndsAllocation", 
+  "name": "rewardFundsAllocation",
   "value": {
-  "rewardFunds": {"iprep": "0x19", "icps": "0x17", "irelay": "0x1a", "ivoter":  "0x1a"}
+    "rewardFunds": {"iprep": "0x10", "icps": "0xa", "irelay": "0xa", "ivoter": "0x40"}
   }
 }
 ```
@@ -1152,7 +1152,7 @@ Triggered on vote transaction approving 'network score update' network proposal.
 
 ```java
 @EventLog(indexed=1)
-public void NetWorkScoreUpdated(Address address) {}
+public void NetworkScoreUpdated(Address address) {}
 ```
 
 ## NetworkScoreDesignated
@@ -1161,7 +1161,7 @@ Triggered on vote transaction approving 'network score designate' network propos
 
 ```java
 @EventLog(indexed=1)
-public void NetWorkScoreDesignated(String role, Address address) {}
+public void NetworkScoreDesignated(String role, Address address) {}
 ```
 
 ## NetworkScoreDeallocated
@@ -1170,7 +1170,7 @@ Triggered on vote transaction approving 'network score designate' network propos
 
 ```java
 @EventLog(indexed=1)
-public void NetWorkScoreDeallocated(String role) {}
+public void NetworkScoreDeallocated(String role) {}
 ```
 
 ## NetworkProposalRegistered
