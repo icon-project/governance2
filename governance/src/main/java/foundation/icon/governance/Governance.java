@@ -589,12 +589,13 @@ public class Governance {
     private void validateDesignationProposal(JsonObject value) {
         var networkScores = value.get("networkScores").asArray();
         int length = networkScores.size();
+        Context.require(0 < length && length <= 2, "Invalid array size");
         for (int i = 0; i < length; i++) {
             var v = networkScores.get(i).asObject();
             String role = v.getString("role", null);
-            Address address = Converter.strToAddress(v.getString("address", null));
-            var ret = role.equals(Value.CPS_SCORE) || role.equals(Value.RELAY_SCORE) || role.equals(Value.GOVERNANCE_SCORE);
-            Context.require(ret, "invalid network SCORE role : " + role);
+            Address address = Converter.toAddress(v.getString("address", null));
+            Context.require(Value.CPS_SCORE.equals(role) || Value.RELAY_SCORE.equals(role),
+                    "Invalid network SCORE role: " + role);
             if (address == null) return;
             Address owner = chainScore.getScoreOwner(address);
             Context.require(owner.equals(Governance.address), "Only owned by governance can be designated");

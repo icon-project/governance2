@@ -39,7 +39,6 @@ public class Value {
     public static final int UNFREEZE_SCORE = 1;
     public static final String CPS_SCORE = "cps";
     public static final String RELAY_SCORE = "relay";
-    public static final String GOVERNANCE_SCORE = "governance";
     public static final String TEXT_TYPE = "text";
     public static final String REVISION_TYPE = "revision";
     public static final String MALICIOUS_SCORE_TYPE = "maliciousScore";
