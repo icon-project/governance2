@@ -385,18 +385,18 @@ public class Governance {
                 case Value.TEXT_TYPE:
                     continue;
                 case Value.REVISION_TYPE:
-                    var revision = Converter.hexToInt(valueObject.getString("revision", null));
+                    var revision = Converter.toInteger(valueObject.getString("revision", null));
                     setRevision(revision);
                     return;
                 case Value.MALICIOUS_SCORE_TYPE:
-                    var type = Converter.hexToInt(valueObject.getString("type", null));
-                    processMaliciousProposal(Converter.strToAddress(valueObject.getString("address", null)), type);
+                    var type = Converter.toInteger(valueObject.getString("type", null));
+                    processMaliciousProposal(Converter.toAddress(valueObject.getString("address", null)), type);
                     continue;
                 case Value.PREP_DISQUALIFICATION_TYPE:
-                    disqualifyPRep(Converter.strToAddress(valueObject.getString("address", null)));
+                    disqualifyPRep(Converter.toAddress(valueObject.getString("address", null)));
                     continue;
                 case Value.STEP_PRICE_TYPE:
-                    var price = Converter.hexToInt(valueObject.getString("stepPrice", ""));
+                    var price = Converter.toInteger(valueObject.getString("stepPrice", null));
                     setStepPrice(price);
                     continue;
                 case Value.STEP_COSTS_TYPE:
@@ -406,7 +406,7 @@ public class Governance {
                     }
                     continue;
                 case Value.REWARD_FUND_TYPE:
-                    var iglobal = Converter.hexToInt(valueObject.getString("iglobal", null));
+                    var iglobal = Converter.toInteger(valueObject.getString("iglobal", null));
                     setRewardFund(iglobal);
                     continue;
                 case Value.REWARD_FUNDS_ALLOCATION:
@@ -434,7 +434,7 @@ public class Governance {
                     for (int j = 0; j < l; j++) {
                         var v = networkScores.get(j).asObject();
                         String role = v.getString("role", null);
-                        Address address = Converter.strToAddress(v.getString("address", null));
+                        Address address = Converter.toAddress(v.getString("address", null));
                         chainScore.setNetworkScore(role, address);
                         if (address != null) NetworkScoreDesignated(role, address);
                         else NetworkScoreDeallocated(role);
@@ -442,7 +442,7 @@ public class Governance {
                     continue;
                 }
                 case Value.NETWORK_SCORE_UPDATE_TYPE:
-                    Address addr = Converter.strToAddress(valueObject.getString("address", null));
+                    Address addr = Converter.toAddress(valueObject.getString("address", null));
                     var content = Converter.hexToBytes(valueObject.getString("content", null));
                     var params = valueObject.get("params");
                     if (params == null) {
@@ -459,12 +459,12 @@ public class Governance {
                     NetworkScoreUpdated(addr);
                     continue;
                 case Value.ACCUMULATED_VALIDATION_FAILURE_PENALTY: {
-                    var rate = Converter.hexToInt(valueObject.getString("slashingRate", null));
+                    var rate = Converter.toInteger(valueObject.getString("slashingRate", null));
                     chainScore.setConsistentValidationSlashingRate(rate);
                     continue;
                 }
                 case Value.MISSED_NETWORK_PROPOSAL_PENALTY: {
-                    var rate = Converter.hexToInt(valueObject.getString("slashingRate", null));
+                    var rate = Converter.toInteger(valueObject.getString("slashingRate", null));
                     chainScore.setNonVoteSlashingRate(rate);
                 }
             }
@@ -489,21 +489,21 @@ public class Governance {
                     continue;
                 case Value.REVISION_TYPE:
                     Context.require(size == 1);
-                    var revision = Converter.hexToInt(value.getString("revision", null));
+                    var revision = Converter.toInteger(value.getString("revision", null));
                     validateRevision(revision);
                     continue;
                 case Value.MALICIOUS_SCORE_TYPE:
                     Context.require(size == 2);
-                    var type = Converter.hexToInt(value.getString("type", null));
-                    validateMaliciousScore(Converter.strToAddress(value.getString("address", null)), type.intValue());
+                    var type = Converter.toInteger(value.getString("type", null));
+                    validateMaliciousScore(Converter.toAddress(value.getString("address", null)), type.intValue());
                     continue;
                 case Value.PREP_DISQUALIFICATION_TYPE:
                     Context.require(size == 1);
-                    validateDisqualifyPRep(Converter.strToAddress(value.getString("address", null)));
+                    validateDisqualifyPRep(Converter.toAddress(value.getString("address", null)));
                     continue;
                 case Value.STEP_PRICE_TYPE:
                     Context.require(size == 1);
-                    var price = Converter.hexToInt(value.getString("stepPrice", null));
+                    var price = Converter.toInteger(value.getString("stepPrice", null));
                     validateStepPrice(price);
                     continue;
                 case Value.STEP_COSTS_TYPE:
@@ -512,7 +512,7 @@ public class Governance {
                     continue;
                 case Value.REWARD_FUND_TYPE:
                     Context.require(size == 1);
-                    var iglobal = Converter.hexToInt(value.getString("iglobal", null));
+                    var iglobal = Converter.toInteger(value.getString("iglobal", null));
                     chainScore.validateRewardFund(iglobal);
                     continue;
                 case Value.REWARD_FUNDS_ALLOCATION:
@@ -525,14 +525,15 @@ public class Governance {
                     validateDesignationProposal(value);
                     continue;
                 case Value.NETWORK_SCORE_UPDATE_TYPE:
-                    Context.require(size == 2);
-                    Converter.strToAddress(value.getString("address", null));
+                    var required = value.get("params") == null ? 2 : 3;
+                    Context.require(size == required, "Invalid array size");
+                    Context.require(Converter.toAddress(value.getString("address", null)) != null, "Invalid address");
                     Converter.hexToBytes(value.getString("content", null));
                     continue;
                 case Value.ACCUMULATED_VALIDATION_FAILURE_PENALTY:
                 case Value.MISSED_NETWORK_PROPOSAL_PENALTY:
                     Context.require(size == 1);
-                    var slashingRate = Converter.hexToInt(value.getString("slashingRate", null));
+                    var slashingRate = Converter.toInteger(value.getString("slashingRate", null));
                     Context.require(slashingRate.compareTo(BigInteger.ZERO) >= 0 && slashingRate.compareTo(BigInteger.valueOf(100)) <= 0,
                             "slashing rate invalid");
                     continue;

@@ -22,7 +22,7 @@ import java.math.BigInteger;
 
 class Converter {
     public static byte[] hexToBytes(String value) {
-        if (value.startsWith("0x") && (value.length() % 2 == 0)) {
+        if (value != null && value.startsWith("0x") && (value.length() % 2 == 0)) {
             String hex = value.substring(2);
             int len = hex.length() / 2;
             byte[] bytes = new byte[len];
@@ -36,18 +36,19 @@ class Converter {
         }
     }
 
-    public static BigInteger hexToInt(String value) {
-        if(value.startsWith("0x")) {
+    public static BigInteger toInteger(String value) {
+        if (value.startsWith("0x")) {
             return new BigInteger(value.substring(2), 16);
         } else if (value.startsWith(("-0x"))){
             return new BigInteger("-" + value.substring(3), 16);
-        } else {
-            throw new IllegalArgumentException("Invalid hex value");
         }
+        return new BigInteger(value);
     }
 
-    public static Address strToAddress(String value) {
-        if (value.equals("")) return null;
+    public static Address toAddress(String value) {
+        if (value == null || value.equals("")) {
+            return null;
+        }
         return Address.fromString(value);
     }
 }

@@ -175,7 +175,7 @@ public class VoteInfo {
                 BigInteger timestamp = BigDecimal.valueOf(
                         voteJson.getDouble("timestamp", 0)
                 ).toBigInteger();
-                Address address = Converter.strToAddress(
+                Address address = Converter.toAddress(
                         voteJson.getString("address", null)
                 );
                 String name = voteJson.getString("name", null);
@@ -339,7 +339,7 @@ public class VoteInfo {
             int i = 0;
             for (JsonValue item : array) {
                 String _address = item.asString();
-                Address address = Converter.strToAddress(_address);
+                Address address = Converter.toAddress(_address);
                 addrList[i++] = address;
             }
             this.setAddressList(addrList);

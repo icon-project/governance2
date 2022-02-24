@@ -180,7 +180,7 @@ public class Proposal {
                 "0x" + jsonObj.getString("id", null)
         );
 
-        Address proposer = Converter.strToAddress(
+        Address proposer = Converter.toAddress(
                 jsonObj.getString("proposer", null)
         );
 

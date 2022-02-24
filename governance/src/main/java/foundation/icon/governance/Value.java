@@ -209,27 +209,27 @@ public class Value {
             case Proposal.MALICIOUS_SCORE:
                 return new Value(
                         type,
-                        Converter.strToAddress(value.getString("address", null)),
-                        Converter.hexToInt(value.getString("type", null))
+                        Converter.toAddress(value.getString("address", null)),
+                        Converter.toInteger(value.getString("type", null))
                 );
             case Proposal.PREP_DISQUALIFICATION:
-                return new Value(type, Converter.strToAddress(value.getString("address", null)));
+                return new Value(type, Converter.toAddress(value.getString("address", null)));
             case Proposal.REVISION:
                 var code = value.getString("code", null);
                 BigInteger revision;
                 if (code != null) {
-                    revision = Converter.hexToInt(code);
+                    revision = Converter.toInteger(code);
                 } else {
-                    revision = Converter.hexToInt(value.getString("value", null));
+                    revision = Converter.toInteger(value.getString("value", null));
                 }
                 return new Value(type, revision);
             case Proposal.STEP_PRICE:
             case Proposal.IREP:
-                return new Value(type, Converter.hexToInt(value.getString("value", null)));
+                return new Value(type, Converter.toInteger(value.getString("value", null)));
             case Proposal.STEP_COSTS:
                 return new Value(type, StepCosts.fromJson(value.get("costs").asObject()));
             case Proposal.REWARD_FUND:
-                return new Value(type, Converter.hexToInt(value.getString("iglobal", null)));
+                return new Value(type, Converter.toInteger(value.getString("iglobal", null)));
             case Proposal.REWARD_FUNDS_ALLOCATION:
                 return new Value(type, RewardFunds.fromJson(value.get("rewardFunds").asObject()));
         }
@@ -339,7 +339,7 @@ public class Value {
                 var key = keys.get(i);
                 Context.require(isValidStepType(key), key + " is not valid step type");
                 var value = object.getString(key, "");
-                var cost = Converter.hexToInt(value);
+                var cost = Converter.toInteger(value);
                 stepCosts[i] = new StepCost(key, cost);
             }
             return new StepCosts(stepCosts);
@@ -441,7 +441,7 @@ public class Value {
                 Context.require(validKeys.contains(key), "InvalidFundType");
                 validKeys.remove(key);
                 var value = object.getString(key, "");
-                var fund = Converter.hexToInt(value);
+                var fund = Converter.toInteger(value);
                 rewardFunds[i] = new RewardFund(key, fund);
             }
             Context.require(validKeys.size() == 0, "InvalidFundType");
