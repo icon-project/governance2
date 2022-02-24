@@ -814,7 +814,7 @@ Invoke method can initiate state transition.
 
 | Key   | Value Type       | Description |
 | :---- | :--------------- | ----------- |
-| name | [T\_STR](#T_STR) | "text"(fixed value)  |
+| name | [T\_STR](#T_STR) | "text" (fixed value)  |
 | value | T\_DICT |  |
 | value.text | [T\_STR](#T_STR) | Text value  |
 
@@ -822,7 +822,7 @@ Invoke method can initiate state transition.
 
 | Key  | Value Type       | Description   |
 | :--- | :--------------- | ------------- |
-| name | [T\_STR](#T_STR) | "revision"(fixed value) |
+| name | [T\_STR](#T_STR) | "revision" (fixed value) |
 | value | T\_DICT | |
 | value.revision | [T\_INT](#T_INT) | Revision code |
 
@@ -830,7 +830,7 @@ Invoke method can initiate state transition.
 
 | Key     | Value Type                      | Description                |
 | :------ | :------------------------------ | -------------------------- |
-| name | [T\_STR](#T_STR) | "maliciousScore"(fixed value) |
+| name | [T\_STR](#T_STR) | "maliciousScore" (fixed value) |
 | value | T\_DICT | |
 | value.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | SCORE address              |
 | value.type    | [T\_INT](#T_INT)                | 0x0: Freeze, 0x1: Unfreeze |
@@ -839,7 +839,7 @@ Invoke method can initiate state transition.
 
 | Key     | Value Type                  | Description                   |
 | :------ | :-------------------------- | ----------------------------- |
-| name | [T\_STR](#T_STR) | "prepDisqualification"(fixed value) |
+| name | [T\_STR](#T_STR) | "prepDisqualification" (fixed value) |
 | value | T\_DICT | |
 | value.address | [T\_ADDR\_EOA](#T_ADDR_EOA) | EOA address of main/sub P-Rep |
 
@@ -847,47 +847,52 @@ Invoke method can initiate state transition.
 
 | Key   | Value Type       | Description                          |
 | :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "stepPrice"(fixed value) |
+| name | [T\_STR](#T_STR) | "stepPrice" (fixed value) |
 | value | T\_DICT | |
 | value.stepPrice | [T\_INT](#T_INT) | An integer of the step price in loop |
 
-*Step Costs*<br>
-| Key | Value Type         | Description                          |
-| :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "stepCosts"(fixed value) |
-| value | T\_DICT | |
-| value.costs | T\_DICT | step costs to set in dict. <br> Fields are optional but at least one field is required. |
+*Step Costs*
 
 | Key | Value Type         | Description                          |
 | :---- | :--------------- | ------------------------------------ |
-| default | [T\_INT](#T_INT) | An integer of the default step cost in loop(Optional) |
-| contractCall | [T\_INT](#T_INT) | An integer of the contractCall step cost in loop(Optional) |
-| contractCreate | [T\_INT](#T_INT) | An integer of the contractCreate step cost in loop(Optional) |
-| contractUpdate | [T\_INT](#T_INT) | An integer of the contractUpdate step cost in loop(Optional) |
-| contractDestruct | [T\_INT](#T_INT) | An integer of the contractDestruct step cost in loop(Optional) |
-| contractSet | [T\_INT](#T_INT) | An integer of the contractSet step cost in loop(Optional) |
-| get | [T\_INT](#T_INT) | An integer of the get step cost in loop(Optional) |
-| set | [T\_INT](#T_INT) | An integer of the set step cost in loop(Optional)|
-| replace | [T\_INT](#T_INT) | An integer of the replace step cost in loop(Optional) |
-| delete | [T\_INT](#T_INT) | An integer of the delete step cost in loop(Optional) |
-| input | [T\_INT](#T_INT) | An integer of the input step cost in loop(Optional) |
-| eventLog | [T\_INT](#T_INT) | An integer of the eventlog step cost in loop(Optional) |
-| apiCall | [T\_INT](#T_INT) | An integer of the apiCall step cost in loop(Optional) |
+| name | [T\_STR](#T_STR) | "stepCosts" (fixed value) |
+| value | T\_DICT | |
+| value.costs | [T\_DICT](#T_DICT) | Step costs to set as a dict. <br> All fields are optional but at least one field should be specified. |
+
+| Key | Value Type         | Description                          |
+| :---- | :--------------- | ------------------------------------ |
+| schema | [T\_INT](#T_INT) | Schema version |
+| default | [T\_INT](#T_INT) | Default cost charged each time transaction is executed |
+| contractCall | [T\_INT](#T_INT) | Cost to call the smart contract function |
+| contractCreate | [T\_INT](#T_INT) | Cost to call the smart contract code generation function |
+| contractUpdate | [T\_INT](#T_INT) | Cost to call the smart contract code update function |
+| contractSet | [T\_INT](#T_INT) | Cost to store the generated/updated smart contract code per byte |
+| get | [T\_INT](#T_INT) | Cost to get values from the state database per byte |
+| getBase | [T\_INT](#T_INT) | Default cost charged each time `get` is called |
+| set | [T\_INT](#T_INT) | Cost to set values newly in the state database per byte |
+| setBase | [T\_INT](#T_INT) | Default cost charged each time `set` is called |
+| delete | [T\_INT](#T_INT) | Cost to delete values in the state database per byte |
+| deleteBase | [T\_INT](#T_INT) | Default cost charged each time `delete` is called |
+| input | [T\_INT](#T_INT) | Cost charged for input data included in transaction per byte |
+| log | [T\_INT](#T_INT) | Cost to emit event logs per byte |
+| logBase | [T\_INT](#T_INT) | Default cost charged each time `log` is called |
+| apiCall | [T\_INT](#T_INT) | Cost charged for heavy API calls (e.g. hash functions) |
 
 *example*
 ```json
 {
   "name": "stepCosts",
   "value": {
-    "costs": {"default": "0x10", "set": "0x20"}
+    "costs": {"default": "0x186a0", "set": "0x140"}
   }
 }
 ```
+
 *Monthly Reward Fund Setting*
 
 | Key   | Value Type       | Description                          |
 | :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "rewardFund"(fixed value) |
+| name | [T\_STR](#T_STR) | "rewardFund" (fixed value) |
 | value | T\_DICT | |
 | value.iglobal | [T\_INT](#T_INT) | The total amount of monthly reward fund in loop  |
 
@@ -896,9 +901,9 @@ Determine the allocation of the monthly reward fund
 
 | Key   | Value Type       | Description                          |
 | :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "rewardFundsAllocation"(fixed value) |
+| name | [T\_STR](#T_STR) | "rewardFundsAllocation" (fixed value) |
 | value | T\_DICT | |
-| value.rewardFunds | T\_DICT | Reward fund values information to set. All values are required. |
+| value.rewardFunds | [T\_DICT](#T_DICT) | Reward fund values information to set. All values are required. |
 
 | Key   | Value Type       | Description                          |
 | :---- | :--------------- | ------------------------------------ |
@@ -921,26 +926,26 @@ Determine the allocation of the monthly reward fund
 
 | Key   | Value Type       | Description                          |
 | :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "networkScoreDesignation"(fixed value) |
+| name | [T\_STR](#T_STR) | "networkScoreDesignation" (fixed value) |
 | value | T\_DICT | |
-| value.networkScores | T\_LIST[T\_DICT] | network score values to set. if set address to empty string, deallocate network score. |
-| value.networkScores.role | [T\_STR](#T_STR) | network score values to set. |
-| value.networkScores.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | network score values to set. |
+| value.networkScores | T\_LIST[T\_DICT] | network SCORE values to set. If the address is an empty string, deallocate network SCORE. |
+| value.networkScores.role | [T\_STR](#T_STR) | "cps" or "relay" |
+| value.networkScores.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | network SCORE address |
 
 *Network Score Update*
 
 | Key   | Value Type       | Description                          |
 | :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "networkScoreUpdate"(fixed value) |
+| name | [T\_STR](#T_STR) | "networkScoreUpdate" (fixed value) |
 | value | T\_DICT | |
-| value.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | network score address to update |
-| value.content | [T_BIN_DATA](#T_BIN_DATA) | score code |
+| value.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | network SCORE address to update |
+| value.content | [T_BIN_DATA](#T_BIN_DATA) | SCORE code |
 
 *Set accumulated validation failure slashing rate*
 
 | Key   | Value Type       | Description                          |
 | :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "accumulatedValidationFailureSlashingRate"(fixed value) |
+| name | [T\_STR](#T_STR) | "accumulatedValidationFailureSlashingRate" (fixed value) |
 | value | T\_DICT | |
 | value.slashingRate | [T\_INT](#T_INT) | slashing rate |
 
@@ -948,7 +953,7 @@ Determine the allocation of the monthly reward fund
 
 | Key   | Value Type       | Description                          |
 | :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "missedNetworkProposalSlashingRate"(fixed value) |
+| name | [T\_STR](#T_STR) | "missedNetworkProposalSlashingRate" (fixed value) |
 | value | T\_DICT | |
 | value.slashingRate | [T\_INT](#T_INT) | slashing rate |
 
@@ -1148,7 +1153,7 @@ public void RewardFundAllocationChanged(BigInteger iprep, BigInteger icps, BigIn
 
 ## NetworkScoreUpdated
 
-Triggered on vote transaction approving 'network score update' network proposal.
+Triggered on vote transaction approving 'Network Score Update' network proposal.
 
 ```java
 @EventLog(indexed=1)
@@ -1157,7 +1162,7 @@ public void NetworkScoreUpdated(Address address) {}
 
 ## NetworkScoreDesignated
 
-Triggered on vote transaction approving 'network score designate' network proposal.
+Triggered on vote transaction approving 'Network Score Designation' network proposal.
 
 ```java
 @EventLog(indexed=1)
@@ -1166,7 +1171,7 @@ public void NetworkScoreDesignated(String role, Address address) {}
 
 ## NetworkScoreDeallocated
 
-Triggered on vote transaction approving 'network score designate' network proposal.
+Triggered on vote transaction approving 'Network Score Designation' network proposal.
 
 ```java
 @EventLog(indexed=1)
