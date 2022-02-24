@@ -28,20 +28,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Map;
 
-/*
-    PROPOSAL TYPE
-    0 - TEXT
-    1 - REVISION
-    2 - MALICIOUS_SCORE
-    3 - PREP_DISQUALIFICATION
-    4 - STEP_PRICE
-    5 - IREP
-    6 - STEP_COSTS
-
-*/
 public class Proposal {
     public static final int TEXT = 0;
-    public static final int MIN = TEXT;
     public static final int REVISION = 1;
     public static final int MALICIOUS_SCORE = 2;
     public static final int PREP_DISQUALIFICATION = 3;
@@ -51,7 +39,10 @@ public class Proposal {
     public static final int REWARD_FUND = 7;
     public static final int REWARD_FUNDS_ALLOCATION = 8;
     public static final int NETWORK_PROPOSAL = 9;
+
+    public static final int MIN = TEXT;
     public static final int MAX = NETWORK_PROPOSAL;
+
     final byte[] id;
     final Address proposer;
     String proposerName;
