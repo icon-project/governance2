@@ -23,6 +23,7 @@ import score.DictDB;
 import scorex.util.ArrayList;
 
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -33,19 +34,23 @@ import java.util.Map;
     3 - Canceled
 */
 public class NetworkProposal {
+    // legacy proposal DB written in Python version
     private final DictDB<byte[], byte[]> proposalList = Context.newDictDB("proposal_list", byte[].class);
     private final ArrayDB<byte[]> proposalListKeys = Context.newArrayDB("proposal_list_keys", byte[].class);
+    // new proposal DB after Java migration
     private final DictDB<byte[], Proposal> proposalDict = Context.newDictDB("proposals", Proposal.class);
     private final ArrayDB<byte[]> proposalKeys = Context.newArrayDB("proposal_keys", byte[].class);
-    public final static int STATUS_MIN = 0;
+
     public final static int VOTING_STATUS = 0;
     public final static int APPROVED_STATUS = 1;
     public final static int DISAPPROVED_STATUS = 2;
     public final static int CANCELED_STATUS = 3;
+    public final static int STATUS_MIN = VOTING_STATUS;
     public final static int STATUS_MAX = CANCELED_STATUS;
+
     public final static int GET_PROPOSALS_FILTER_ALL = 100;
     public final static int GET_PROPOSALS_MAX_SIZE = 10;
-    public final static int GET_PROPOSAL_DEFAULT_START = 0;
+
     public final static int EVENT_NONE = 0;
     public final static int EVENT_APPROVED = 1;
     public final static int EVENT_DISAPPROVED = 2;
@@ -62,44 +67,39 @@ public class NetworkProposal {
         return p;
     }
 
-    public Map<String, Object>[] getProposals(int typeCondition, int statusCondition, int start, int size) {
-        var listKeySize = proposalListKeys.size();
-        var keysSize = proposalKeys.size();
-        var proposalList = new ArrayList<Map<String, Object>>();
-        Map<String, Object>[] proposals;
-        int proposalMaxIndex = keysSize + listKeySize - 1;
-        Context.require(
-                typeCondition == GET_PROPOSALS_FILTER_ALL || typeCondition >= Proposal.MIN && typeCondition <= Proposal.MAX, "invalid type : " + typeCondition);
-        Context.require(
-                statusCondition == GET_PROPOSALS_FILTER_ALL || statusCondition >= NetworkProposal.STATUS_MIN && statusCondition <= NetworkProposal.STATUS_MAX, "invalid status : " + statusCondition);
+    public List<Object> getProposals(int typeCondition, int statusCondition, int start, int size) {
+        Context.require(typeCondition == GET_PROPOSALS_FILTER_ALL ||
+                        typeCondition >= Proposal.MIN && typeCondition <= Proposal.MAX,
+                "Invalid type: " + typeCondition);
+        Context.require(statusCondition == GET_PROPOSALS_FILTER_ALL ||
+                        statusCondition >= NetworkProposal.STATUS_MIN && statusCondition <= NetworkProposal.STATUS_MAX,
+                "Invalid status: " + statusCondition);
         Context.require(start >= 0, "Invalid start parameter: " + start);
         Context.require(size > 0 && size <= GET_PROPOSALS_MAX_SIZE, "Invalid size parameter: " + size);
-        Context.require(
-                start <= proposalMaxIndex, "Invalid start parameter: " + start + ">" + proposalMaxIndex);
 
-        for (int i = 0; i < listKeySize; i++) {
-            var key = proposalListKeys.get(i);
-            var proposal = Proposal.loadJson(this.proposalList.get(key));
-            filterProposal(typeCondition, statusCondition, proposalList, proposal);
-        }
-
-        for (int i = 0; i < keysSize; i++) {
+        var proposalList = new ArrayList<Map<String, Object>>();
+        var keySize = proposalKeys.size();
+        int count = 0;
+        for (int i = keySize - start - 1; i >= 0 && count < size; i--) {
             var key = proposalKeys.get(i);
             var proposal = proposalDict.get(key);
-            filterProposal(typeCondition, statusCondition, proposalList, proposal);
+            count += filterProposal(typeCondition, statusCondition, proposalList, proposal);
         }
-        int totalSize = proposalList.size();
-        size = Integer.min(size, totalSize - start);
+        if (count == size) {
+            return List.of(proposalList.toArray());
+        }
 
-        int startIndex = totalSize - start - 1;
-        proposals = new Map[size];
-        for (int i = 0; i < size; i++) {
-            proposals[i] = proposalList.get(startIndex - i);
+        start = start >= keySize ? start - keySize : 0;
+        var listKeySize = proposalListKeys.size();
+        for (int i = listKeySize - start - 1; i >= 0 && count < size; i--) {
+            var key = proposalListKeys.get(i);
+            var proposal = Proposal.loadJson(this.proposalList.get(key));
+            count += filterProposal(typeCondition, statusCondition, proposalList, proposal);
         }
-        return proposals;
+        return List.of(proposalList.toArray());
     }
 
-    private void filterProposal(int typeCondition, int statusCondition, ArrayList<Map<String, Object>> proposals, Proposal proposal) {
+    private int filterProposal(int typeCondition, int statusCondition, ArrayList<Map<String, Object>> proposals, Proposal proposal) {
         var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
         int type = proposal.type;
         int status = proposal.getStatus(blockHeight);
@@ -108,7 +108,9 @@ public class NetworkProposal {
         if (condition) {
             var proposalMap = proposal.getSummary(blockHeight);
             proposals.add(proposalMap);
+            return 1;
         }
+        return 0;
     }
 
     public void registerProposal(

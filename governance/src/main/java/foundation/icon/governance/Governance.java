@@ -191,8 +191,14 @@ public class Governance {
         return false;
     }
 
+    /**
+     * Get a proposal info as dict
+     *
+     * @param id transaction hash to generate when registering proposal
+     * @return proposal information in dict
+     */
     @External(readonly = true)
-    public Map<String, ?> getProposal(byte[] id) {
+    public Map<String, Object> getProposal(byte[] id) {
         Proposal p = networkProposal.getProposal(id);
         if (p == null) {
             return null;
@@ -200,15 +206,27 @@ public class Governance {
         return p.toMap(BigInteger.valueOf(Context.getBlockHeight()));
     }
 
+    /**
+     * Get a list of proposals filtered by type, status, start and size
+     *
+     * @param type type of network proposal to filter (optional)
+     * @param status status of network proposal to filter (optional)
+     * @param start starting index of network proposal to filter. Default is 0, which means the latest (optional)
+     * @param size size of network proposal to filter. Default and maximum is 10 (optional)
+     * @return proposal list in dict
+     */
     @External(readonly = true)
-    public List<Map<String, ?>> getProposals(
-            @Optional String type, @Optional String status, @Optional String start, @Optional String size) {
-        int typeIntValue, statusIntValue, startIntValue, sizeIntValue;
-        typeIntValue = type == null ? NetworkProposal.GET_PROPOSALS_FILTER_ALL : Converter.hexToInt(type).intValue();
-        statusIntValue = status == null ? NetworkProposal.GET_PROPOSALS_FILTER_ALL : Converter.hexToInt(status).intValue();
-        startIntValue = start == null ? NetworkProposal.GET_PROPOSAL_DEFAULT_START : Converter.hexToInt(start).intValue();
-        sizeIntValue = size == null ? NetworkProposal.GET_PROPOSALS_MAX_SIZE : Converter.hexToInt(size).intValue();
-        return List.of(networkProposal.getProposals(typeIntValue, statusIntValue, startIntValue, sizeIntValue));
+    public Map<String, Object> getProposals(@Optional BigInteger type, @Optional BigInteger status,
+                                            @Optional BigInteger start, @Optional BigInteger size) {
+        int _type = IS_ZERO(type) ? NetworkProposal.GET_PROPOSALS_FILTER_ALL : type.intValue();
+        int _status = IS_ZERO(status) ? NetworkProposal.GET_PROPOSALS_FILTER_ALL : status.intValue();
+        int _start = start.intValue();
+        int _size = IS_ZERO(size) ? NetworkProposal.GET_PROPOSALS_MAX_SIZE : size.intValue();
+        return Map.of("proposals", networkProposal.getProposals(_type, _status, _start, _size));
+    }
+
+    private boolean IS_ZERO(BigInteger value) {
+        return value.signum() == 0;
     }
 
     @Payable

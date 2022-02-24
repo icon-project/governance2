@@ -549,12 +549,12 @@ registered before governance2
 
 ### Parameters
 
-| Key    | Value Type       | Description                    |
-| :----- | :--------------- | ------------------------------ |
-| type   | [T\_STR](#T_STR) | Type for querying (hex int, optional)   |
-| status | [T\_STR](#T_STR) | Status for querying (hex int, optional) |
-| start  | [T\_STR](#T_STR) | Starting index for querying. Default is 0, which means the latest (hex int, optional) |
-| size   | [T\_STR](#T_STR) | Size for querying. Default and maximum is 10 (hex int, optional)                     |
+| Key    | Value Type       | Description                                                                 |
+|:-------| :--------------- |-----------------------------------------------------------------------------|
+| type   | [T\_INT](#T_INT) | Type for querying (optional)                                                |
+| status | [T\_INT](#T_INT) | Status for querying (optional)                                              |
+| start  | [T\_INT](#T_INT) | Starting index for querying. Default is 0, which means the latest (optional)|
+| size   | [T\_INT](#T_INT) | Size for querying. Default and maximum is 10 (optional)                     |
 
 ### Returns
 
