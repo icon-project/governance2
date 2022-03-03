@@ -32,10 +32,12 @@ import java.util.Map;
 
 
 public class Governance {
+    private static final BigInteger EXA = BigInteger.valueOf(1_000_000_000_000_000_000L);
+    private static final BigInteger PROPOSAL_REGISTRATION_FEE = BigInteger.valueOf(100).multiply(EXA);
+
     private final static ChainScore chainScore = new ChainScore();
     private final static Address address = Address.fromString("cx0000000000000000000000000000000000000001");
     private final static NetworkProposal networkProposal = new NetworkProposal();
-    public final static BigInteger proposalRegisterFee = Governance.proposalRegisterFee();
     private final ArrayDB<Address> auditors = Context.newArrayDB("auditor_list", Address.class);
     private final DictDB<BigInteger, TimerInfo> timerInfo = Context.newDictDB("timerInfo", TimerInfo.class);
 
@@ -236,9 +238,8 @@ public class Governance {
             String description,
             byte[] value
     ) {
-        var fee = Context.getValue();
-        Context.require(fee.compareTo(Governance.proposalRegisterFee) == 0, "have to pay 100ICX to register Proposal");
-        chainScore.burn();
+        Context.require(PROPOSAL_REGISTRATION_FEE.compareTo(Context.getValue()) == 0, "100 ICX required to register proposal");
+        chainScore.burn(PROPOSAL_REGISTRATION_FEE);
         Address proposer = Context.getCaller();
         PRepInfo[] mainPRepsInfo = chainScore.getMainPRepsInfo();
         var prep = getPRepInfoFromList(proposer, mainPRepsInfo);
@@ -361,14 +362,6 @@ public class Governance {
             }
         }
         return null;
-    }
-
-    private static BigInteger proposalRegisterFee() {
-        BigInteger result = BigInteger.ONE;
-        for (int i = 0; i < 20; i++) {
-            result = result.multiply(BigInteger.TEN);
-        }
-        return result;
     }
 
     public void approveProposal(Value value) {

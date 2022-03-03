@@ -155,8 +155,8 @@ class ChainScore {
         return (Address)Context.call(CHAIN_SCORE, "getScoreOwner", address);
     }
 
-    void burn() {
-        Context.call(Governance.proposalRegisterFee, CHAIN_SCORE, "burn");
+    void burn(BigInteger value) {
+        Context.call(value, CHAIN_SCORE, "burn");
     }
 
     void setNetworkScore(String role, Address address) {
