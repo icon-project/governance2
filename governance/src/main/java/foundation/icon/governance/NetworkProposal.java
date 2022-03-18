@@ -26,13 +26,6 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
-/*
-    PROPOSAL STATUS
-    0 - Voting
-    1 - Approved
-    2 - DisApproved
-    3 - Canceled
-*/
 public class NetworkProposal {
     // legacy proposal DB written in Python version
     private final DictDB<byte[], byte[]> proposalList = Context.newDictDB("proposal_list", byte[].class);

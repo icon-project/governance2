@@ -311,7 +311,7 @@ public class Governance {
     }
 
     @External
-    public void applyProposal(byte []id) {
+    public void applyProposal(byte[] id) {
         Address sender = Context.getCaller();
         Proposal p = networkProposal.getProposal(id);
         BigInteger blockHeight = BigInteger.valueOf(Context.getBlockHeight());
@@ -570,7 +570,7 @@ public class Governance {
 
     private void validateDisqualifyPRep(Address address) {
         PRepInfo[] preps = chainScore.getPRepsInfo();
-        Context.require(getPRepInfoFromList(address, preps) != null, address.toString() + "is not p-rep");
+        Context.require(getPRepInfoFromList(address, preps) != null, address.toString() + " is not p-rep");
     }
 
     private void validateStepPrice(BigInteger price) {
