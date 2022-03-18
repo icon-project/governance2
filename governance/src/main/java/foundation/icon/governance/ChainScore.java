@@ -175,8 +175,8 @@ class ChainScore {
         return (Map<String, Object>) Context.call(CHAIN_SCORE, "getMainPReps");
     }
 
-    Map<String, Object> getSubPReps() {
-        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getSubPReps");
+    Map<String, Object> getPReps() {
+        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getPReps");
     }
 
     Map<String, Object> getPRepTerm() {
@@ -188,9 +188,9 @@ class ChainScore {
         return getPRepInfolist(mainPreps);
     }
 
-    PRepInfo[] getSubPRepsInfo() {
-        Map<String, Object> subPReps = getSubPReps();
-        return getPRepInfolist(subPReps);
+    PRepInfo[] getPRepsInfo() {
+        Map<String, Object> preps = getPReps();
+        return getPRepInfolist(preps);
     }
 
     private PRepInfo[] getPRepInfolist(Map<String, Object> preps) {

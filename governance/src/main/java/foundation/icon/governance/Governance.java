@@ -286,7 +286,7 @@ public class Governance {
     @External
     public void voteProposal(byte[] id, int vote) {
         Address sender = Context.getCaller();
-        PRepInfo[] prepsInfo = chainScore.getMainPRepsInfo();
+        PRepInfo[] prepsInfo = chainScore.getPRepsInfo();
         var prep = getPRepInfoFromList(sender, prepsInfo);
 
         Proposal p = networkProposal.getProposal(id);
@@ -297,7 +297,7 @@ public class Governance {
         Context.require(!p.isExpired(blockHeight), "This proposal has already expired");
         Context.require(p.getStatus(blockHeight) != NetworkProposal.CANCELED_STATUS, "This proposal has canceled");
 
-        Context.require(p.isInNoVote(sender), "No permission - only for main prep were main prep when network registered");
+        Context.require(p.isInNoVote(sender), "No permission - only for prep were main prep when network registered");
         Context.require(!p.agreed(sender) && !p.disagreed(sender), "Already voted");
 
         var event = networkProposal.voteProposal(p, vote, prep);
@@ -305,10 +305,20 @@ public class Governance {
 
         if (event == NetworkProposal.EVENT_APPROVED) {
             NetworkProposalApproved(id);
-            approveProposal(p.value);
         } else if (event == NetworkProposal.EVENT_DISAPPROVED) {
             NetworkProposalDisapproved(id);
         }
+    }
+
+    @External
+    public void applyProposal(byte []id) {
+        Address sender = Context.getCaller();
+        Proposal p = networkProposal.getProposal(id);
+        BigInteger blockHeight = BigInteger.valueOf(Context.getBlockHeight());
+        Context.require(p.agreed(sender) || p.disagreed(sender), "No permission - only for voted preps");
+        Context.require(p.getStatus(blockHeight) == NetworkProposal.APPROVED_STATUS, "Only approved proposal can be applied");
+        NetworkProposalApplied(id);
+        applyProposal(p);
     }
 
     @External
@@ -320,7 +330,9 @@ public class Governance {
         var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
         Context.require(p != null, "no registered proposal");
         Context.require(!p.isExpired(blockHeight), "This proposal has already expired");
-        Context.require(p.getStatus(blockHeight) == NetworkProposal.VOTING_STATUS, "Can not be canceled - only voting proposal");
+        int status = p.getStatus(blockHeight);
+        Context.require(status == NetworkProposal.VOTING_STATUS || status == NetworkProposal.APPROVED_STATUS,
+                "Can not be canceled - voting/approved proposal can be canceled");
         Context.require(sender.equals(p.proposer), "No permission - only for proposer");
 
         networkProposal.cancelProposal(p);
@@ -348,7 +360,10 @@ public class Governance {
             var proposal = networkProposal.getProposal(id);
             var novoters = proposal.getNonVoters();
             chainScore.penalizeNonvoters(List.of(novoters));
-            if (proposal.isExpired(blockHeight)) {
+            int status = proposal.getStatus(blockHeight);
+            if (status == NetworkProposal.EXPIRED_STATUS) {
+                NetworkProposalExpired(proposal.id);
+            } else if (status == NetworkProposal.DISAPPROVED_STATUS) {
                 NetworkProposalDisapproved(proposal.id);
             }
         }
@@ -364,7 +379,9 @@ public class Governance {
         return null;
     }
 
-    public void approveProposal(Value value) {
+    public void applyProposal(Proposal proposal) {
+        networkProposal.applyProposal(proposal);
+        var value = proposal.value;
         var data = value.data();
         String stringValue = new String(data);
         JsonValue json = Json.parse(stringValue);
@@ -552,10 +569,8 @@ public class Governance {
     }
 
     private void validateDisqualifyPRep(Address address) {
-        PRepInfo[] mainPreps = chainScore.getMainPRepsInfo();
-        PRepInfo[] subPreps = chainScore.getSubPRepsInfo();
-        Context.require(getPRepInfoFromList(address, mainPreps) != null || getPRepInfoFromList(address, subPreps) != null,
-                address.toString() + "is not p-rep");
+        PRepInfo[] preps = chainScore.getPRepsInfo();
+        Context.require(getPRepInfoFromList(address, preps) != null, address.toString() + "is not p-rep");
     }
 
     private void validateStepPrice(BigInteger price) {
@@ -730,5 +745,11 @@ public class Governance {
 
     @EventLog(indexed=0)
     public void NetworkProposalDisapproved(byte[] id) {}
+
+    @EventLog(indexed=0)
+    public void NetworkProposalApplied(byte[] id) {}
+
+    @EventLog(indexed=0)
+    public void NetworkProposalExpired(byte[] id) {}
 
 }
