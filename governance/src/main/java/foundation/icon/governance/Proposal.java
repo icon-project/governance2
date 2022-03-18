@@ -127,11 +127,17 @@ public class Proposal {
     }
 
     public boolean isExpired(BigInteger blockHeight) {
-        return blockHeight.compareTo(expireBlockHeight) > 0 && status == NetworkProposal.VOTING_STATUS;
+        return blockHeight.compareTo(expireBlockHeight) > 0;
     }
 
     public int getStatus(BigInteger blockHeight) {
-        return isExpired(blockHeight) ? NetworkProposal.DISAPPROVED_STATUS : status;
+        boolean expired = isExpired(blockHeight);
+        if (expired && status == NetworkProposal.VOTING_STATUS) {
+            return NetworkProposal.DISAPPROVED_STATUS;
+        } else if (expired && status == NetworkProposal.APPROVED_STATUS) {
+            return NetworkProposal.EXPIRED_STATUS;
+        }
+        return status;
     }
 
     public Map<String, Object> toMap(BigInteger blockHeight) {

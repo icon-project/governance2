@@ -42,11 +42,13 @@ public class NetworkProposal {
     private final ArrayDB<byte[]> proposalKeys = Context.newArrayDB("proposal_keys", byte[].class);
 
     public final static int VOTING_STATUS = 0;
-    public final static int APPROVED_STATUS = 1;
+    public final static int APPLIED_STATUS = 1;
     public final static int DISAPPROVED_STATUS = 2;
     public final static int CANCELED_STATUS = 3;
+    public final static int APPROVED_STATUS = 4;
+    public final static int EXPIRED_STATUS = 5;
     public final static int STATUS_MIN = VOTING_STATUS;
-    public final static int STATUS_MAX = CANCELED_STATUS;
+    public final static int STATUS_MAX = EXPIRED_STATUS;
 
     public final static int GET_PROPOSALS_FILTER_ALL = 100;
     public final static int GET_PROPOSALS_MAX_SIZE = 10;
@@ -165,6 +167,11 @@ public class NetworkProposal {
 
     public void cancelProposal(Proposal p) {
         p.status = CANCELED_STATUS;
+        proposalDict.set(p.id, p);
+    }
+
+    public void applyProposal(Proposal p) {
+        p.status = APPLIED_STATUS;
         proposalDict.set(p.id, p);
     }
 

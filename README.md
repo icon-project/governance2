@@ -45,6 +45,7 @@ The most commonly used Value types are as follows.
   * [registerProposal](#registerproposal)
   * [cancelProposal](#cancelproposal)
   * [voteProposal](#voteproposal)
+  * [applyProposal](#applyproposal)
 * Eventlog
   * [Accepted](#accepted)
   * [Rejected](#rejected)
@@ -57,6 +58,9 @@ The most commonly used Value types are as follows.
   * [NetworkProposalCanceled](#networkproposalcanceled)
   * [NetworkProposalVoted](#networkproposalvoted)
   * [NetworkProposalApproved](#networkproposalapproved)
+  * [NetworkProposalDisapproved](#networkproposaldisapproved)
+  * [NetworkProposalApplied](#networkproposalapplied)
+  * [NetworkProposalExpired](#networkproposalexpired)
 
 # Query Methods
 
@@ -1066,6 +1070,43 @@ Determine the allocation of the monthly reward fund
 }
 ```
 
+## applyProposal
+
+* apply proposal
+
+### Parameters
+
+| Key  | Value Type         | Description                                  |
+| :--- | :----------------- | -------------------------------------------- |
+| id   | [T\_HASH](#T_HASH) | Transaction hash of network proposal to apply |
+
+### Examples
+
+#### Request
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 100,
+  "method": "icx_sendTransaction",
+  "params": {
+    "version": "0x3",
+    "from": "hxbe258ceb872e08851f1f59694dac2558708ece11",
+    "to": "cx0000000000000000000000000000000000000001",
+    "stepLimit": "0x30000",
+    "timestamp": "0x563a6cf330136",
+    "nonce": "0x1",
+    "signature": "VAia7YZ2Ji6igKWzjR2YsGa2m53nKPrfK7uXYW78QLE+ATehAVZPC40szvAiA6NEU5gCYB4c4qaQzqDh2ugcHgA=",
+    "dataType": "call",
+    "data": {
+      "method": "applyProposal",
+      "parmas": {
+        "id" : "0xb903239f8543d04b5dc1ba6579132b143087c68db1b2168786408fcbce568238",
+      }
+    }
+  }
+}
+```
 
 # Eventlog
 
@@ -1212,4 +1253,31 @@ Triggered on any successful voteProposal transaction approving network proposal.
 ```java
 @EventLog(indexed=0)
 public void NetworkProposalApproved(byte[] id) {}
+```
+
+## NetworkProposalDisapproved
+
+Triggered on any successful transaction disapproving network proposal(voteProposal or BaseTransaction).
+
+```java
+@EventLog(indexed=0)
+public void NetworkProposalDisapproved(byte[] id) {}
+```
+
+## NetworkProposalApplied
+
+Triggered on any successful applyProposal transaction.
+
+```java
+@EventLog(indexed=0)
+public void NetworkProposalApplied(byte[] id) {}
+```
+
+## NetworkProposalExpired
+
+Triggered on successful Base transaction expiring network proposal.
+
+```java
+@EventLog(indexed=0)
+public void NetworkProposalExpired(byte[] id) {}
 ```
