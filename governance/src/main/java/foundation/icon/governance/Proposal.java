@@ -56,6 +56,7 @@ public class Proposal {
     VoteInfo vote;
     int totalVoter;
     BigInteger totalPower;
+    ApplyInfo apply;
 
     public Proposal(
             byte[] id,
@@ -70,7 +71,8 @@ public class Proposal {
             int status,
             VoteInfo vote,
             int totalVoter,
-            BigInteger totalPower
+            BigInteger totalPower,
+            ApplyInfo apply
     ) {
         this.id = id;
         this.proposer = proposer;
@@ -85,10 +87,11 @@ public class Proposal {
         this.vote = vote;
         this.totalVoter = totalVoter;
         this.totalPower = totalPower;
+        this.apply = apply;
     }
 
     public static void writeObject(ObjectWriter w, Proposal p) {
-        w.beginList(13);
+        w.beginList(14);
         w.write(p.id);
         w.write(p.proposer);
         w.write(p.proposerName);
@@ -102,6 +105,7 @@ public class Proposal {
         w.write(p.vote);
         w.write(p.totalVoter);
         w.write(p.totalPower);
+        w.writeNullable(p.apply);
         w.end();
     }
 
@@ -120,7 +124,8 @@ public class Proposal {
                 r.readInt(),
                 r.read(VoteInfo.class),
                 r.readInt(),
-                r.readBigInteger()
+                r.readBigInteger(),
+                r.readNullable(ApplyInfo.class)
         );
         r.end();
         return p;
@@ -142,6 +147,18 @@ public class Proposal {
 
     public Map<String, Object> toMap(BigInteger blockHeight) {
         var contents = Map.of("description", description, "title", title, "type", type, "value", value.toMap());
+        if (apply == null) {
+            return Map.ofEntries(
+                    Map.entry("id", id),
+                    Map.entry("proposer", proposer),
+                    Map.entry("proposerName", proposerName),
+                    Map.entry("contents", contents),
+                    Map.entry("startBlockHeight", startBlockHeight),
+                    Map.entry("endBlockHeight", expireBlockHeight),
+                    Map.entry("status", getStatus(blockHeight)),
+                    Map.entry("vote", vote.toMap())
+            );
+        }
         return Map.ofEntries(
                 Map.entry("id", id),
                 Map.entry("proposer", proposer),
@@ -150,12 +167,25 @@ public class Proposal {
                 Map.entry("startBlockHeight", startBlockHeight),
                 Map.entry("endBlockHeight", expireBlockHeight),
                 Map.entry("status", getStatus(blockHeight)),
-                Map.entry("vote", vote.toMap())
+                Map.entry("vote", vote.toMap()),
+                Map.entry("apply", apply.toMap())
         );
     }
 
     public Map<String, Object> getSummary(BigInteger blockHeight) {
         var contents = Map.of("description", description, "title", title, "type", type);
+        if (apply == null) {
+            return Map.ofEntries(
+                    Map.entry("id", id),
+                    Map.entry("proposer", proposer),
+                    Map.entry("proposerName", proposerName),
+                    Map.entry("contents", contents),
+                    Map.entry("startBlockHeight", startBlockHeight),
+                    Map.entry("endBlockHeight", expireBlockHeight),
+                    Map.entry("status", getStatus(blockHeight)),
+                    Map.entry("vote", vote.getSummary())
+            );
+        }
         return Map.ofEntries(
                 Map.entry("id", id),
                 Map.entry("proposer", proposer),
@@ -164,7 +194,8 @@ public class Proposal {
                 Map.entry("startBlockHeight", startBlockHeight),
                 Map.entry("endBlockHeight", expireBlockHeight),
                 Map.entry("status", getStatus(blockHeight)),
-                Map.entry("vote", vote.getSummary())
+                Map.entry("vote", vote.getSummary()),
+                Map.entry("apply", apply.toMap())
         );
     }
 
@@ -220,7 +251,8 @@ public class Proposal {
                 status,
                 vote,
                 totalVoter,
-                totalBondedDelegation
+                totalBondedDelegation,
+                null
         );
     }
 

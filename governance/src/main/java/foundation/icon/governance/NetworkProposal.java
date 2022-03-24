@@ -159,7 +159,8 @@ public class NetworkProposal {
                 VOTING_STATUS,
                 v,
                 prepsInfo.length,
-                totalPower
+                totalPower,
+                null
         );
         proposalDict.set(id, proposal);
         proposalKeys.add(id);
