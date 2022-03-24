@@ -95,7 +95,7 @@ public class Proposal {
         w.write(p.title);
         w.write(p.description);
         w.write(p.type);
-        w.write(p.value);
+        w.writeNullable(p.value);
         w.write(p.startBlockHeight);
         w.write(p.expireBlockHeight);
         w.write(p.status);
@@ -114,7 +114,7 @@ public class Proposal {
                 r.readString(),
                 r.readString(),
                 r.readInt(),
-                r.read(Value.class),
+                r.readNullable(Value.class),
                 r.readBigInteger(),
                 r.readBigInteger(),
                 r.readInt(),
@@ -155,7 +155,7 @@ public class Proposal {
     }
 
     public Map<String, Object> getSummary(BigInteger blockHeight) {
-        var contents = Map.of("description", description, "title", title, "type", type, "value", value.toMap());
+        var contents = Map.of("description", description, "title", title, "type", type);
         return Map.ofEntries(
                 Map.entry("id", id),
                 Map.entry("proposer", proposer),

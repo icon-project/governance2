@@ -204,6 +204,8 @@ public class Governance {
         Proposal p = networkProposal.getProposal(id);
         if (p == null) {
             return null;
+        } else if (p.type == Proposal.NETWORK_PROPOSAL) {
+            p.value = new Value(Proposal.NETWORK_PROPOSAL, networkProposal.getProposalValue(id));
         }
         return p.toMap(BigInteger.valueOf(Context.getBlockHeight()));
     }
@@ -381,8 +383,7 @@ public class Governance {
 
     public void applyProposal(Proposal proposal) {
         networkProposal.applyProposal(proposal);
-        var value = proposal.value;
-        var data = value.data();
+        var data = networkProposal.getProposalValue(proposal.id);
         String stringValue = new String(data);
         JsonValue json = Json.parse(stringValue);
         JsonArray values = json.asArray();
