@@ -32,6 +32,7 @@ public class NetworkProposal {
     private final ArrayDB<byte[]> proposalListKeys = Context.newArrayDB("proposal_list_keys", byte[].class);
     // new proposal DB after Java migration
     private final DictDB<byte[], Proposal> proposalDict = Context.newDictDB("proposals", Proposal.class);
+    private final DictDB<byte[], byte[]> proposalValueDict = Context.newDictDB("proposal_values", byte[].class);
     private final ArrayDB<byte[]> proposalKeys = Context.newArrayDB("proposal_keys", byte[].class);
 
     public final static int VOTING_STATUS = 0;
@@ -60,6 +61,12 @@ public class NetworkProposal {
         }
         Context.require(p != null, "No registered proposal");
         return p;
+    }
+
+    public byte[] getProposalValue(byte[] id) {
+        byte[] value = proposalValueDict.get(id);
+        Context.require(value != null);
+        return value;
     }
 
     public List<Object> getProposals(int typeCondition, int statusCondition, int start, int size) {
@@ -146,16 +153,18 @@ public class NetworkProposal {
                 title,
                 description,
                 Proposal.NETWORK_PROPOSAL,
-                value,
+                null,
                 blockHeight,
                 expireHeight,
                 VOTING_STATUS,
                 v,
                 prepsInfo.length,
-                totalPower
+                totalPower,
+                null
         );
         proposalDict.set(id, proposal);
         proposalKeys.add(id);
+        proposalValueDict.set(id, value.data());
     }
 
     public void cancelProposal(Proposal p) {

@@ -204,6 +204,8 @@ public class Governance {
         Proposal p = networkProposal.getProposal(id);
         if (p == null) {
             return null;
+        } else if (p.type == Proposal.NETWORK_PROPOSAL) {
+            p.value = new Value(Proposal.NETWORK_PROPOSAL, networkProposal.getProposalValue(id));
         }
         return p.toMap(BigInteger.valueOf(Context.getBlockHeight()));
     }
@@ -314,11 +316,13 @@ public class Governance {
     public void applyProposal(byte[] id) {
         Address sender = Context.getCaller();
         Proposal p = networkProposal.getProposal(id);
+        PRepInfo[] prepsInfo = chainScore.getPRepsInfo();
+        var prep = getPRepInfoFromList(sender, prepsInfo);
         BigInteger blockHeight = BigInteger.valueOf(Context.getBlockHeight());
         Context.require(p.agreed(sender) || p.disagreed(sender), "No permission - only for voted preps");
         Context.require(p.getStatus(blockHeight) == NetworkProposal.APPROVED_STATUS, "Only approved proposal can be applied");
         NetworkProposalApplied(id);
-        applyProposal(p);
+        applyProposal(p, prep);
     }
 
     @External
@@ -379,10 +383,11 @@ public class Governance {
         return null;
     }
 
-    public void applyProposal(Proposal proposal) {
+    public void applyProposal(Proposal proposal, PRepInfo pRepInfo) {
+        proposal.apply = new ApplyInfo(
+                Context.getTransactionHash(), pRepInfo.getAddress(), pRepInfo.getName(), BigInteger.valueOf(Context.getTransactionTimestamp()));
         networkProposal.applyProposal(proposal);
-        var value = proposal.value;
-        var data = value.data();
+        var data = networkProposal.getProposalValue(proposal.id);
         String stringValue = new String(data);
         JsonValue json = Json.parse(stringValue);
         JsonArray values = json.asArray();
