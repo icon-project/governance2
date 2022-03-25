@@ -146,34 +146,23 @@ public class Proposal {
     }
 
     public Map<String, Object> toMap(BigInteger blockHeight) {
-        var contents = Map.of("description", description, "title", title, "type", type, "value", value.toMap());
-        if (apply == null) {
-            return Map.ofEntries(
-                    Map.entry("id", id),
-                    Map.entry("proposer", proposer),
-                    Map.entry("proposerName", proposerName),
-                    Map.entry("contents", contents),
-                    Map.entry("startBlockHeight", startBlockHeight),
-                    Map.entry("endBlockHeight", expireBlockHeight),
-                    Map.entry("status", getStatus(blockHeight)),
-                    Map.entry("vote", vote.toMap())
-            );
-        }
-        return Map.ofEntries(
-                Map.entry("id", id),
-                Map.entry("proposer", proposer),
-                Map.entry("proposerName", proposerName),
-                Map.entry("contents", contents),
-                Map.entry("startBlockHeight", startBlockHeight),
-                Map.entry("endBlockHeight", expireBlockHeight),
-                Map.entry("status", getStatus(blockHeight)),
-                Map.entry("vote", vote.toMap()),
-                Map.entry("apply", apply.toMap())
-        );
+        return toMap(blockHeight, false);
     }
 
     public Map<String, Object> getSummary(BigInteger blockHeight) {
-        var contents = Map.of("description", description, "title", title, "type", type);
+        return toMap(blockHeight, true);
+    }
+
+    public Map<String, Object> toMap(BigInteger blockHeight, boolean isSummary) {
+        Map<String, Object> contents;
+        Map<String, Map<String, Object>> votes;
+        if (isSummary) {
+            contents = Map.of("description", description, "title", title, "type", type);
+            votes = vote.getSummary();
+        } else {
+            contents = Map.of("description", description, "title", title, "type", type, "value", value.toMap());
+            votes = vote.toMap();
+        }
         if (apply == null) {
             return Map.ofEntries(
                     Map.entry("id", id),
@@ -183,7 +172,7 @@ public class Proposal {
                     Map.entry("startBlockHeight", startBlockHeight),
                     Map.entry("endBlockHeight", expireBlockHeight),
                     Map.entry("status", getStatus(blockHeight)),
-                    Map.entry("vote", vote.getSummary())
+                    Map.entry("vote", votes)
             );
         }
         return Map.ofEntries(
@@ -194,7 +183,7 @@ public class Proposal {
                 Map.entry("startBlockHeight", startBlockHeight),
                 Map.entry("endBlockHeight", expireBlockHeight),
                 Map.entry("status", getStatus(blockHeight)),
-                Map.entry("vote", vote.getSummary()),
+                Map.entry("vote", votes),
                 Map.entry("apply", apply.toMap())
         );
     }
