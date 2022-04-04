@@ -465,11 +465,11 @@ public class Governance {
                     } else {
                         var p = params.asArray();
                         var size = p.size();
-                        String[] stringParams = new String[size];
+                        String[] scoreParams = new String[size];
                         for (int j = 0; j < size; j++) {
-                            stringParams[j] = p.get(j).asString();
+                            scoreParams[j] = p.get(j).asString();
                         }
-                        Context.deploy(addr, content, (Object) stringParams);
+                        Context.deploy(addr, content, scoreParams);
                     }
                     NetworkScoreUpdated(addr);
                     continue;
