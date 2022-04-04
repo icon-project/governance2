@@ -473,12 +473,12 @@ public class Governance {
                     }
                     NetworkScoreUpdated(addr);
                     continue;
-                case Value.ACCUMULATED_VALIDATION_FAILURE_PENALTY: {
+                case Value.ACCUMULATED_VALIDATION_FAILURE_SLASHING_RATE: {
                     var rate = Converter.toInteger(valueObject.getString("slashingRate", null));
                     chainScore.setConsistentValidationSlashingRate(rate);
                     continue;
                 }
-                case Value.MISSED_NETWORK_PROPOSAL_PENALTY: {
+                case Value.MISSED_NETWORK_PROPOSAL_VOTE_SLASHING_RATE: {
                     var rate = Converter.toInteger(valueObject.getString("slashingRate", null));
                     chainScore.setNonVoteSlashingRate(rate);
                 }
@@ -545,8 +545,8 @@ public class Governance {
                     Context.require(Converter.toAddress(value.getString("address", null)) != null, "Invalid address");
                     Converter.hexToBytes(value.getString("content", null));
                     continue;
-                case Value.ACCUMULATED_VALIDATION_FAILURE_PENALTY:
-                case Value.MISSED_NETWORK_PROPOSAL_PENALTY:
+                case Value.ACCUMULATED_VALIDATION_FAILURE_SLASHING_RATE:
+                case Value.MISSED_NETWORK_PROPOSAL_VOTE_SLASHING_RATE:
                     Context.require(size == 1);
                     var slashingRate = Converter.toInteger(value.getString("slashingRate", null));
                     Context.require(slashingRate.compareTo(BigInteger.ZERO) >= 0 && slashingRate.compareTo(BigInteger.valueOf(100)) <= 0,
