@@ -49,8 +49,8 @@ public class Value {
     public static final String REWARD_FUNDS_ALLOCATION = "rewardFundsAllocation";
     public static final String NETWORK_SCORE_DESIGNATION_TYPE = "networkScoreDesignation";
     public static final String NETWORK_SCORE_UPDATE_TYPE = "networkScoreUpdate";
-    public static final String ACCUMULATED_VALIDATION_FAILURE_PENALTY = "accumulatedValidationFailureSlashingRate";
-    public static final String MISSED_NETWORK_PROPOSAL_PENALTY = "missedNetworkProposalSlashingRate";
+    public static final String ACCUMULATED_VALIDATION_FAILURE_SLASHING_RATE = "accumulatedValidationFailureSlashingRate";
+    public static final String MISSED_NETWORK_PROPOSAL_VOTE_SLASHING_RATE = "missedNetworkProposalVoteSlashingRate";
     private byte[] data;
 
     public Value(int p, String text) {
