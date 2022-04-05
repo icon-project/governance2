@@ -802,87 +802,149 @@ Invoke method can initiate state transition.
 
 ## registerProposal
 
-* Register the network proposal
-* This function can be invoked only by the main P-Reps.
+* Registers diverse network proposals in a transaction
+* This function can be invoked only by main P-Reps at that time.
 
 ### Parameters
 
-| Key         | Value Type       | Description                                                  |
-| :---------- | :--------------- | ------------------------------------------------------------ |
-| title       | [T\_STR](#T_STR) | Title of the network proposal                                |
-| description | [T\_STR](#T_STR) | Description of the network proposal                          |
+| Key         | Value Type       | Description                                                                                                                                                |
+|:------------|:-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| title       | [T\_STR](#T_STR) | Title of the network proposal                                                                                                                              |
+| description | [T\_STR](#T_STR) | Description of the network proposal                                                                                                                        |
 | value       | T\_LIST[T\_DICT] | Values for each type of network proposal. Hex string of UTF-8 encoded bytes data of JSON string<br />ex. "0x" + bytes.hex(json.dumps(value_list).encode()) |
 
-#### Format of dict values for each type
-*Text*
+#### Value format for each type
 
-| Key   | Value Type       | Description |
-| :---- | :--------------- | ----------- |
-| name | [T\_STR](#T_STR) | "text" (fixed value)  |
-| value | T\_DICT |  |
-| value.text | [T\_STR](#T_STR) | Text value  |
+* value contains the list of network proposals below.
+* Proposals are applied in the order they are included in `value` list.
+ 
+##### text
 
-*Revision*
+* Stores the contents of the proposal in the blockchain.
+* It does not affect any blockchain behavior.
 
-| Key  | Value Type       | Description   |
-| :--- | :--------------- | ------------- |
-| name | [T\_STR](#T_STR) | "revision" (fixed value) |
-| value | T\_DICT | |
-| value.revision | [T\_INT](#T_INT) | Revision code |
+| Key        | Value Type        | Description          |
+|:-----------|:------------------|----------------------|
+| name       | [T\_STR](#T_STR)  | "text" (fixed value) |
+| value      | T\_DICT           |                      |
+| value.text | [T\_STR](#T_STR)  | Text value           |
 
-*Malicious SCORE*
+```json
+{
+  "name": "text",
+  "value": {
+    "text": "This is a text proposal"
+  }
+}
+```
 
-| Key     | Value Type                      | Description                |
-| :------ | :------------------------------ | -------------------------- |
-| name | [T\_STR](#T_STR) | "maliciousScore" (fixed value) |
-| value | T\_DICT | |
-| value.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | SCORE address              |
-| value.type    | [T\_INT](#T_INT)                | 0x0: Freeze, 0x1: Unfreeze |
+##### revision
 
-*P-Rep disqualification*
+* Revision update proposal
 
-| Key     | Value Type                  | Description                   |
-| :------ | :-------------------------- | ----------------------------- |
-| name | [T\_STR](#T_STR) | "prepDisqualification" (fixed value) |
-| value | T\_DICT | |
-| value.address | [T\_ADDR\_EOA](#T_ADDR_EOA) | EOA address of main/sub P-Rep |
+| Key            | Value Type        | Description              |
+|:---------------|:------------------|--------------------------|
+| name           | [T\_STR](#T_STR)  | "revision" (fixed value) |
+| value          | T\_DICT           |                          |
+| value.revision | [T\_INT](#T_INT)  | Revision code            |
 
-*Step price*
+```json
+{
+  "name": "revision",
+  "value": {
+    "revision": "0x11"
+  }
+}
+```
 
-| Key   | Value Type       | Description                          |
-| :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "stepPrice" (fixed value) |
-| value | T\_DICT | |
-| value.stepPrice | [T\_INT](#T_INT) | An integer of the step price in loop |
+##### maliciousScore
 
-*Step Costs*
+* Controls access to a given score
 
-| Key | Value Type         | Description                          |
-| :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "stepCosts" (fixed value) |
-| value | T\_DICT | |
+| Key           | Value Type                       | Description                    |
+|:--------------|:---------------------------------|--------------------------------|
+| name          | [T\_STR](#T_STR)                 | "maliciousScore" (fixed value) |
+| value         | T\_DICT                          |                                |
+| value.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE)  | SCORE address                  |
+| value.type    | [T\_INT](#T_INT)                 | 0x0: Freeze, 0x1: Unfreeze     |
+
+```json
+{
+  "name": "maliciousScore",
+  "value": {
+    "address": "cx7cc546bf908018b5602b66fa65ff5fdacef45fe0",
+    "type": "0x0"
+  }
+}
+```
+
+##### prepDisqualification
+
+* Disqualifies a given P-Rep
+
+| Key           | Value Type                   | Description                          |
+|:--------------|:-----------------------------|--------------------------------------|
+| name          | [T\_STR](#T_STR)             | "prepDisqualification" (fixed value) |
+| value         | T\_DICT                      |                                      |
+| value.address | [T\_ADDR\_EOA](#T_ADDR_EOA)  | EOA address of main/sub P-Rep        |
+
+```json
+{
+  "name": "prepDisqualification",
+  "value": {
+    "address": "hx7cc546bf908018b5602b66fa65ff5fdacef45fe0"
+  }
+}
+```
+
+##### stepPrice
+
+* Updates step price
+
+| Key             | Value Type        | Description                          |
+|:----------------|:------------------|--------------------------------------|
+| name            | [T\_STR](#T_STR)  | "stepPrice" (fixed value)            |
+| value           | T\_DICT           |                                      |
+| value.stepPrice | [T\_INT](#T_INT)  | An integer of the step price in loop |
+
+```json
+{
+  "name": "stepPrice",
+  "value": {
+    "stepPrice": "0x2e90edd00"
+  }
+}
+```
+
+##### stepCosts
+
+* Updates given step costs.
+* All fields below is optional.
+
+| Key         | Value Type         | Description                                                                                           |
+|:------------|:-------------------|-------------------------------------------------------------------------------------------------------|
+| name        | [T\_STR](#T_STR)   | "stepCosts" (fixed value)                                                                             |
+| value       | T\_DICT            |                                                                                                       |
 | value.costs | [T\_DICT](#T_DICT) | Step costs to set as a dict. <br> All fields are optional but at least one field should be specified. |
 
-| Key | Value Type         | Description                          |
-| :---- | :--------------- | ------------------------------------ |
-| schema | [T\_INT](#T_INT) | Schema version |
-| default | [T\_INT](#T_INT) | Default cost charged each time transaction is executed |
-| contractCall | [T\_INT](#T_INT) | Cost to call the smart contract function |
-| contractCreate | [T\_INT](#T_INT) | Cost to call the smart contract code generation function |
-| contractUpdate | [T\_INT](#T_INT) | Cost to call the smart contract code update function |
-| contractSet | [T\_INT](#T_INT) | Cost to store the generated/updated smart contract code per byte |
-| get | [T\_INT](#T_INT) | Cost to get values from the state database per byte |
-| getBase | [T\_INT](#T_INT) | Default cost charged each time `get` is called |
-| set | [T\_INT](#T_INT) | Cost to set values newly in the state database per byte |
-| setBase | [T\_INT](#T_INT) | Default cost charged each time `set` is called |
-| delete | [T\_INT](#T_INT) | Cost to delete values in the state database per byte |
-| deleteBase | [T\_INT](#T_INT) | Default cost charged each time `delete` is called |
-| input | [T\_INT](#T_INT) | Cost charged for input data included in transaction per byte |
-| log | [T\_INT](#T_INT) | Cost to emit event logs per byte |
-| logBase | [T\_INT](#T_INT) | Default cost charged each time `log` is called |
-| apiCall | [T\_INT](#T_INT) | Cost charged for heavy API calls (e.g. hash functions) |
+| Key            | Value Type       | Description                                                      |
+|:---------------|:-----------------|------------------------------------------------------------------|
+| default        | [T\_INT](#T_INT) | Default cost charged each time transaction is executed           |
+| contractCall   | [T\_INT](#T_INT) | Cost to call the smart contract function                         |
+| contractCreate | [T\_INT](#T_INT) | Cost to call the smart contract code generation function         |
+| contractUpdate | [T\_INT](#T_INT) | Cost to call the smart contract code update function             |
+| contractSet    | [T\_INT](#T_INT) | Cost to store the generated/updated smart contract code per byte |
+| get            | [T\_INT](#T_INT) | Cost to get values from the state database per byte              |
+| getBase        | [T\_INT](#T_INT) | Default cost charged each time `get` is called                   |
+| set            | [T\_INT](#T_INT) | Cost to set values newly in the state database per byte          |
+| setBase        | [T\_INT](#T_INT) | Default cost charged each time `set` is called                   |
+| delete         | [T\_INT](#T_INT) | Cost to delete values in the state database per byte             |
+| deleteBase     | [T\_INT](#T_INT) | Default cost charged each time `delete` is called                |
+| input          | [T\_INT](#T_INT) | Cost charged for input data included in transaction per byte     |
+| log            | [T\_INT](#T_INT) | Cost to emit event logs per byte                                 |
+| logBase        | [T\_INT](#T_INT) | Default cost charged each time `log` is called                   |
+| apiCall        | [T\_INT](#T_INT) | Cost charged for heavy API calls (e.g. hash functions)           |
 
-*example*
 ```json
 {
   "name": "stepCosts",
@@ -892,78 +954,153 @@ Invoke method can initiate state transition.
 }
 ```
 
-*Monthly Reward Fund Setting*
+##### rewardFund
 
-| Key   | Value Type       | Description                          |
-| :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "rewardFund" (fixed value) |
-| value | T\_DICT | |
-| value.iglobal | [T\_INT](#T_INT) | The total amount of monthly reward fund in loop  |
+* Updates Iglobal value, which is the total amount of monthly reward fund in loop unit.
 
-*Monthly Reward Fund Allocation*<br>
-Determine the allocation of the monthly reward fund
+| Key           | Value Type        | Description                                     |
+|:--------------|:------------------|-------------------------------------------------|
+| name          | [T\_STR](#T_STR)  | "rewardFund" (fixed value)                      |
+| value         | T\_DICT           |                                                 |
+| value.iglobal | [T\_INT](#T_INT)  | The total amount of monthly reward fund in loop |
 
-| Key   | Value Type       | Description                          |
-| :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "rewardFundsAllocation" (fixed value) |
-| value | T\_DICT | |
+```json
+{
+    "name": "rewardFund",
+    "value": {
+        "iglobal": "0x27b46536c66c8e3000000"
+    }
+}
+```
+
+##### rewardFundsAllocation
+
+* Determines the allocation proportion of the monthly reward fund.
+* Each allocation should be an integer in percentage. [0 ~ 100]
+* The sum of all allocations must be 100.
+* All allocations are required.
+
+| Key               | Value Type         | Description                                                     |
+|:------------------|:-------------------|-----------------------------------------------------------------|
+| name              | [T\_STR](#T_STR)   | "rewardFundsAllocation" (fixed value)                           |
+| value             | T\_DICT            |                                                                 |
 | value.rewardFunds | [T\_DICT](#T_DICT) | Reward fund values information to set. All values are required. |
 
-| Key   | Value Type       | Description                          |
-| :---- | :--------------- | ------------------------------------ |
-| iprep | [T\_INT](#T_INT) | The percentage allocated to the P-Rep from the monthly reward fund |
-| icps | [T\_INT](#T_INT) | The percentage allocated to the CPS from the monthly reward fund |
+| Key    | Value Type       | Description                                                            |
+|:-------|:-----------------|------------------------------------------------------------------------|
+| iprep  | [T\_INT](#T_INT) | The percentage allocated to the P-Rep from the monthly reward fund     |
+| icps   | [T\_INT](#T_INT) | The percentage allocated to the CPS from the monthly reward fund       |
 | irelay | [T\_INT](#T_INT) | The percentage allocated to the BTP relay from the monthly reward fund |
-| ivoter | [T\_INT](#T_INT) | The percentage allocated to the Voter from the monthly reward fund |
+| ivoter | [T\_INT](#T_INT) | The percentage allocated to the Voter from the monthly reward fund     |
 
-*example*
 ```json
 {
   "name": "rewardFundsAllocation",
   "value": {
-    "rewardFunds": {"iprep": "0x10", "icps": "0xa", "irelay": "0xa", "ivoter": "0x40"}
+    "rewardFunds": {
+      "iprep": "0x10",
+      "icps": "0xa",
+      "irelay": "0xa",
+      "ivoter": "0x40"
+    }
   }
 }
 ```
 
-*Network Score Designation*
+##### networkScoreDesignation
 
-| Key   | Value Type       | Description                          |
-| :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "networkScoreDesignation" (fixed value) |
-| value | T\_DICT | |
-| value.networkScores | T\_LIST[T\_DICT] | network SCORE values to set. If the address is an empty string, deallocate network SCORE. |
-| value.networkScores.role | [T\_STR](#T_STR) | "cps" or "relay" |
-| value.networkScores.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | network SCORE address |
+* Designates a given score to the network score which plays a specific role.
+* The designated score gets the reward fund for its role from blockchain every term.
+* The only scores owned by governance score can be designated to network scores.
 
-*Network Score Update*
+| Key                         | Value Type                      | Description                                                                               |
+|:----------------------------|:--------------------------------|-------------------------------------------------------------------------------------------|
+| name                        | [T\_STR](#T_STR)                | "networkScoreDesignation" (fixed value)                                                   |
+| value                       | T\_DICT                         |                                                                                           |
+| value.networkScores         | T\_LIST[T\_DICT]                | network SCORE values to set. If the address is an empty string, deallocate network SCORE. |
+| value.networkScores.role    | [T\_STR](#T_STR)                | "cps" or "relay"                                                                          |
+| value.networkScores.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | network SCORE address                                                                     |
 
-| Key   | Value Type       | Description                          |
-| :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "networkScoreUpdate" (fixed value) |
-| value | T\_DICT | |
-| value.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | network SCORE address to update |
-| value.content | [T_BIN_DATA](#T_BIN_DATA) | SCORE code |
+```json
+{
+  "name": "networkScoreDesignation",
+  "value": {
+    "networkScores": [
+      {
+        "role": "cps",
+        "address": "cx7cc546bf908018b5602b66fa65ff5fdacef45fe0"
+      }
+    ]
+  }
+}
+```
 
-*Set accumulated validation failure slashing rate*
+##### networkScoreUpdate
 
-| Key   | Value Type       | Description                          |
-| :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "accumulatedValidationFailureSlashingRate" (fixed value) |
-| value | T\_DICT | |
-| value.slashingRate | [T\_INT](#T_INT) | slashing rate |
+* Updates a network score with a given address and content.
+* Only java scores are supported.
 
-*Set accumulated validation failure slashing rate*
+| Key           | Value Type                      | Description                          |
+|:--------------|:--------------------------------|--------------------------------------|
+| name          | [T\_STR](#T_STR)                | "networkScoreUpdate" (fixed value)   |
+| value         | T\_DICT                         |                                      |
+| value.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | network SCORE address to update      |
+| value.content | [T_BIN_DATA](#T_BIN_DATA)       | SCORE code in hexadecimal string     |
+| value.params  | [T_LIST](#T_LIST)               | Parameters passed to score on update |
 
-| Key   | Value Type       | Description                          |
-| :---- | :--------------- | ------------------------------------ |
-| name | [T\_STR](#T_STR) | "missedNetworkProposalSlashingRate" (fixed value) |
-| value | T\_DICT | |
-| value.slashingRate | [T\_INT](#T_INT) | slashing rate |
+```json
+{
+  "name": "networkScoreUpdate",
+  "value": {
+    "address": "cx7cc546bf908018b5602b66fa65ff5fdacef45fe0",
+    "content": "0x504b0304107082bc2bf352a000000280...00000504b03041400080808000000210000000",
+    "params": ["0x10", "Hello"]
+  }
+}
+```
+
+##### accumulatedValidationFailureSlashingRate
+
+* Sets accumulated validation failure slashing rate.
+* `SlashingRateChanged("ConsistentValidationPenalty",int)` eventLog is emitted on applying the proposal.
+
+| Key                | Value Type       | Description                                              |
+|:-------------------|:-----------------|----------------------------------------------------------|
+| name               | [T\_STR](#T_STR) | "accumulatedValidationFailureSlashingRate" (fixed value) |
+| value              | T\_DICT          |                                                          |
+| value.slashingRate | [T\_INT](#T_INT) | slashing rate [0 ~ 100]                                  |
+
+```json
+{
+  "name": "accumulatedValidationFailureSlashingRate",
+  "value": {
+    "slashingRate": "0x5"
+  }
+}
+```
+
+##### missedNetworkProposalVoteSlashingRate
+
+* Sets missed network proposal vote slashing rate.
+
+| Key                | Value Type       | Description                                           |
+|:-------------------|:-----------------|-------------------------------------------------------|
+| name               | [T\_STR](#T_STR) | "missedNetworkProposalVoteSlashingRate" (fixed value) |
+| value              | T\_DICT          |                                                       |
+| value.slashingRate | [T\_INT](#T_INT) | slashing rate [0 ~ 100]                               |
+
+```json
+{
+  "name": "missedNetworkProposalVoteSlashingRate",
+  "value": {
+    "slashingRate": "0x5"
+  }
+}
+```
 
 ### Examples
 
-#### Request
+*Request*
 
 ```json
 {
@@ -990,6 +1127,37 @@ Determine the allocation of the monthly reward fund
     }
   }
 }
+```
+
+`value` is in hexadecimal format of the following json string.
+
+```json
+[
+  {
+    "name": "missedNetworkProposalVoteSlashingRate",
+    "value": {
+      "slashingRate": "0x5"
+    }
+  },
+  {
+    "name": "accumulatedValidationFailureSlashingRate",
+    "value": {
+      "slashingRate": "0x5"
+    }
+  },
+  {
+    "name": "rewardFundsAllocation",
+    "value": {
+      "rewardFunds": {
+        "iprep": "0x10",
+        "icps": "0xa",
+        "irelay": "0xa",
+        "ivoter": "0x40"
+      }
+    }
+  },
+  ...
+]
 ```
 
 ## cancelProposal
