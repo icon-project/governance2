@@ -3,26 +3,27 @@ Governance SCORE APIs
 
 This document describes APIs that Governance SCORE provides.
 
-
 # Overview
 
 * Governance SCORE is a built-in SCORE that manages adjustable characteristics of ICON network.
-* Address: cx0000000000000000000000000000000000000001
+* Address: `cx0000000000000000000000000000000000000001`
 
 # Value Types
 
 By default, Values in all JSON-RPC messages are in string form.
 The most commonly used Value types are as follows.
 
-| Value Type                                | Description                                                  | Example                                                      |
-| :---------------------------------------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
-| <a id="T_ADDR_EOA">T\_ADDR\_EOA</a>       | "hx" + 40 digits HEX string                                  | hxbe258ceb872e08851f1f59694dac2558708ece11                   |
-| <a id="T_ADDR_SCORE">T\_ADDR\_SCORE</a>   | "cx" + 40 digits HEX string                                  | cxb0776ee37f5b45bfaea8cff1d8232fbb6122ec32                   |
-| <a id="T_HASH">T\_HASH</a>                | "0x" + 64 digits HEX string                                  | 0xc71303ef8543d04b5dc1ba6579132b143087c68db1b2168786408fcbce568238 |
-| <a id="T_INT">T\_INT</a>                  | "0x" + lowercase HEX string                                  | 0xa                                                          |
-| <a id="T_STR">T\_STR</a>                  | string                                                       | hello                                                        |
-| <a id="T_BIN_DATA">T\_BIN\_DATA</a>       | "0x" + lowercase HEX string (the length of string should be even) | 0x34b2                                                       |
-| <a id="T_SIG">T\_SIG</a>                  | base64 encoded string                                        | VAia7YZ2Ji6igKWzjR2YsGa2m53nKPrfK7uXYW78QLE+ATehAVZPC40szvAiA6NEU5gCYB4c4qaQzqDh2ugcHgA= |
+| Value Type                              | Description                                                       | Example                                                                                  |
+|:----------------------------------------|:------------------------------------------------------------------|:-----------------------------------------------------------------------------------------|
+| <a id="T_ADDR_EOA">T\_ADDR\_EOA</a>     | "hx" + 40 digits HEX string                                       | hxbe258ceb872e08851f1f59694dac2558708ece11                                               |
+| <a id="T_ADDR_SCORE">T\_ADDR\_SCORE</a> | "cx" + 40 digits HEX string                                       | cxb0776ee37f5b45bfaea8cff1d8232fbb6122ec32                                               |
+| <a id="T_HASH">T\_HASH</a>              | "0x" + 64 digits HEX string                                       | 0xc71303ef8543d04b5dc1ba6579132b143087c68db1b2168786408fcbce568238                       |
+| <a id="T_INT">T\_INT</a>                | "0x" + lowercase HEX string                                       | 0xa                                                                                      |
+| <a id="T_STR">T\_STR</a>                | string                                                            | hello                                                                                    |
+| <a id="T_BIN_DATA">T\_BIN\_DATA</a>     | "0x" + lowercase HEX string (the length of string should be even) | 0x34b2                                                                                   |
+| <a id="T_SIG">T\_SIG</a>                | base64 encoded string                                             | VAia7YZ2Ji6igKWzjR2YsGa2m53nKPrfK7uXYW78QLE+ATehAVZPC40szvAiA6NEU5gCYB4c4qaQzqDh2ugcHgA= |
+| <a id="T_LIST">T\_LIST</a>              | list                                                              | \["a", "b", "0x1"\]                                                                      |
+| <a id="T_DICT">T\_DICT</a>              | dict                                                              | {"key": "value"}                                                                         |
 
 
 # Methods List
@@ -33,7 +34,7 @@ The most commonly used Value types are as follows.
   * [getStepCosts](#getstepcosts)
   * [getMaxStepLimit](#getmaxsteplimit)
   * [isInScoreBlackList](#isinscoreblacklist)
-  * [getVersion](#getVersion)
+  * [getVersion](#getversion)
   * [getRevision](#getrevision)
   * [getProposal](#getproposal)
   * [getProposals](#getproposals)
@@ -52,7 +53,7 @@ The most commonly used Value types are as follows.
   * [StepPriceChanged](#steppricechanged)
   * [StepCostChanged](#stepcostchanged)
   * [RevisionChanged](#revisionchanged)
-  * [MaliciousScore](#maliciousscore)
+  * [MaliciousScore](#maliciousscore-event)
   * [PRepDisqualified](#prepdisqualified)
   * [NetworkProposalRegistered](#networkproposalregistered)
   * [NetworkProposalCanceled](#networkproposalcanceled)
@@ -75,7 +76,7 @@ Query method does not change state. Read-only.
 ### Parameters
 
 | Key     | Value Type                      | Description                           |
-| :------ | :------------------------------ | ------------------------------------- |
+|:--------|:--------------------------------|---------------------------------------|
 | address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | SCORE address whose status be checked |
 
 ### Examples
@@ -236,7 +237,7 @@ None
 ### Parameters
 
 | Key         | Value Type | Description                                    |
-| :---------- | :--------- | ---------------------------------------------- |
+|:------------|:-----------|------------------------------------------------|
 | contextType | string     | 'invoke' for sendTransaction, 'query' for call |
 
 ### Returns
@@ -282,7 +283,7 @@ None
 ### Parameters
 
 | Key     | Value Type                      | Description            |
-| :------ | :------------------------------ | ---------------------- |
+|:--------|:--------------------------------|------------------------|
 | address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | SCORE address to query |
 
 ### Returns
@@ -408,7 +409,7 @@ None
 ### Parameters
 
 | Key  | Value Type         | Description                                         |
-| :--- | :----------------- | --------------------------------------------------- |
+|:-----|:-------------------|-----------------------------------------------------|
 | id   | [T\_HASH](#T_HASH) | Transaction hash of the registered network proposal |
 
 ### Returns
@@ -553,12 +554,12 @@ registered before governance2
 
 ### Parameters
 
-| Key    | Value Type       | Description                                                                 |
-|:-------| :--------------- |-----------------------------------------------------------------------------|
-| type   | [T\_INT](#T_INT) | Type for querying (optional)                                                |
-| status | [T\_INT](#T_INT) | Status for querying (optional)                                              |
-| start  | [T\_INT](#T_INT) | Starting index for querying. Default is 0, which means the latest (optional)|
-| size   | [T\_INT](#T_INT) | Size for querying. Default and maximum is 10 (optional)                     |
+| Key    | Value Type       | Description                                                                  |
+|:-------|:-----------------|------------------------------------------------------------------------------|
+| type   | [T\_INT](#T_INT) | Type for querying (optional)                                                 |
+| status | [T\_INT](#T_INT) | Status for querying (optional)                                               |
+| start  | [T\_INT](#T_INT) | Starting index for querying. Default is 0, which means the latest (optional) |
+| size   | [T\_INT](#T_INT) | Size for querying. Default and maximum is 10 (optional)                      |
 
 ### Returns
 
@@ -648,7 +649,7 @@ Invoke method can initiate state transition.
 ### Parameters
 
 | Key    | Value Type         | Description                                       |
-| :----- | :----------------- | ------------------------------------------------- |
+|:-------|:-------------------|---------------------------------------------------|
 | txHash | [T\_HASH](#T_HASH) | Transaction hash of the SCORE deploy transaction. |
 
 ### Examples
@@ -687,7 +688,7 @@ Invoke method can initiate state transition.
 ### Parameters
 
 | Key    | Value Type         | Description                                   |
-| :----- | :----------------- | --------------------------------------------- |
+|:-------|:-------------------|-----------------------------------------------|
 | txHash | [T\_HASH](#T_HASH) | Transaction hash of the SCORE deploy request. |
 | reason | T\_TEXT            | Reason for rejecting                          |
 
@@ -729,7 +730,7 @@ Invoke method can initiate state transition.
 ### Parameters
 
 | Key     | Value Type                  | Description                                            |
-| :------ | :-------------------------- | ------------------------------------------------------ |
+|:--------|:----------------------------|--------------------------------------------------------|
 | address | [T\_ADDR\_EOA](#T_ADDR_EOA) | New EOA address that will be added to the auditor list |
 
 ### Examples
@@ -769,7 +770,7 @@ Invoke method can initiate state transition.
 ### Parameters
 
 | Key     | Value Type                  | Description                     |
-| :------ | :-------------------------- | ------------------------------- |
+|:--------|:----------------------------|---------------------------------|
 | address | [T\_ADDR\_EOA](#T_ADDR_EOA) | EOA address in the auditor list |
 
 ### Examples
@@ -861,12 +862,12 @@ Invoke method can initiate state transition.
 
 * Controls access to a given score
 
-| Key           | Value Type                       | Description                    |
-|:--------------|:---------------------------------|--------------------------------|
-| name          | [T\_STR](#T_STR)                 | "maliciousScore" (fixed value) |
-| value         | T\_DICT                          |                                |
-| value.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE)  | SCORE address                  |
-| value.type    | [T\_INT](#T_INT)                 | 0x0: Freeze, 0x1: Unfreeze     |
+| Key           | Value Type                      | Description                    |
+|:--------------|:--------------------------------|--------------------------------|
+| name          | [T\_STR](#T_STR)                | "maliciousScore" (fixed value) |
+| value         | T\_DICT                         |                                |
+| value.address | [T\_ADDR\_SCORE](#T_ADDR_SCORE) | SCORE address                  |
+| value.type    | [T\_INT](#T_INT)                | 0x0: Freeze, 0x1: Unfreeze     |
 
 ```json
 {
@@ -882,11 +883,11 @@ Invoke method can initiate state transition.
 
 * Disqualifies a given P-Rep
 
-| Key           | Value Type                   | Description                          |
-|:--------------|:-----------------------------|--------------------------------------|
-| name          | [T\_STR](#T_STR)             | "prepDisqualification" (fixed value) |
-| value         | T\_DICT                      |                                      |
-| value.address | [T\_ADDR\_EOA](#T_ADDR_EOA)  | EOA address of main/sub P-Rep        |
+| Key           | Value Type                  | Description                          |
+|:--------------|:----------------------------|--------------------------------------|
+| name          | [T\_STR](#T_STR)            | "prepDisqualification" (fixed value) |
+| value         | T\_DICT                     |                                      |
+| value.address | [T\_ADDR\_EOA](#T_ADDR_EOA) | EOA address of main/sub P-Rep        |
 
 ```json
 {
@@ -901,11 +902,11 @@ Invoke method can initiate state transition.
 
 * Updates step price
 
-| Key             | Value Type        | Description                          |
-|:----------------|:------------------|--------------------------------------|
-| name            | [T\_STR](#T_STR)  | "stepPrice" (fixed value)            |
-| value           | T\_DICT           |                                      |
-| value.stepPrice | [T\_INT](#T_INT)  | An integer of the step price in loop |
+| Key             | Value Type       | Description                          |
+|:----------------|:-----------------|--------------------------------------|
+| name            | [T\_STR](#T_STR) | "stepPrice" (fixed value)            |
+| value           | T\_DICT          |                                      |
+| value.stepPrice | [T\_INT](#T_INT) | An integer of the step price in loop |
 
 ```json
 {
@@ -929,6 +930,7 @@ Invoke method can initiate state transition.
 
 | Key            | Value Type       | Description                                                      |
 |:---------------|:-----------------|------------------------------------------------------------------|
+| schema         | [T\_INT](#T_INT) | Schema version (currently fixed at 1)                            |
 | default        | [T\_INT](#T_INT) | Default cost charged each time transaction is executed           |
 | contractCall   | [T\_INT](#T_INT) | Cost to call the smart contract function                         |
 | contractCreate | [T\_INT](#T_INT) | Cost to call the smart contract code generation function         |
@@ -958,11 +960,11 @@ Invoke method can initiate state transition.
 
 * Updates Iglobal value, which is the total amount of monthly reward fund in loop unit.
 
-| Key           | Value Type        | Description                                     |
-|:--------------|:------------------|-------------------------------------------------|
-| name          | [T\_STR](#T_STR)  | "rewardFund" (fixed value)                      |
-| value         | T\_DICT           |                                                 |
-| value.iglobal | [T\_INT](#T_INT)  | The total amount of monthly reward fund in loop |
+| Key           | Value Type       | Description                                     |
+|:--------------|:-----------------|-------------------------------------------------|
+| name          | [T\_STR](#T_STR) | "rewardFund" (fixed value)                      |
+| value         | T\_DICT          |                                                 |
+| value.iglobal | [T\_INT](#T_INT) | The total amount of monthly reward fund in loop |
 
 ```json
 {
@@ -1166,9 +1168,9 @@ Invoke method can initiate state transition.
 
 ### Parameters
 
-| Key  | Value Type         | Description                                    |
-| :--- | :----------------- | ---------------------------------------------- |
-| id   | [T\_HASH](#T_HASH) | Transaction hash of network proposal to cancel |
+| Key | Value Type         | Description                                    |
+|:----|:-------------------|------------------------------------------------|
+| id  | [T\_HASH](#T_HASH) | Transaction hash of network proposal to cancel |
 
 ### Examples
 
@@ -1205,7 +1207,7 @@ Invoke method can initiate state transition.
 ### Parameters
 
 | Key  | Value Type         | Description                                  |
-| :--- | :----------------- | -------------------------------------------- |
+|:-----|:-------------------|----------------------------------------------|
 | id   | [T\_HASH](#T_HASH) | Transaction hash of network proposal to vote |
 | vote | [T\_INT](#T_INT)   | 0x0: Disagree, 0x1: Agree                    |
 
@@ -1244,9 +1246,9 @@ Invoke method can initiate state transition.
 
 ### Parameters
 
-| Key  | Value Type         | Description                                  |
-| :--- | :----------------- | -------------------------------------------- |
-| id   | [T\_HASH](#T_HASH) | Transaction hash of network proposal to apply |
+| Key | Value Type         | Description                                   |
+|:----|:-------------------|-----------------------------------------------|
+| id  | [T\_HASH](#T_HASH) | Transaction hash of network proposal to apply |
 
 ### Examples
 
@@ -1323,14 +1325,13 @@ Triggered on vote transaction approving 'Revision' network proposal.
 public void RevisionChanged(BigInteger revisionCode) {}
 ```
 
-## MaliciousSCORE
+## MaliciousSCORE event
 
 Triggered on vote transaction approving 'Malicious SCORE' network proposal.
 
 ```java
-@eventlog(indexed=0)
-def MaliciousScore(self, address: Address, unfreeze: int):
-  pass
+@EventLog(indexed=0)
+public void MaliciousScore(Address address, int unFreeze) {}
 ```
 
 ## PRepDisqualified
