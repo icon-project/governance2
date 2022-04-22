@@ -119,7 +119,7 @@ public class Governance {
 
     @External(readonly = true)
     public String getVersion() {
-        return "2.1.1";
+        return "2.1.2";
     }
 
     @External(readonly = true)
@@ -366,7 +366,11 @@ public class Governance {
             chainScore.penalizeNonvoters(List.of(novoters));
             int status = proposal.getStatus(blockHeight);
             if (status == NetworkProposal.EXPIRED_STATUS) {
-                NetworkProposalExpired(proposal.id);
+                if (proposal.apply != null) {
+                    networkProposal.applyProposal(proposal);
+                } else {
+                    NetworkProposalExpired(proposal.id);
+                }
             } else if (status == NetworkProposal.DISAPPROVED_STATUS) {
                 NetworkProposalDisapproved(proposal.id);
             }
@@ -383,7 +387,7 @@ public class Governance {
         return null;
     }
 
-    public void applyProposal(Proposal proposal, PRepInfo pRepInfo) {
+    private void applyProposal(Proposal proposal, PRepInfo pRepInfo) {
         proposal.apply = new ApplyInfo(
                 Context.getTransactionHash(), pRepInfo.getAddress(), pRepInfo.getName(), BigInteger.valueOf(Context.getTransactionTimestamp()));
         networkProposal.applyProposal(proposal);

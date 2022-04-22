@@ -185,24 +185,24 @@ public class NetworkProposal {
         p.updateVote(prep, vote);
         int votingEvent = EVENT_NONE;
         int currentStatus = p.status;
-        if (vote == VoteInfo.AGREE_VOTE) {
-            if (p.sizeofAgreed() * 3 >= p.totalVoter * 2 &&
-                    p.amountOfAgreed().multiply(BigInteger.valueOf(3)).compareTo(p.totalPower.multiply(BigInteger.TWO)) >= 0) {
-                p.status = APPROVED_STATUS;
-                votingEvent = EVENT_APPROVED;
-            } else if (p.sizeofNoVote() == 0) {
-                p.status = DISAPPROVED_STATUS;
-                votingEvent = EVENT_DISAPPROVED;
-            }
-        } else {
-            if (p.sizeofDisagreed() * 3 >= p.totalVoter &&
-                    p.amountOfDisagreed().multiply(BigInteger.valueOf(3)).compareTo(p.totalPower) >= 0) {
-                p.status = DISAPPROVED_STATUS;
-                votingEvent = EVENT_DISAPPROVED;
-            }
-        }
-        proposalDict.set(p.id, p);
         if (currentStatus == VOTING_STATUS) {
+            if (vote == VoteInfo.AGREE_VOTE) {
+                if (p.sizeofAgreed() * 3 >= p.totalVoter * 2 &&
+                        p.amountOfAgreed().multiply(BigInteger.valueOf(3)).compareTo(p.totalPower.multiply(BigInteger.TWO)) >= 0) {
+                    p.status = APPROVED_STATUS;
+                    votingEvent = EVENT_APPROVED;
+                } else if (p.sizeofNoVote() == 0) {
+                    p.status = DISAPPROVED_STATUS;
+                    votingEvent = EVENT_DISAPPROVED;
+                }
+            } else {
+                if (p.sizeofDisagreed() * 3 >= p.totalVoter &&
+                        p.amountOfDisagreed().multiply(BigInteger.valueOf(3)).compareTo(p.totalPower) >= 0) {
+                    p.status = DISAPPROVED_STATUS;
+                    votingEvent = EVENT_DISAPPROVED;
+                }
+            }
+            proposalDict.set(p.id, p);
             return votingEvent;
         }
         return EVENT_NONE;
