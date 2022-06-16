@@ -17,6 +17,7 @@ The most commonly used Value types are as follows.
 |:----------------------------------------|:------------------------------------------------------------------|:-----------------------------------------------------------------------------------------|
 | <a id="T_ADDR_EOA">T\_ADDR\_EOA</a>     | "hx" + 40 digits HEX string                                       | hxbe258ceb872e08851f1f59694dac2558708ece11                                               |
 | <a id="T_ADDR_SCORE">T\_ADDR\_SCORE</a> | "cx" + 40 digits HEX string                                       | cxb0776ee37f5b45bfaea8cff1d8232fbb6122ec32                                               |
+| <a id="T_ADDR">T\_ADDR</a>              | T_ADDR_EOA + T_ADDR_SCORE                                         |                                                                                          |
 | <a id="T_HASH">T\_HASH</a>              | "0x" + 64 digits HEX string                                       | 0xc71303ef8543d04b5dc1ba6579132b143087c68db1b2168786408fcbce568238                       |
 | <a id="T_INT">T\_INT</a>                | "0x" + lowercase HEX string                                       | 0xa                                                                                      |
 | <a id="T_STR">T\_STR</a>                | string                                                            | hello                                                                                    |
@@ -1096,6 +1097,48 @@ Invoke method can initiate state transition.
   "name": "missedNetworkProposalVoteSlashingRate",
   "value": {
     "slashingRate": "0x5"
+  }
+}
+```
+
+##### openBTPNetwork
+
+* Open BTP network.
+
+| Key                   | Value Type         | Description                                      |
+|:----------------------|:-------------------|--------------------------------------------------|
+| name                  | [T\_STR](#T_STR)   | "openBTPNetwork" (fixed value)                   |
+| value                 | T\_DICT            |                                                  |
+| value.networkTypeName | [T\_STR](#T_STR)   | BTP network type name                            |
+| value.name            | [T\_STR](#T_STR)   | BTP network name                                 |
+| value.owner           | [T\_ADDR](#T_ADDR) | Owner of the BTP network who can send a message  |
+
+```json
+{
+  "name": "openBTPNetwork",
+  "value": {
+    "networkTypeName": "eth",
+    "name": "ethereum",
+    "owner": "cxb0776ee37f5b45bfaea8cff1d8232fbb6122ec32"
+  }
+}
+```
+
+##### closeBTPNetwork
+
+* Close BTP network.
+
+| Key       | Value Type       | Description                     |
+|:----------|:-----------------|---------------------------------|
+| name      | [T\_STR](#T_STR) | "closeBTPNetwork" (fixed value) |
+| value     | T\_DICT          |                                 |
+| value.id  | [T\_INT](#T_INT) | BTP network ID                  |
+
+```json
+{
+  "name": "closeBTPNetwork",
+  "value": {
+    "id": "0x1"
   }
 }
 ```

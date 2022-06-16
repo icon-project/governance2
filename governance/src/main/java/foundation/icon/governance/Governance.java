@@ -485,6 +485,19 @@ public class Governance {
                 case Value.MISSED_NETWORK_PROPOSAL_VOTE_SLASHING_RATE: {
                     var rate = Converter.toInteger(valueObject.getString("slashingRate", null));
                     chainScore.setNonVoteSlashingRate(rate);
+                    continue;
+                }
+                case Value.OPEN_BTP_NETWORK: {
+                    String networkTypeName = valueObject.getString("networkTypeName", null);
+                    String networkName = valueObject.getString("name", null);
+                    var owner = Converter.toAddress(valueObject.getString("owner", null));
+                    chainScore.openBTPNetwork(networkTypeName, networkName, owner);
+                    continue;
+                }
+                case Value.CLOSE_BTP_NETWORK: {
+                    var id = Converter.toInteger(valueObject.getString("id", null));
+                    chainScore.closeBTPNetwork(id);
+                    continue;
                 }
             }
         }
@@ -555,6 +568,16 @@ public class Governance {
                     var slashingRate = Converter.toInteger(value.getString("slashingRate", null));
                     Context.require(slashingRate.compareTo(BigInteger.ZERO) >= 0 && slashingRate.compareTo(BigInteger.valueOf(100)) <= 0,
                             "slashing rate invalid");
+                    continue;
+                case Value.OPEN_BTP_NETWORK:
+                    Context.require(size == 3);
+                    Context.require(value.getString("networkTypeName", null) != null);
+                    Context.require(value.getString("name", null) != null);
+                    Context.require(Converter.toAddress(value.getString("owner", null)) != null, "Invalid address");
+                    continue;
+                case Value.CLOSE_BTP_NETWORK:
+                    Context.require(size == 1);
+                    Context.require(Converter.toInteger(value.getString("id", null)) != null, "Invalid id");
                     continue;
                 default:
                     Context.revert("undefined proposal type");

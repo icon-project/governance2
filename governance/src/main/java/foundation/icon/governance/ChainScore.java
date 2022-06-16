@@ -212,4 +212,11 @@ class ChainScore {
         return prepInfo;
     }
 
+    BigInteger openBTPNetwork(String networkTypeName, String name, Address owner) {
+        return (BigInteger) Context.call(CHAIN_SCORE, "openBTPNetwork", networkTypeName, name, owner);
+    }
+
+    void closeBTPNetwork(BigInteger id) {
+        Context.call(CHAIN_SCORE, "closeBTPNetwork", id);
+    }
 }
