@@ -202,9 +202,8 @@ public class NetworkProposal {
                     votingEvent = EVENT_DISAPPROVED;
                 }
             }
-            proposalDict.set(p.id, p);
-            return votingEvent;
         }
-        return EVENT_NONE;
+        proposalDict.set(p.id, p);
+        return votingEvent;
     }
 }
