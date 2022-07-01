@@ -19,6 +19,16 @@ optimizedJar {
 
 deployJar {
     endpoints {
+        mainnet {
+            uri = 'https://ctz.solidwallet.io/api/v3'
+            nid = 0x1
+            to = 'cx0000000000000000000000000000000000000001'
+        }
+        lisbon {
+            uri = 'https://lisbon.net.solidwallet.io/api/v3'
+            nid = 0x2
+            to = 'cx0000000000000000000000000000000000000001'
+        }
         berlin {
             uri = 'https://berlin.net.solidwallet.io/api/v3'
             nid = 0x7
