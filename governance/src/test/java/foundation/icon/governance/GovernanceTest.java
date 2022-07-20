@@ -20,6 +20,7 @@ import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonValue;
 import org.junit.jupiter.api.Test;
+import score.UserRevertedException;
 
 import java.util.Arrays;
 
@@ -50,7 +51,7 @@ public class GovernanceTest {
         for (String test: invalid) {
             JsonValue json = Json.parse(test);
             JsonArray values = json.asArray();
-            assertThrows(AssertionError.class, () -> gov.validateProposals(values));
+            assertThrows(UserRevertedException.class, () -> gov.validateProposals(values));
         }
     }
 
