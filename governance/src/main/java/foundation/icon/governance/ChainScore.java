@@ -59,128 +59,68 @@ class PRepInfo {
 }
 
 class ChainScore {
-    static final Address CHAIN_SCORE = Address.fromString("cx0000000000000000000000000000000000000000");
+    static final Address ADDRESS = Address.fromString("cx0000000000000000000000000000000000000000");
 
     private void validateHash(byte[] value) {
         Context.require(value.length == 32);
     }
 
-    void setRevision(BigInteger code) {
-        Context.call(CHAIN_SCORE, "setRevision", code);
+    static BigInteger getRevision() {
+        return (BigInteger) Context.call(ADDRESS, "getRevision");
     }
 
-    BigInteger getRevision() {
-        return (BigInteger) Context.call(CHAIN_SCORE, "getRevision");
-    }
-
-    void setStepPrice(BigInteger price) {
-        Context.call(CHAIN_SCORE, "setStepPrice", price);
-    }
-
-    BigInteger getStepPrice() {
-        return (BigInteger) Context.call(CHAIN_SCORE, "getStepPrice");
-    }
-
-    Map<String, Object> getStepCosts() {
-        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getStepCosts");
-    }
-
-    BigInteger getMaxStepLimit(String t) {
-        return (BigInteger) Context.call(CHAIN_SCORE, "getMaxStepLimit", t);
-    }
-
-    Map<String, Object> getScoreStatus(Address address) {
-        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getScoreStatus", address);
+    static BigInteger getStepPrice() {
+        return (BigInteger) Context.call(ADDRESS, "getStepPrice");
     }
 
     List<Address> getBlockedScores() {
-        return (List<Address>) Context.call(CHAIN_SCORE, "getBlockedScores");
-    }
-
-    void setStepCost(String type, BigInteger cost) {
-        Context.call(CHAIN_SCORE, "setStepCost", type, cost);
-    }
-
-    void disqualifyPRep(Address address) {
-        Context.call(CHAIN_SCORE, "disqualifyPRep", address);
-    }
-
-    void setIRep(BigInteger irep) {
-        Context.call(CHAIN_SCORE, "setIRep", irep);
+        return (List<Address>) Context.call(ADDRESS, "getBlockedScores");
     }
 
     void acceptScore(byte[] txHash) {
         validateHash(txHash);
-        Context.call(CHAIN_SCORE, "acceptScore", (Object) txHash);
+        Context.call(ADDRESS, "acceptScore", (Object) txHash);
     }
 
     void rejectScore(byte[] txHash) {
         validateHash(txHash);
-        Context.call(CHAIN_SCORE, "rejectScore", (Object) txHash);
+        Context.call(ADDRESS, "rejectScore", (Object) txHash);
     }
 
     void addTimer(BigInteger blockHeight) {
-        Context.call(CHAIN_SCORE, "addTimer", blockHeight);
+        Context.call(ADDRESS, "addTimer", blockHeight);
     }
 
     void removeTimer(BigInteger blockHeight) {
-        Context.call(CHAIN_SCORE, "removeTimer", blockHeight);
+        Context.call(ADDRESS, "removeTimer", blockHeight);
     }
 
     void penalizeNonvoters(List<Address> preps) {
-        Context.call(CHAIN_SCORE, "penalizeNonvoters", preps);
+        Context.call(ADDRESS, "penalizeNonvoters", preps);
     }
 
-    void blockScore(Address address) {
-        Context.call(CHAIN_SCORE, "blockScore", address);
+    static void validateRewardFund(BigInteger rewardFund) {
+        Context.call(ADDRESS, "validateRewardFund", rewardFund);
     }
 
-    void unblockScore(Address address) {
-        Context.call(CHAIN_SCORE, "unblockScore", address);
-    }
-
-    void validateRewardFund(BigInteger rewardFund) {
-        Context.call(CHAIN_SCORE, "validateRewardFund", rewardFund);
-    }
-
-    void setRewardFund(BigInteger rewardFund) {
-        Context.call(CHAIN_SCORE, "setRewardFund", rewardFund);
-    }
-
-    void setRewardFundsRate(BigInteger iprep, BigInteger icps, BigInteger irelay, BigInteger ivoter) {
-        Context.call(CHAIN_SCORE, "setRewardFundAllocation", iprep, icps, irelay, ivoter);
-    }
-
-    Address getScoreOwner(Address address) {
-        return (Address)Context.call(CHAIN_SCORE, "getScoreOwner", address);
+    static Address getScoreOwner(Address address) {
+        return (Address)Context.call(ADDRESS, "getScoreOwner", address);
     }
 
     void burn(BigInteger value) {
-        Context.call(value, CHAIN_SCORE, "burn");
-    }
-
-    void setNetworkScore(String role, Address address) {
-        Context.call(CHAIN_SCORE, "setNetworkScore", role, address);
-    }
-
-    void setConsistentValidationSlashingRate(BigInteger rate) {
-        Context.call(CHAIN_SCORE, "setConsistentValidationSlashingRate", rate);
-    }
-
-    void setNonVoteSlashingRate(BigInteger rate) {
-        Context.call(CHAIN_SCORE, "setNonVoteSlashingRate", rate);
+        Context.call(value, ADDRESS, "burn");
     }
 
     Map<String, Object> getMainPReps() {
-        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getMainPReps");
+        return (Map<String, Object>) Context.call(ADDRESS, "getMainPReps");
     }
 
-    Map<String, Object> getPReps() {
-        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getPReps");
+    static Map<String, Object> getPReps() {
+        return (Map<String, Object>) Context.call(ADDRESS, "getPReps");
     }
 
     Map<String, Object> getPRepTerm() {
-        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getPRepTerm");
+        return (Map<String, Object>) Context.call(ADDRESS, "getPRepTerm");
     }
 
     PRepInfo[] getMainPRepsInfo() {
@@ -188,12 +128,12 @@ class ChainScore {
         return getPRepInfolist(mainPreps);
     }
 
-    PRepInfo[] getPRepsInfo() {
+    static PRepInfo[] getPRepsInfo() {
         Map<String, Object> preps = getPReps();
         return getPRepInfolist(preps);
     }
 
-    private PRepInfo[] getPRepInfolist(Map<String, Object> preps) {
+    static private PRepInfo[] getPRepInfolist(Map<String, Object> preps) {
         List<Map<String, Object>> info = (List<Map<String, Object>>) preps.get("preps");
 
         PRepInfo[] prepInfo = new PRepInfo[info.size()];

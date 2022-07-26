@@ -39,9 +39,10 @@ public class Proposal {
     public static final int REWARD_FUND = 7;
     public static final int REWARD_FUNDS_ALLOCATION = 8;
     public static final int NETWORK_PROPOSAL = 9;
+    public static final int EXTERNAL_CALL = 10;
 
     public static final int MIN = TEXT;
-    public static final int MAX = NETWORK_PROPOSAL;
+    public static final int MAX = EXTERNAL_CALL;
 
     final byte[] id;
     final Address proposer;

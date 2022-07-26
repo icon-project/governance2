@@ -33,6 +33,7 @@ public class NetworkProposal {
     // new proposal DB after Java migration
     private final DictDB<byte[], Proposal> proposalDict = Context.newDictDB("proposals", Proposal.class);
     private final DictDB<byte[], byte[]> proposalValueDict = Context.newDictDB("proposal_values", byte[].class);
+    private final DictDB<byte[], MessageRequests> messageRequestsDict = Context.newDictDB("proposal_values", MessageRequests.class);
     private final ArrayDB<byte[]> proposalKeys = Context.newArrayDB("proposal_keys", byte[].class);
 
     public final static int VOTING_STATUS = 0;
@@ -67,6 +68,12 @@ public class NetworkProposal {
         byte[] value = proposalValueDict.get(id);
         Context.require(value != null);
         return value;
+    }
+
+    public MessageRequests getProposalRequest(byte[] id) {
+        MessageRequests messageRequests = messageRequestsDict.get(id);
+        Context.require(messageRequests != null);
+        return messageRequests;
     }
 
     public List<Object> getProposals(int typeCondition, int statusCondition, int start, int size) {
@@ -152,7 +159,7 @@ public class NetworkProposal {
                 proposerName,
                 title,
                 description,
-                Proposal.NETWORK_PROPOSAL,
+                Proposal.EXTERNAL_CALL,
                 null,
                 blockHeight,
                 expireHeight,
@@ -164,7 +171,7 @@ public class NetworkProposal {
         );
         proposalDict.set(id, proposal);
         proposalKeys.add(id);
-        proposalValueDict.set(id, value.data());
+        messageRequestsDict.set(id, value.getMessageRequests());
     }
 
     public void cancelProposal(Proposal p) {

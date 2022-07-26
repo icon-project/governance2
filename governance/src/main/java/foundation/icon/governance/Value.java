@@ -35,23 +35,10 @@ public class Value {
     private BigInteger value;
     private StepCosts stepCosts;
     private RewardFunds rewardFunds;
-    public static final int FREEZE_SCORE = 0;
-    public static final int UNFREEZE_SCORE = 1;
     public static final String CPS_SCORE = "cps";
     public static final String RELAY_SCORE = "relay";
-    public static final String TEXT_TYPE = "text";
-    public static final String REVISION_TYPE = "revision";
-    public static final String MALICIOUS_SCORE_TYPE = "maliciousScore";
-    public static final String PREP_DISQUALIFICATION_TYPE = "prepDisqualification";
-    public static final String STEP_PRICE_TYPE = "stepPrice";
-    public static final String STEP_COSTS_TYPE = "stepCosts";
-    public static final String REWARD_FUND_TYPE = "rewardFund";
-    public static final String REWARD_FUNDS_ALLOCATION = "rewardFundsAllocation";
-    public static final String NETWORK_SCORE_DESIGNATION_TYPE = "networkScoreDesignation";
-    public static final String NETWORK_SCORE_UPDATE_TYPE = "networkScoreUpdate";
-    public static final String ACCUMULATED_VALIDATION_FAILURE_SLASHING_RATE = "accumulatedValidationFailureSlashingRate";
-    public static final String MISSED_NETWORK_PROPOSAL_VOTE_SLASHING_RATE = "missedNetworkProposalVoteSlashingRate";
     private byte[] data;
+    private MessageRequests messageRequests;
 
     public Value(int p, String text) {
         // Text
@@ -107,6 +94,11 @@ public class Value {
         this.data = data;
     }
 
+    public Value(int p, MessageRequests messageRequests) {
+        this.proposalType = p;
+        this.messageRequests = messageRequests;
+    }
+
     public static void writeObject(ObjectWriter w, Value v) {
         w.beginList(v.size());
         v.set(w);
@@ -121,12 +113,8 @@ public class Value {
         return v;
     }
 
-    public byte[] data() {
-        return data;
-    }
-
-    public String text() {
-        return stringValue;
+    public MessageRequests getMessageRequests() {
+        return messageRequests;
     }
 
     private void set(ObjectWriter w) {
@@ -196,6 +184,8 @@ public class Value {
                 return new Value(proposalType, r.read(RewardFunds.class));
             case Proposal.NETWORK_PROPOSAL:
                 return new Value(proposalType, r.readByteArray());
+            case Proposal.EXTERNAL_CALL:
+                return new Value(proposalType, r.read(MessageRequests.class));
             default:
                 throw new IllegalArgumentException("proposalType not exist");
         }
@@ -257,6 +247,8 @@ public class Value {
                 return rewardFunds.toMap();
             case Proposal.NETWORK_PROPOSAL:
                 return Map.of("data", new String(data));
+            case Proposal.EXTERNAL_CALL:
+                return Map.of("requests", messageRequests.toList());
         }
         throw new IllegalArgumentException("Invalid value type");
     }
@@ -290,10 +282,6 @@ public class Value {
 
         private final StepCost[] costs;
 
-        public StepCost[] getCosts() {
-            return costs;
-        }
-
         public static class StepCost {
             private final String type;
             private final BigInteger cost;
@@ -317,13 +305,6 @@ public class Value {
                 return s;
             }
 
-            public String getType() {
-                return type;
-            }
-
-            public BigInteger getCost() {
-                return cost;
-            }
         }
 
         public StepCosts(StepCost[] costs) {
