@@ -13,7 +13,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
-public class MessageRequest {
+public class CallRequest {
     final static String SET_REVISION = "setRevision";
     final static String UNBLOCK_SCORE = "unblockScore";
     final static String BLOCK_SCORE = "blockScore";
@@ -23,13 +23,14 @@ public class MessageRequest {
     final static String SET_REWARD_FUND = "setRewardFund";
     final static String SET_REWARD_FUND_ALLOCATION = "setRewardFundAllocation";
     final static String SET_NETWORK_SCORE = "setNetworkScore";
+    final static String UPDATE_NETWORK_SCORE = "updateNetworkScore";
     final static String CONSISTENT_VALIDATION_PENALTY = "setConsistentValidationSlashingRate";
     final static String NON_VOTE_SLASHING_RATE = "setNonVoteSlashingRate";
     private Address to;
     private String method;
     private Param[] params;
 
-    public MessageRequest(Address to, String method, Param[] params) {
+    public CallRequest(Address to, String method, Param[] params) {
         this.to = to;
         this.method = method;
         this.params = params;
@@ -90,10 +91,7 @@ public class MessageRequest {
                 case "str":
                     return value;
                 case "int": {
-                    if (value.startsWith("0x")) {
-                        return new BigInteger(value.substring(2), 16);
-                    }
-                    return new BigInteger(value);
+                    Converter.toInteger(value);
                 }
                 case "bool": {
                     if (value.equals("0x0") || value.equals("false")) {
@@ -135,6 +133,30 @@ public class MessageRequest {
                     }
                     return list;
                 }
+                case "[]Address": {
+                    var v = Json.parse(value).asArray();
+                    var list = new ArrayList<Address>();
+                    for (JsonValue jsonValue : v) {
+                        list.add(Address.fromString(jsonValue.asString()));
+                    }
+                    return list;
+                }
+                case "[]int": {
+                    var v = Json.parse(value).asArray();
+                    var list = new ArrayList<BigInteger>();
+                    for (JsonValue jsonValue : v) {
+                        list.add(Converter.toInteger(jsonValue.asString()));
+                    }
+                    return list;
+                }
+                case "[]str": {
+                    var v = Json.parse(value).asArray();
+                    var list = new ArrayList<String>();
+                    for (JsonValue jsonValue : v) {
+                        list.add(jsonValue.asString());
+                    }
+                    return list;
+                }
             }
             throw new IllegalArgumentException("Unknown type");
         }
@@ -148,7 +170,7 @@ public class MessageRequest {
         }
     }
 
-    public static MessageRequest fromJson(JsonValue json) {
+    public static CallRequest fromJson(JsonValue json) {
         var object = json.asObject();
         Context.require(object.size() == 3, "key size must be 3");
         var method = object.getString("method", "");
@@ -170,7 +192,7 @@ public class MessageRequest {
             }
             pArray[i] = new Param(type, stringValue, fieldsMap);
         }
-        return new MessageRequest(to, method, pArray);
+        return new CallRequest(to, method, pArray);
     }
 
     private static String getStringValue(JsonValue jsonValue) {
@@ -184,7 +206,7 @@ public class MessageRequest {
         throw new IllegalArgumentException("invalid value type. value type must be string, struct, []struct");
     }
 
-    public static void writeObject(ObjectWriter w, MessageRequest m) {
+    public static void writeObject(ObjectWriter w, CallRequest m) {
         w.beginList(3);
         w.write(m.to);
         w.write(m.method);
@@ -196,7 +218,7 @@ public class MessageRequest {
         w.end();
     }
 
-    public static MessageRequest readObject(ObjectReader r) {
+    public static CallRequest readObject(ObjectReader r) {
         r.beginList();
         var to = r.readAddress();
         var method = r.readString();
@@ -211,7 +233,7 @@ public class MessageRequest {
         }
         r.end();
         r.end();
-        return new MessageRequest(to, method, params);
+        return new CallRequest(to, method, params);
     }
 
     public Object[] getParams() {
@@ -262,6 +284,13 @@ public class MessageRequest {
             case SET_NETWORK_SCORE:
                 validateSetNetworkScore(ps);
                 break;
+            case UPDATE_NETWORK_SCORE:
+                Context.require(2 == ps.length || ps.length ==3);
+                Context.require(ps[0] instanceof Address && ps[1] instanceof byte[]);
+                var owner = ChainScore.getScoreOwner((Address) ps[0]);
+                Context.require(owner.equals(Governance.address));
+                if (ps.length == 3) Context.require(ps[2] instanceof String[]);
+                break;
             case SET_STEP_COST:
                 Context.require(ps.length == 2);
                 Context.require(ps[0] instanceof String && ps[1] instanceof BigInteger);
@@ -273,9 +302,21 @@ public class MessageRequest {
         }
     }
 
-    public void handleRequest() {
+    public void handleRequest(Governance governance) {
         var ps = getParams();
-        Context.call(to, method, ps);
+        if (!to.equals(Governance.address)) {
+            Context.call(to, method, ps);
+            return;
+        }
+        if (method.equals(UPDATE_NETWORK_SCORE)) {
+            String[] scoreParams = null;
+            if (ps.length == 3) {
+                var c = (ArrayList<String>)ps[2];
+                scoreParams = new String[c.size()];
+                for (int i = 0; i < scoreParams.length; i++) scoreParams[i] = c.get(i);
+            }
+            governance.deployScore((Address)ps[0], (byte[]) ps[1], scoreParams);
+        }
     }
 
     private void validateRevision(Object... values) {

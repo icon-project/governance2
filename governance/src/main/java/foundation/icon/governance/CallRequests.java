@@ -24,64 +24,64 @@ import scorex.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class MessageRequests {
-    private MessageRequest[] requests;
+public class CallRequests {
+    private CallRequest[] requests;
 
-    public MessageRequests(MessageRequest[] requests) {
+    public CallRequests(CallRequest[] requests) {
         this.requests = requests;
     }
 
-    public static MessageRequests fromJson(JsonValue json) {
+    public static CallRequests fromJson(JsonValue json) {
         JsonArray jsonArray = json.asArray();
         int length = jsonArray.size();
-        MessageRequest[] messageRequests = new MessageRequest[length];
+        CallRequest[] callRequests = new CallRequest[length];
         for (int i = 0; i < length; i++) {
             var jsonValue = jsonArray.get(i);
-            messageRequests[i] = MessageRequest.fromJson(jsonValue);
+            callRequests[i] = CallRequest.fromJson(jsonValue);
         }
-        return new MessageRequests(messageRequests);
+        return new CallRequests(callRequests);
     }
 
-    public static void writeObject(ObjectWriter w, MessageRequests m) {
+    public static void writeObject(ObjectWriter w, CallRequests m) {
         w.beginList(1);
         w.beginList(m.requests.length);
-        for (MessageRequest r : m.requests) {
+        for (CallRequest r : m.requests) {
             w.write(r);
         }
         w.end();
         w.end();
     }
 
-    public static MessageRequests readObject(ObjectReader r) {
+    public static CallRequests readObject(ObjectReader r) {
         r.beginList();
-        MessageRequest[] messageRequests;
-        List<MessageRequest> messageList = new ArrayList<>();
+        CallRequest[] callRequests;
+        List<CallRequest> requestList = new ArrayList<>();
         r.beginList();
-        while(r.hasNext()) messageList.add(r.read(MessageRequest.class));
+        while(r.hasNext()) requestList.add(r.read(CallRequest.class));
         r.end();
-        var len = messageList.size();
-        messageRequests = new MessageRequest[len];
+        var len = requestList.size();
+        callRequests = new CallRequest[len];
         for (int i = 0; i < len; i++) {
-            messageRequests[i] = messageList.get(i);
+            callRequests[i] = requestList.get(i);
         }
         r.end();
-        return new MessageRequests(messageRequests);
+        return new CallRequests(callRequests);
     }
 
     public List<Object> toList(){
-        ArrayList<Map<String, Object>> messageRequests = new ArrayList<>();
-        for (MessageRequest request: requests) {
-            messageRequests.add(request.toMap());
+        ArrayList<Map<String, Object>> callRequests = new ArrayList<>();
+        for (CallRequest request: requests) {
+            callRequests.add(request.toMap());
         }
-        return List.of(messageRequests.toArray());
+        return List.of(callRequests.toArray());
     }
 
     public void validateRequests() {
-        for (MessageRequest mr : requests) mr.validateRequest();
+        for (CallRequest mr : requests) mr.validateRequest();
     }
 
-    public void handleRequests() {
-        for (MessageRequest mr : requests) mr.handleRequest();
+    public void handleRequests(Governance governance) {
+        for (CallRequest mr : requests) mr.handleRequest(governance);
     }
 }
 

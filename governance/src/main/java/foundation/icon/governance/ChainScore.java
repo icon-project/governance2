@@ -61,7 +61,7 @@ class PRepInfo {
 class ChainScore {
     static final Address ADDRESS = Address.fromString("cx0000000000000000000000000000000000000000");
 
-    private void validateHash(byte[] value) {
+    static private void validateHash(byte[] value) {
         Context.require(value.length == 32);
     }
 
@@ -73,29 +73,41 @@ class ChainScore {
         return (BigInteger) Context.call(ADDRESS, "getStepPrice");
     }
 
-    List<Address> getBlockedScores() {
+    static public Map<String, Object> getStepCosts() {
+        return (Map<String, Object>) Context.call(ADDRESS, "getStepCosts");
+    }
+
+    static public BigInteger getMaxStepLimit(String contextType) {
+        return (BigInteger) Context.call(ADDRESS, "getMaxStepLimit");
+    }
+
+    static public Map<String, Object> getScoreStatus(Address address) {
+        return (Map<String, Object>) Context.call(ADDRESS, "getScoreStatus");
+    }
+
+    static List<Address> getBlockedScores() {
         return (List<Address>) Context.call(ADDRESS, "getBlockedScores");
     }
 
-    void acceptScore(byte[] txHash) {
+    static void acceptScore(byte[] txHash) {
         validateHash(txHash);
         Context.call(ADDRESS, "acceptScore", (Object) txHash);
     }
 
-    void rejectScore(byte[] txHash) {
+    static void rejectScore(byte[] txHash) {
         validateHash(txHash);
         Context.call(ADDRESS, "rejectScore", (Object) txHash);
     }
 
-    void addTimer(BigInteger blockHeight) {
+    static void addTimer(BigInteger blockHeight) {
         Context.call(ADDRESS, "addTimer", blockHeight);
     }
 
-    void removeTimer(BigInteger blockHeight) {
+    static void removeTimer(BigInteger blockHeight) {
         Context.call(ADDRESS, "removeTimer", blockHeight);
     }
 
-    void penalizeNonvoters(List<Address> preps) {
+    static void penalizeNonvoters(List<Address> preps) {
         Context.call(ADDRESS, "penalizeNonvoters", preps);
     }
 
@@ -107,11 +119,11 @@ class ChainScore {
         return (Address)Context.call(ADDRESS, "getScoreOwner", address);
     }
 
-    void burn(BigInteger value) {
+    static void burn(BigInteger value) {
         Context.call(value, ADDRESS, "burn");
     }
 
-    Map<String, Object> getMainPReps() {
+    static Map<String, Object> getMainPReps() {
         return (Map<String, Object>) Context.call(ADDRESS, "getMainPReps");
     }
 
@@ -119,11 +131,11 @@ class ChainScore {
         return (Map<String, Object>) Context.call(ADDRESS, "getPReps");
     }
 
-    Map<String, Object> getPRepTerm() {
+    static Map<String, Object> getPRepTerm() {
         return (Map<String, Object>) Context.call(ADDRESS, "getPRepTerm");
     }
 
-    PRepInfo[] getMainPRepsInfo() {
+    static PRepInfo[] getMainPRepsInfo() {
         Map<String, Object> mainPreps = getMainPReps();
         return getPRepInfolist(mainPreps);
     }

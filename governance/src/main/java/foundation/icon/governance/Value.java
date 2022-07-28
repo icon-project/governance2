@@ -38,7 +38,7 @@ public class Value {
     public static final String CPS_SCORE = "cps";
     public static final String RELAY_SCORE = "relay";
     private byte[] data;
-    private MessageRequests messageRequests;
+    private CallRequests callRequests;
 
     public Value(int p, String text) {
         // Text
@@ -94,9 +94,9 @@ public class Value {
         this.data = data;
     }
 
-    public Value(int p, MessageRequests messageRequests) {
+    public Value(int p, CallRequests callRequests) {
         this.proposalType = p;
-        this.messageRequests = messageRequests;
+        this.callRequests = callRequests;
     }
 
     public static void writeObject(ObjectWriter w, Value v) {
@@ -113,8 +113,8 @@ public class Value {
         return v;
     }
 
-    public MessageRequests getMessageRequests() {
-        return messageRequests;
+    public CallRequests getCallRequests() {
+        return callRequests;
     }
 
     private void set(ObjectWriter w) {
@@ -185,7 +185,7 @@ public class Value {
             case Proposal.NETWORK_PROPOSAL:
                 return new Value(proposalType, r.readByteArray());
             case Proposal.EXTERNAL_CALL:
-                return new Value(proposalType, r.read(MessageRequests.class));
+                return new Value(proposalType, r.read(CallRequests.class));
             default:
                 throw new IllegalArgumentException("proposalType not exist");
         }
@@ -248,7 +248,7 @@ public class Value {
             case Proposal.NETWORK_PROPOSAL:
                 return Map.of("data", new String(data));
             case Proposal.EXTERNAL_CALL:
-                return Map.of("requests", messageRequests.toList());
+                return Map.of("requests", callRequests.toList());
         }
         throw new IllegalArgumentException("Invalid value type");
     }

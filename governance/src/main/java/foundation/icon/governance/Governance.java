@@ -51,7 +51,7 @@ public class Governance {
 
     @External(readonly = true)
     public BigInteger getRevision() {
-        return (BigInteger) Context.call(ChainScore.ADDRESS, "getRevision");
+        return ChainScore.getRevision();
     }
 
     @External(readonly = true)
@@ -61,22 +61,22 @@ public class Governance {
 
     @External(readonly = true)
     public BigInteger getStepPrice() {
-        return (BigInteger) Context.call(ChainScore.ADDRESS, "getStepPrice");
+        return ChainScore.getStepPrice();
     }
 
     @External(readonly = true)
     public Map<String, Object> getStepCosts() {
-        return (Map<String, Object>) Context.call(ChainScore.ADDRESS, "getStepCosts");
+        return ChainScore.getStepCosts();
     }
 
     @External(readonly = true)
     public BigInteger getMaxStepLimit(String contextType) {
-        return (BigInteger) Context.call(ChainScore.ADDRESS, "getMaxStepLimit");
+        return ChainScore.getMaxStepLimit(contextType);
     }
 
     @External(readonly = true)
     public Map<String, Object> getScoreStatus(Address address) {
-        return (Map<String, Object>) Context.call(ChainScore.ADDRESS, "getScoreStatus");
+        return ChainScore.getScoreStatus(address);
     }
 
     @External
@@ -180,18 +180,18 @@ public class Governance {
             byte[] value
     ) {
         Context.require(PROPOSAL_REGISTRATION_FEE.compareTo(Context.getValue()) == 0, "100 ICX required to register proposal");
-        chainScore.burn(PROPOSAL_REGISTRATION_FEE);
+        ChainScore.burn(PROPOSAL_REGISTRATION_FEE);
         Address proposer = Context.getCaller();
-        PRepInfo[] mainPRepsInfo = chainScore.getMainPRepsInfo();
+        PRepInfo[] mainPRepsInfo = ChainScore.getMainPRepsInfo();
         var prep = getPRepInfoFromList(proposer, mainPRepsInfo);
         Context.require(prep != null, "No permission - only for main prep");
 
         String stringValue = new String(value);
         JsonValue json = Json.parse(stringValue);
-        var messageRequests = MessageRequests.fromJson(json);
-        Value v = new Value(Proposal.EXTERNAL_CALL, messageRequests);
-        v.getMessageRequests().validateRequests();
-        var term = chainScore.getPRepTerm();
+        var callRequests = CallRequests.fromJson(json);
+        Value v = new Value(Proposal.EXTERNAL_CALL, callRequests);
+        v.getCallRequests().validateRequests();
+        var term = ChainScore.getPRepTerm();
 
         /*
             currentTermEnd: endBlockHeight
@@ -215,7 +215,7 @@ public class Governance {
             ti = new TimerInfo(new TimerInfo.ProposalIds());
             ti.addProposalId(Context.getTransactionHash());
             timerInfo.set(penaltyHeight, ti);
-            chainScore.addTimer(penaltyHeight);
+            ChainScore.addTimer(penaltyHeight);
         } else {
             ti.addProposalId(Context.getTransactionHash());
             timerInfo.set(penaltyHeight, ti);
@@ -226,7 +226,7 @@ public class Governance {
     @External
     public void voteProposal(byte[] id, int vote) {
         Address sender = Context.getCaller();
-        PRepInfo[] prepsInfo = chainScore.getPRepsInfo();
+        PRepInfo[] prepsInfo = ChainScore.getPRepsInfo();
         var prep = getPRepInfoFromList(sender, prepsInfo);
 
         Proposal p = networkProposal.getProposal(id);
@@ -254,7 +254,7 @@ public class Governance {
     public void applyProposal(byte[] id) {
         Address sender = Context.getCaller();
         Proposal p = networkProposal.getProposal(id);
-        PRepInfo[] prepsInfo = chainScore.getPRepsInfo();
+        PRepInfo[] prepsInfo = ChainScore.getPRepsInfo();
         var prep = getPRepInfoFromList(sender, prepsInfo);
         BigInteger blockHeight = BigInteger.valueOf(Context.getBlockHeight());
         Context.require(p.agreed(sender) || p.disagreed(sender), "No permission - only for voted preps");
@@ -264,8 +264,8 @@ public class Governance {
         proposal.apply = new ApplyInfo(
                 Context.getTransactionHash(), prep.getAddress(), prep.getName(), BigInteger.valueOf(Context.getTransactionTimestamp()));
         networkProposal.applyProposal(proposal);
-        var messageRequests = networkProposal.getProposalRequest(id);
-        messageRequests.handleRequests();
+        var callRequests = networkProposal.getProposalRequest(id);
+        callRequests.handleRequests(this);
     }
 
     @External
@@ -319,6 +319,14 @@ public class Governance {
             }
         }
         timerInfo.set(blockHeight, null);
+    }
+
+    void deployScore(Address address, byte[] content, String[] params) {
+        if (params == null) {
+            Context.deploy(address, content);
+        } else {
+            Context.deploy(address, content, params);
+        }
     }
 
     static PRepInfo getPRepInfoFromList(Address address, PRepInfo[] prepsInfo) {
