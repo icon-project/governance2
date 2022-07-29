@@ -91,7 +91,7 @@ public class CallRequest {
                 case "str":
                     return value;
                 case "int": {
-                    Converter.toInteger(value);
+                    return Converter.toInteger(value);
                 }
                 case "bool": {
                     if (value.equals("0x0") || value.equals("false")) {
@@ -112,6 +112,7 @@ public class CallRequest {
                         }
                         return bytes;
                     }
+                    break;
                 }
                 case "struct": {
                     var v = Json.parse(value).asObject();
@@ -146,6 +147,19 @@ public class CallRequest {
                     var list = new ArrayList<BigInteger>();
                     for (JsonValue jsonValue : v) {
                         list.add(Converter.toInteger(jsonValue.asString()));
+                    }
+                    return list;
+                }
+                case "[]bool": {
+                    var v = Json.parse(value).asArray();
+                    var list = new ArrayList<Boolean>();
+                    for (JsonValue jsonValue : v) {
+                        String strVal = jsonValue.asString();
+                        if (strVal.equals("0x0") || strVal.equals("false")) {
+                            list.add(Boolean.FALSE);
+                        } else if (strVal.equals("0x1") || strVal.equals("true")) {
+                            list.add(Boolean.TRUE);
+                        }
                     }
                     return list;
                 }
