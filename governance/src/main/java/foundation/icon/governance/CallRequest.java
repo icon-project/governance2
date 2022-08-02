@@ -176,10 +176,14 @@ public class CallRequest {
         }
 
         public Map<String, Object> toMap() {
-            return Map.of(
+            if (fields.size() != 0) return Map.of(
                     "type", type,
                     "value", value,
                     "fields", fields
+            );
+            return Map.of(
+                    "type", type,
+                    "value", value
             );
         }
     }
