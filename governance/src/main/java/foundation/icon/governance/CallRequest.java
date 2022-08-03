@@ -87,7 +87,7 @@ public class CallRequest {
         public static Object convertParams(String type, String value, Map<String, String> fields) {
             switch (type) {
                 case "Address":
-                    return Address.fromString(value);
+                    return Converter.toAddress(value);
                 case "str":
                     return value;
                 case "int": {
@@ -323,7 +323,47 @@ public class CallRequest {
     public void handleRequest(Governance governance) {
         var ps = getParams();
         if (!to.equals(Governance.address)) {
+            if (method.equals(DISQUALIFY_PREP)) {
+                disqualifyPrep((Address) ps[0], governance);
+                return;
+            }
             Context.call(to, method, ps);
+            switch (method) {
+                case SET_REVISION:
+                    governance.RevisionChanged((BigInteger) ps[0]);
+                    break;
+                case UNBLOCK_SCORE:
+                    Context.require(ps[0] instanceof Address);
+                    governance.MaliciousScore((Address) ps[0], 1);
+                    break;
+                case BLOCK_SCORE:
+                    validateBlockScore(ps);
+                    governance.MaliciousScore((Address) ps[0], 0);
+                    break;
+                case SET_STEP_PRICE:
+                    governance.StepPriceChanged((BigInteger) ps[0]);
+                    break;
+                case SET_REWARD_FUND:
+                    governance.RewardFundSettingChanged((BigInteger) ps[0]);
+                    break;
+                case SET_REWARD_FUND_ALLOCATION:
+                    governance.RewardFundAllocationChanged((BigInteger) ps[0], (BigInteger) ps[1], (BigInteger) ps[2], (BigInteger) ps[3]);
+                    break;
+                case SET_NETWORK_SCORE:
+                    if (ps[1] == null) {
+                        governance.NetworkScoreDeallocated((String)ps[0]);
+                    } else {
+                        governance.NetworkScoreDesignated((String)ps[0], (Address) ps[1]);
+                    }
+                    break;
+                case SET_STEP_COST:
+                    governance.StepCostChanged((String) ps[0], (BigInteger) ps[1]);
+                    break;
+                case CONSISTENT_VALIDATION_PENALTY:
+                case NON_VOTE_SLASHING_RATE:
+                    Context.require(ps[0] instanceof BigInteger);
+                    break;
+            }
             return;
         }
         if (method.equals(UPDATE_NETWORK_SCORE)) {
@@ -333,7 +373,18 @@ public class CallRequest {
                 scoreParams = new String[c.size()];
                 for (int i = 0; i < scoreParams.length; i++) scoreParams[i] = c.get(i);
             }
-            governance.deployScore((Address)ps[0], (byte[]) ps[1], scoreParams);
+            var address = (Address) ps[0];
+            governance.deployScore(address, (byte[]) ps[1], scoreParams);
+            governance.NetworkScoreUpdated(address);
+        }
+    }
+
+    private void disqualifyPrep(Address address, Governance governance) {
+        try {
+            Context.call(to, method, address);
+            governance.PRepDisqualified(address, true, "");
+        } catch (Exception e) {
+            governance.PRepDisqualified(address, false, e.getMessage());
         }
     }
 
@@ -381,9 +432,8 @@ public class CallRequest {
     }
 
     private void validateSetNetworkScore(Object... values) {
-        Context.require(values.length == 4, "InvalidFundType");
-        var address = (Address) values[0];
-        var role = (String) values[1];
+        var role = (String) values[0];
+        var address = (Address) values[1];
         Context.require(Value.CPS_SCORE.equals(role) || Value.RELAY_SCORE.equals(role),
                 "Invalid network SCORE role: " + role);
         if (address == null) return;

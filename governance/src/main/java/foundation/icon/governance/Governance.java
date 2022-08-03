@@ -220,7 +220,7 @@ public class Governance {
             ti.addProposalId(Context.getTransactionHash());
             timerInfo.set(penaltyHeight, ti);
         }
-        NetworkProposalRegistered(title, description, Proposal.NETWORK_PROPOSAL, value, proposer);
+        NetworkProposalRegistered(title, description, Proposal.EXTERNAL_CALL, value, proposer);
     }
 
     @External
