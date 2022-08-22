@@ -32,7 +32,6 @@ import java.util.Map;
 public class Governance {
     private static final BigInteger EXA = BigInteger.valueOf(1_000_000_000_000_000_000L);
     private static final BigInteger PROPOSAL_REGISTRATION_FEE = BigInteger.valueOf(100).multiply(EXA);
-    private final static ChainScore chainScore = new ChainScore();
     public final static Address address = Address.fromString("cx0000000000000000000000000000000000000001");
     private final static NetworkProposal networkProposal = new NetworkProposal();
     private final ArrayDB<Address> auditors = Context.newArrayDB("auditor_list", Address.class);
@@ -288,7 +287,7 @@ public class Governance {
         if (ti != null) {
             if (ti.proposalIds.ids.length == 1) {
                 timerInfo.set(timerHeight, null);
-                chainScore.removeTimer(timerHeight);
+                ChainScore.removeTimer(timerHeight);
             } else {
                 ti.removeProposalId(id);
                 timerInfo.set(timerHeight, ti);
@@ -306,7 +305,7 @@ public class Governance {
         for (byte[] id : ti.proposalIds.ids) {
             var proposal = networkProposal.getProposal(id);
             var novoters = proposal.getNonVoters();
-            chainScore.penalizeNonvoters(List.of(novoters));
+            ChainScore.penalizeNonvoters(List.of(novoters));
             int status = proposal.getStatus(blockHeight);
             if (status == NetworkProposal.EXPIRED_STATUS) {
                 if (proposal.apply != null) {
