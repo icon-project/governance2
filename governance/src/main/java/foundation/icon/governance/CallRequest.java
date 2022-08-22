@@ -275,48 +275,52 @@ public class CallRequest {
     }
 
     public void validateRequest() {
-        if (!to.equals(ChainScore.ADDRESS)) return;
+        var isSystemMethod = to.equals(ChainScore.ADDRESS);
+        var isGovernanceMethod = to.equals(Governance.address);
+        if (!isSystemMethod && !isGovernanceMethod) return;
         var ps = getParams();
-        switch (method) {
-            case SET_REVISION:
-                validateRevision(ps);
-                break;
-            case UNBLOCK_SCORE:
-                Context.require(ps[0] instanceof Address);
-                break;
-            case BLOCK_SCORE:
-                validateBlockScore(ps);
-                break;
-            case DISQUALIFY_PREP:
-                validateDisqualifyPRep(ps);
-                break;
-            case SET_STEP_PRICE:
-                validateStepPrice(ps);
-                break;
-            case SET_REWARD_FUND:
-                ChainScore.validateRewardFund((BigInteger) ps[0]);
-                break;
-            case SET_REWARD_FUND_ALLOCATION:
-                validateRewardFundsRate(ps);
-                break;
-            case SET_NETWORK_SCORE:
-                validateSetNetworkScore(ps);
-                break;
-            case UPDATE_NETWORK_SCORE:
-                Context.require(2 == ps.length || ps.length ==3);
-                Context.require(ps[0] instanceof Address && ps[1] instanceof byte[]);
-                var owner = ChainScore.getScoreOwner((Address) ps[0]);
-                Context.require(owner.equals(Governance.address));
-                if (ps.length == 3) Context.require(ps[2] instanceof String[]);
-                break;
-            case SET_STEP_COST:
-                Context.require(ps.length == 2);
-                Context.require(ps[0] instanceof String && ps[1] instanceof BigInteger);
-                break;
-            case CONSISTENT_VALIDATION_PENALTY:
-            case NON_VOTE_SLASHING_RATE:
-                Context.require(ps[0] instanceof BigInteger);
-                break;
+        if (isSystemMethod) {
+            switch (method) {
+                case SET_REVISION:
+                    validateRevision(ps);
+                    break;
+                case UNBLOCK_SCORE:
+                    Context.require(ps[0] instanceof Address);
+                    break;
+                case BLOCK_SCORE:
+                    validateBlockScore(ps);
+                    break;
+                case DISQUALIFY_PREP:
+                    validateDisqualifyPRep(ps);
+                    break;
+                case SET_STEP_PRICE:
+                    validateStepPrice(ps);
+                    break;
+                case SET_REWARD_FUND:
+                    ChainScore.validateRewardFund((BigInteger) ps[0]);
+                    break;
+                case SET_REWARD_FUND_ALLOCATION:
+                    validateRewardFundsRate(ps);
+                    break;
+                case SET_NETWORK_SCORE:
+                    validateSetNetworkScore(ps);
+                    break;
+                case SET_STEP_COST:
+                    Context.require(ps.length == 2);
+                    Context.require(ps[0] instanceof String && ps[1] instanceof BigInteger);
+                    break;
+                case CONSISTENT_VALIDATION_PENALTY:
+                case NON_VOTE_SLASHING_RATE:
+                    Context.require(ps[0] instanceof BigInteger);
+                    break;
+            }
+        } else {
+            // In this version, governance custom call can only call updateNetworkScore()
+            Context.require(2 == ps.length || ps.length ==3);
+            Context.require(ps[0] instanceof Address && ps[1] instanceof byte[]);
+            var owner = ChainScore.getScoreOwner((Address) ps[0]);
+            Context.require(owner.equals(Governance.address));
+            if (ps.length == 3) Context.require(ps[2] instanceof String[]);
         }
     }
 
