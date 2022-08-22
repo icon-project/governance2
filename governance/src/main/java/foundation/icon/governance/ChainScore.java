@@ -78,11 +78,11 @@ class ChainScore {
     }
 
     static public BigInteger getMaxStepLimit(String contextType) {
-        return (BigInteger) Context.call(ADDRESS, "getMaxStepLimit");
+        return (BigInteger) Context.call(ADDRESS, "getMaxStepLimit", contextType);
     }
 
     static public Map<String, Object> getScoreStatus(Address address) {
-        return (Map<String, Object>) Context.call(ADDRESS, "getScoreStatus");
+        return (Map<String, Object>) Context.call(ADDRESS, "getScoreStatus", address);
     }
 
     static List<Address> getBlockedScores() {

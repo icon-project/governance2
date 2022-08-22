@@ -83,7 +83,7 @@ public class Governance {
     public void acceptScore(byte[] txHash) {
         var caller = Context.getCaller();
         Context.require(isAuditor(caller), "Invalid sender: no permission");
-        chainScore.acceptScore(txHash);
+        ChainScore.acceptScore(txHash);
         Accepted(txHash);
     }
 
@@ -91,7 +91,7 @@ public class Governance {
     public void rejectScore(byte[] txHash, String reason) {
         var caller = Context.getCaller();
         Context.require(isAuditor(caller), "Invalid sender: no permission");
-        chainScore.rejectScore(txHash);
+        ChainScore.rejectScore(txHash);
         Rejected(txHash, reason);
     }
 
@@ -123,7 +123,7 @@ public class Governance {
 
     @External(readonly = true)
     public boolean isInScoreBlackList(Address address) {
-        var addresses = chainScore.getBlockedScores();
+        var addresses = ChainScore.getBlockedScores();
         for (Address addr : addresses) {
             if (address.equals(addr)) return true;
         }
