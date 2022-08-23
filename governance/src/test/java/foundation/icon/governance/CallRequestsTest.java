@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CallRequestsTest {
     @Test
-    void validateRequest() {
+    void initCallRequests() {
         String[] valid = new String[]{
                 "[{\"to\":\"cx0000000000000000000000000000000000000000\",\"method\":\"blockScore\",\"params\":[{\"type\":\"Address\",\"value\":\"cxaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]}]",
                 "[{\"to\":\"cx0000000000000000000000000000000000000002\",\"method\":\"method2\",\"params\":[{\"type\":\"str\",\"value\":\"Alice\"},{\"type\":\"struct\",\"value\":{\"field1\":\"Bob\",\"field2\":\"hxb6b5791be0b5ef67063b3c10b840fb81514db2fd\"},\"fields\":{\"field1\":\"str\",\"field2\":\"Address\"}}]}]",
@@ -36,8 +36,7 @@ public class CallRequestsTest {
         for (String test: valid) {
             JsonValue json = Json.parse(test);
             JsonArray values = json.asArray();
-            var callRequests = CallRequests.fromJson(values);
-            callRequests.validateRequests();
+            CallRequests.fromJson(values);
         }
         
         String[] invalid = new String[]{
@@ -49,8 +48,7 @@ public class CallRequestsTest {
         for (String test: invalid) {
             JsonValue json = Json.parse(test);
             JsonArray values = json.asArray();
-            var callRequests = CallRequests.fromJson(values);
-            assertThrows(UserRevertedException.class, callRequests::validateRequests);
+            assertThrows(UserRevertedException.class, () -> CallRequests.fromJson(values));
         }
     }
 }

@@ -126,9 +126,9 @@ public class NetworkProposal {
             String title,
             String description,
             Value value,
-            PRepInfo[] prepsInfo,
             BigInteger expireHeight
     ) {
+        PRepInfo[] prepsInfo = ChainScore.getMainPRepsInfo();
         var id = Context.getTransactionHash();
         var proposer = Context.getCaller();
         var blockHeight = BigInteger.valueOf(Context.getBlockHeight());

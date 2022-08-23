@@ -57,7 +57,7 @@ public class CallRequest {
                 fields.add(r.readString());
             }
             r.end();
-            Map<String, String> fieldsMap = new HashMap();
+            Map<String, String> fieldsMap = new HashMap<>();
             for (int i = 0; i < fields.size() / 2; i++) {
                 var key = fields.get(i * 2);
                 var v = fields.get(i * 2 + 1);
@@ -263,7 +263,7 @@ public class CallRequest {
     }
 
     public Map<String, Object> toMap() {
-        ArrayList paramList = new ArrayList();
+        ArrayList<Map<String, Object>> paramList = new ArrayList<>();
         for (Param p : params) {
             paramList.add(p.toMap());
         }
@@ -408,8 +408,7 @@ public class CallRequest {
     private void validateDisqualifyPRep(Object... values) {
         Context.require(values.length == 1);
         var address = (Address) values[0];
-        PRepInfo[] preps = ChainScore.getPRepsInfo();
-        Context.require(Governance.getPRepInfoFromList(address, preps) != null, address.toString() + " is not p-rep");
+        Context.require(ChainScore.getPRepInfoFromList(address) != null, address.toString() + " is not p-rep");
     }
 
     private void validateStepPrice(Object... values) {

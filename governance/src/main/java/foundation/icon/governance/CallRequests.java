@@ -39,13 +39,15 @@ public class CallRequests {
             var jsonValue = jsonArray.get(i);
             callRequests[i] = CallRequest.fromJson(jsonValue);
         }
-        return new CallRequests(callRequests);
+        var requests = new CallRequests(callRequests);
+        requests.validateRequests();
+        return requests;
     }
 
-    public static void writeObject(ObjectWriter w, CallRequests m) {
+    public static void writeObject(ObjectWriter w, CallRequests c) {
         w.beginList(1);
-        w.beginList(m.requests.length);
-        for (CallRequest r : m.requests) {
+        w.beginList(c.requests.length);
+        for (CallRequest r : c.requests) {
             w.write(r);
         }
         w.end();
@@ -76,12 +78,12 @@ public class CallRequests {
         return List.of(callRequests.toArray());
     }
 
-    public void validateRequests() {
-        for (CallRequest mr : requests) mr.validateRequest();
+    private void validateRequests() {
+        for (CallRequest cr : requests) cr.validateRequest();
     }
 
     public void handleRequests(Governance governance) {
-        for (CallRequest mr : requests) mr.handleRequest(governance);
+        for (CallRequest cr : requests) cr.handleRequest(governance);
     }
 }
 

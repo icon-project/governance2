@@ -181,52 +181,31 @@ public class Governance {
         Context.require(PROPOSAL_REGISTRATION_FEE.compareTo(Context.getValue()) == 0, "100 ICX required to register proposal");
         ChainScore.burn(PROPOSAL_REGISTRATION_FEE);
         Address proposer = Context.getCaller();
-        PRepInfo[] mainPRepsInfo = ChainScore.getMainPRepsInfo();
-        var prep = getPRepInfoFromList(proposer, mainPRepsInfo);
+        var prep = ChainScore.getPRepInfoFromList(proposer);
         Context.require(prep != null, "No permission - only for main prep");
 
         String stringValue = new String(value);
         JsonValue json = Json.parse(stringValue);
         var callRequests = CallRequests.fromJson(json);
         Value v = new Value(Proposal.EXTERNAL_CALL, callRequests);
-        v.getCallRequests().validateRequests();
-        var term = ChainScore.getPRepTerm();
 
-        /*
-            currentTermEnd: endBlockHeight
-            4-terms: termPeriod * 4
-            currentTermEnd + 4terms = 5terms
-         */
-        BigInteger expireVotingHeight = (BigInteger) term.get("period");
-        expireVotingHeight = expireVotingHeight.multiply(BigInteger.valueOf(4));
-        expireVotingHeight = expireVotingHeight.add((BigInteger) term.get("endBlockHeight"));
+        var expireVotingHeight = ChainScore.getExpireVotingHeight();
 
         networkProposal.registerProposal(
                 title,
                 description,
                 v,
-                mainPRepsInfo,
                 expireVotingHeight
         );
-        BigInteger penaltyHeight = BigInteger.ONE.add(expireVotingHeight);
-        TimerInfo ti = timerInfo.getOrDefault(penaltyHeight, null);
-        if (ti == null) {
-            ti = new TimerInfo(new TimerInfo.ProposalIds());
-            ti.addProposalId(Context.getTransactionHash());
-            timerInfo.set(penaltyHeight, ti);
-            ChainScore.addTimer(penaltyHeight);
-        } else {
-            ti.addProposalId(Context.getTransactionHash());
-            timerInfo.set(penaltyHeight, ti);
-        }
+        setTimerInfo(BigInteger.ONE.add(expireVotingHeight));
         NetworkProposalRegistered(title, description, Proposal.EXTERNAL_CALL, value, proposer);
     }
+
 
     @External
     public void voteProposal(byte[] id, int vote) {
         Address sender = Context.getCaller();
-        PRepInfo[] prepsInfo = ChainScore.getPRepsInfo();
-        var prep = getPRepInfoFromList(sender, prepsInfo);
+        var prep = ChainScore.getPRepInfoFromList(sender);
 
         Proposal p = networkProposal.getProposal(id);
         Context.require(p != null, "no registered proposal");
@@ -253,8 +232,7 @@ public class Governance {
     public void applyProposal(byte[] id) {
         Address sender = Context.getCaller();
         Proposal p = networkProposal.getProposal(id);
-        PRepInfo[] prepsInfo = ChainScore.getPRepsInfo();
-        var prep = getPRepInfoFromList(sender, prepsInfo);
+        var prep = ChainScore.getPRepInfoFromList(sender);
         BigInteger blockHeight = BigInteger.valueOf(Context.getBlockHeight());
         Context.require(p.agreed(sender) || p.disagreed(sender), "No permission - only for voted preps");
         Context.require(p.getStatus(blockHeight) == NetworkProposal.APPROVED_STATUS, "Only approved proposal can be applied");
@@ -328,13 +306,17 @@ public class Governance {
         }
     }
 
-    static PRepInfo getPRepInfoFromList(Address address, PRepInfo[] prepsInfo) {
-        for (PRepInfo prep : prepsInfo) {
-            if (address.equals(prep.getAddress())) {
-                return prep;
-            }
+    private void setTimerInfo(BigInteger penaltyHeight) {
+        TimerInfo ti = timerInfo.getOrDefault(penaltyHeight, null);
+        if (ti == null) {
+            ti = new TimerInfo(new TimerInfo.ProposalIds());
+            ti.addProposalId(Context.getTransactionHash());
+            timerInfo.set(penaltyHeight, ti);
+            ChainScore.addTimer(penaltyHeight);
+        } else {
+            ti.addProposalId(Context.getTransactionHash());
+            timerInfo.set(penaltyHeight, ti);
         }
-        return null;
     }
 
     public static class TimerInfo {

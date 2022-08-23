@@ -145,6 +145,28 @@ class ChainScore {
         return getPRepInfolist(preps);
     }
 
+    static PRepInfo getPRepInfoFromList(Address address) {
+        PRepInfo[] preps = ChainScore.getPRepsInfo();
+        for (PRepInfo prep : preps) {
+            if (address.equals(prep.getAddress())) {
+                return prep;
+            }
+        }
+        return null;
+    }
+
+    static BigInteger getExpireVotingHeight() {
+        /*
+            currentTermEnd: endBlockHeight
+            4-terms: termPeriod * 4
+            currentTermEnd + 4terms = 5terms
+         */
+        var term = ChainScore.getPRepTerm();
+        BigInteger expireVotingHeight = (BigInteger) term.get("period");
+        expireVotingHeight = expireVotingHeight.multiply(BigInteger.valueOf(4));
+        return expireVotingHeight.add((BigInteger) term.get("endBlockHeight"));
+    }
+
     static private PRepInfo[] getPRepInfolist(Map<String, Object> preps) {
         List<Map<String, Object>> info = (List<Map<String, Object>>) preps.get("preps");
 
