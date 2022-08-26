@@ -33,7 +33,7 @@ public class NetworkProposal {
     // new proposal DB after Java migration
     private final DictDB<byte[], Proposal> proposalDict = Context.newDictDB("proposals", Proposal.class);
     private final DictDB<byte[], byte[]> proposalValueDict = Context.newDictDB("proposal_values", byte[].class);
-    private final DictDB<byte[], CallRequests> callRequestsDict = Context.newDictDB("proposal_values", CallRequests.class);
+    private final DictDB<byte[], CallRequests> callRequestsDict = Context.newDictDB("call_requests", CallRequests.class);
     private final ArrayDB<byte[]> proposalKeys = Context.newArrayDB("proposal_keys", byte[].class);
 
     public final static int VOTING_STATUS = 0;
