@@ -1,13 +1,26 @@
+/*
+ * Copyright 2022 ICON Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package foundation.icon.governance;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonValue;
 import score.Address;
 import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
 import scorex.util.ArrayList;
-import scorex.util.HashMap;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -30,198 +43,16 @@ public class CallRequest {
     private String method;
     private Param[] params;
 
-    public CallRequest(Address to, String method, Param[] params) {
+    public void setTo(Address to) {
         this.to = to;
+    }
+
+    public void setMethod(String method) {
         this.method = method;
+    }
+
+    public void setParams(Param[] params) {
         this.params = params;
-    }
-
-    public static class Param {
-        private String type;
-        private String value;
-        private Map<String, String> fields;
-
-        public Param(String type, String value, Map<String, String> fields) {
-            this.type = type;
-            this.value = value;
-            this.fields = fields;
-        }
-
-        public static Param readObject(ObjectReader r) {
-            r.beginList();
-            var type = r.readString();
-            var value = r.readString();
-            List<String> fields = new ArrayList<>();
-            r.beginList();
-            while (r.hasNext()) {
-                fields.add(r.readString());
-            }
-            r.end();
-            Map<String, String> fieldsMap = new HashMap<>();
-            for (int i = 0; i < fields.size() / 2; i++) {
-                var key = fields.get(i * 2);
-                var v = fields.get(i * 2 + 1);
-                fieldsMap.put(key, v);
-            }
-            r.end();
-            return new Param(type, value, fieldsMap);
-        }
-
-        public static void writeObject(ObjectWriter w, Param p) {
-            w.beginList(3);
-            w.write(p.type);
-            w.write(p.value);
-            w.beginList(p.fields.size() * 2);
-            for (String key : p.fields.keySet()) {
-                w.write(key);
-                w.write(p.fields.get(key));
-            }
-            w.end();
-            w.end();
-        }
-
-        public Object getParam() {
-            return convertParams(type, value, fields);
-        }
-
-        public static Object convertParams(String type, String value, Map<String, String> fields) {
-            switch (type) {
-                case "Address":
-                    return Converter.toAddress(value);
-                case "str":
-                    return value;
-                case "int": {
-                    return Converter.toInteger(value);
-                }
-                case "bool": {
-                    if (value.equals("0x0") || value.equals("false")) {
-                        return Boolean.FALSE;
-                    } else if (value.equals("0x1") || value.equals("true")) {
-                        return Boolean.TRUE;
-                    }
-                    break;
-                }
-                case "bytes": {
-                    if (value.startsWith("0x") && (value.length() % 2 == 0)) {
-                        String hex = value.substring(2);
-                        int len = hex.length() / 2;
-                        byte[] bytes = new byte[len];
-                        for (int i = 0; i < len; i++) {
-                            int j = i * 2;
-                            bytes[i] = (byte) Integer.parseInt(hex.substring(j, j + 2), 16);
-                        }
-                        return bytes;
-                    }
-                    break;
-                }
-                case "struct": {
-                    var v = Json.parse(value).asObject();
-                    var map = new HashMap<String, Object>();
-                    for (String key : fields.keySet()) {
-                        var t = fields.get(key);
-                        map.put(key, convertParams(t, v.get(key).asString(), fields));
-                    }
-                    return map;
-                }
-                case "[]struct": {
-                    var v = Json.parse(value).asArray();
-                    var list = new ArrayList<Map<String, Object>>();
-                    for (int i = 0; i < v.size(); i++) {
-                        for (String key : fields.keySet()) {
-                            var t = fields.get(key);
-                            list.add(Map.of(key, convertParams(t, v.get(i).asObject().get(key).asString(), fields)));
-                        }
-                    }
-                    return list;
-                }
-                case "[]Address": {
-                    var v = Json.parse(value).asArray();
-                    var list = new ArrayList<Address>();
-                    for (JsonValue jsonValue : v) {
-                        list.add(Address.fromString(jsonValue.asString()));
-                    }
-                    return list;
-                }
-                case "[]int": {
-                    var v = Json.parse(value).asArray();
-                    var list = new ArrayList<BigInteger>();
-                    for (JsonValue jsonValue : v) {
-                        list.add(Converter.toInteger(jsonValue.asString()));
-                    }
-                    return list;
-                }
-                case "[]bool": {
-                    var v = Json.parse(value).asArray();
-                    var list = new ArrayList<Boolean>();
-                    for (JsonValue jsonValue : v) {
-                        String strVal = jsonValue.asString();
-                        if (strVal.equals("0x0") || strVal.equals("false")) {
-                            list.add(Boolean.FALSE);
-                        } else if (strVal.equals("0x1") || strVal.equals("true")) {
-                            list.add(Boolean.TRUE);
-                        }
-                    }
-                    return list;
-                }
-                case "[]str": {
-                    var v = Json.parse(value).asArray();
-                    var list = new ArrayList<String>();
-                    for (JsonValue jsonValue : v) {
-                        list.add(jsonValue.asString());
-                    }
-                    return list;
-                }
-            }
-            throw new IllegalArgumentException("Unknown type");
-        }
-
-        public Map<String, Object> toMap() {
-            if (fields.size() != 0) return Map.of(
-                    "type", type,
-                    "value", value,
-                    "fields", fields
-            );
-            return Map.of(
-                    "type", type,
-                    "value", value
-            );
-        }
-    }
-
-    public static CallRequest fromJson(JsonValue json) {
-        var object = json.asObject();
-        Context.require(object.size() == 3, "key size must be 3");
-        var method = object.getString("method", "");
-        var to = Address.fromString(object.getString("to", ""));
-        var params = object.get("params").asArray();
-        var paramsLength = params.size();
-        Param[] pArray = new Param[paramsLength];
-        for (int i = 0; i < paramsLength; i++) {
-            var param = params.get(i).asObject();
-            var type = param.getString("type", null);
-            var value = param.get("value");
-            var stringValue = getStringValue(value);
-            var fields = param.get("fields") == null ? null : param.get("fields").asObject();
-            Map<String, String> fieldsMap = new HashMap<>();
-            if (fields != null) {
-                for (String key : fields.names()) {
-                    fieldsMap.put(key, fields.get(key).asString());
-                }
-            }
-            pArray[i] = new Param(type, stringValue, fieldsMap);
-        }
-        return new CallRequest(to, method, pArray);
-    }
-
-    private static String getStringValue(JsonValue jsonValue) {
-        if (jsonValue.isString()) {
-            return jsonValue.asString();
-        } else if (jsonValue.isArray()) {
-            return jsonValue.asArray().toString();
-        } else if (jsonValue.isObject()) {
-            return jsonValue.asObject().toString();
-        }
-        throw new IllegalArgumentException("invalid value type. value type must be string, struct, []struct");
     }
 
     public static void writeObject(ObjectWriter w, CallRequest m) {
@@ -251,7 +82,11 @@ public class CallRequest {
         }
         r.end();
         r.end();
-        return new CallRequest(to, method, params);
+        var cr = new CallRequest();
+        cr.setParams(params);
+        cr.setMethod(method);
+        cr.setTo(to);
+        return cr;
     }
 
     public Object[] getParams() {

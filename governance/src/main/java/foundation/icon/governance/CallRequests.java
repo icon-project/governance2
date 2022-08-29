@@ -16,8 +16,6 @@
 
 package foundation.icon.governance;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonValue;
 import score.*;
 import scorex.util.ArrayList;
 
@@ -29,19 +27,6 @@ public class CallRequests {
 
     public CallRequests(CallRequest[] requests) {
         this.requests = requests;
-    }
-
-    public static CallRequests fromJson(JsonValue json) {
-        JsonArray jsonArray = json.asArray();
-        int length = jsonArray.size();
-        CallRequest[] callRequests = new CallRequest[length];
-        for (int i = 0; i < length; i++) {
-            var jsonValue = jsonArray.get(i);
-            callRequests[i] = CallRequest.fromJson(jsonValue);
-        }
-        var requests = new CallRequests(callRequests);
-        requests.validateRequests();
-        return requests;
     }
 
     public static void writeObject(ObjectWriter w, CallRequests c) {
@@ -78,12 +63,18 @@ public class CallRequests {
         return List.of(callRequests.toArray());
     }
 
-    private void validateRequests() {
+    public void validateRequests() {
         for (CallRequest cr : requests) cr.validateRequest();
     }
 
     public void handleRequests(Governance governance) {
         for (CallRequest cr : requests) cr.handleRequest(governance);
+    }
+
+    public byte[] toBytes() {
+        ByteArrayObjectWriter w = Context.newByteArrayObjectWriter("RLPn");
+        writeObject(w, this);
+        return w.toByteArray();
     }
 }
 

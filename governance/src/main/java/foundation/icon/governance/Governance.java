@@ -16,8 +16,6 @@
 
 package foundation.icon.governance;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonValue;
 import score.*;
 import score.annotation.EventLog;
 import score.annotation.External;
@@ -176,7 +174,7 @@ public class Governance {
     public void registerProposal(
             String title,
             String description,
-            byte[] value
+            CallRequest[] requests
     ) {
         Context.require(PROPOSAL_REGISTRATION_FEE.compareTo(Context.getValue()) == 0, "100 ICX required to register proposal");
         ChainScore.burn(PROPOSAL_REGISTRATION_FEE);
@@ -184,9 +182,8 @@ public class Governance {
         var prep = ChainScore.getPRepInfoFromList(proposer);
         Context.require(prep != null, "No permission - only for main prep");
 
-        String stringValue = new String(value);
-        JsonValue json = Json.parse(stringValue);
-        var callRequests = CallRequests.fromJson(json);
+        var callRequests = new CallRequests(requests);
+        callRequests.validateRequests();
         Value v = new Value(Proposal.EXTERNAL_CALL, callRequests);
 
         var expireVotingHeight = ChainScore.getExpireVotingHeight();
@@ -198,7 +195,7 @@ public class Governance {
                 expireVotingHeight
         );
         setTimerInfo(BigInteger.ONE.add(expireVotingHeight));
-        NetworkProposalRegistered(title, description, Proposal.EXTERNAL_CALL, value, proposer);
+        NetworkProposalRegistered(title, description, Proposal.EXTERNAL_CALL, callRequests.toBytes(), proposer);
     }
 
 

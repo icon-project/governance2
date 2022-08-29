@@ -16,39 +16,143 @@
 
 package foundation.icon.governance;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonValue;
 import org.junit.jupiter.api.Test;
+import score.Address;
 import score.UserRevertedException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CallRequestsTest {
+
     @Test
-    void initCallRequests() {
-        String[] valid = new String[]{
-                "[{\"to\":\"cx0000000000000000000000000000000000000000\",\"method\":\"blockScore\",\"params\":[{\"type\":\"Address\",\"value\":\"cxaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]}]",
-                "[{\"to\":\"cx0000000000000000000000000000000000000002\",\"method\":\"method2\",\"params\":[{\"type\":\"str\",\"value\":\"Alice\"},{\"type\":\"struct\",\"value\":{\"field1\":\"Bob\",\"field2\":\"hxb6b5791be0b5ef67063b3c10b840fb81514db2fd\"},\"fields\":{\"field1\":\"str\",\"field2\":\"Address\"}}]}]",
-                "[{\"to\":\"cx0000000000000000000000000000000000000000\",\"method\":\"method3\",\"params\":[{\"type\":\"[]struct\",\"value\":[{\"name\":\"bob\",\"address\":\"hx1111111111111111111111111111111111111111\"},{\"name\":\"alice\",\"address\":\"hx2111111111111111111111111111111111111111\"}],\"fields\":{\"name\":\"str\",\"address\":\"Address\"}}]}]",
-                "[{\"to\":\"cx0000000000000000000000000000000000000000\",\"method\":\"setRewardFundAllocation\",\"params\":[{\"type\":\"int\",\"value\":\"0x19\"},{\"type\":\"int\",\"value\":\"0x19\"},{\"type\":\"int\",\"value\":\"0x19\"},{\"type\":\"int\",\"value\":\"0x19\"}]}]"
-        };
-        for (String test: valid) {
-            JsonValue json = Json.parse(test);
-            JsonArray values = json.asArray();
-            CallRequests.fromJson(values);
-        }
-        
-        String[] invalid = new String[]{
-                "[{\"to\":\"cx0000000000000000000000000000000000000000\",\"method\":\"blockScore\",\"params\":[{\"type\":\"Address\",\"value\":\"cx0000000000000000000000000000000000000001\"}]}]",
-                "[{\"to\":\"cx0000000000000000000000000000000000000000\",\"method\":\"setRewardFundAllocation\",\"params\":[{\"type\":\"int\",\"value\":\"0x19\"},{\"type\":\"int\",\"value\":\"0x19\"},{\"type\":\"int\",\"value\":\"0x19\"},{\"type\":\"int\",\"value\":\"0x18\"}]}]",
-                "[{\"to\":\"cx0000000000000000000000000000000000000000\",\"method\":\"setRewardFundAllocation\",\"params\":[{\"type\":\"int\",\"value\":\"0x19\"},{\"type\":\"int\",\"value\":\"0x19\"},{\"type\":\"int\",\"value\":\"0x19\"}]}]",
-                "[{\"to\":\"cx0000000000000000000000000000000000000000\",\"method\":\"setRewardFundAllocation\",\"params\":[{\"type\":\"int\",\"value\":\"0x19\"},{\"type\":\"int\",\"value\":\"0x19\"},{\"type\":\"int\",\"value\":\"0x19\"},{\"type\":\"int\",\"value\":\"0x18\"},{\"type\":\"int\",\"value\":\"0x18\"}]}]",
-        };
-        for (String test: invalid) {
-            JsonValue json = Json.parse(test);
-            JsonArray values = json.asArray();
-            assertThrows(UserRevertedException.class, () -> CallRequests.fromJson(values));
-        }
+    void initValidCallRequest() {
+        // validate ChainScore.blockScore
+        var to = ChainScore.ADDRESS;
+        var method = "blockScore";
+        var params = new Param[1];
+        var param0 = new Param();
+        param0.setValue("cxaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        param0.setType("Address");
+        params[0] = param0;
+        CallRequest callRequest = new CallRequest();
+        callRequest.setTo(to);
+        callRequest.setMethod(method);
+        callRequest.setParams(params);
+        callRequest.validateRequest();
+
+        // validate request with struct parameter
+        to = Address.fromString("cx0000000000000000000000000000000000000000");
+        method = "method2";
+        param0.setType("struct");
+        param0.setValue("{\"field1\": \"Bob\",\"field2\": \"hxb6b5791be0b5ef67063b3c10b840fb81514db2fd\"}");
+        Param.Field[] fields = new Param.Field[2];
+        Param.Field field0 = new Param.Field();
+        Param.Field field1 = new Param.Field();
+        field0.setName("field1");
+        field0.setType("str");
+        field1.setName("field2");
+        field1.setType("Address");
+        fields[0] = field0;
+        fields[1] = field1;
+        param0.setFields(fields);
+        params[0] = param0;
+        callRequest.setParams(params);
+        callRequest.setMethod(method);
+        callRequest.setTo(to);
+        callRequest.validateRequest();
+
+        //validate request with []struct parameter
+        to = Address.fromString("cx0000000000000000000000000000000000000000");
+        method = "method3";
+        param0.setType("[]struct");
+        param0.setValue("[{\"name\": \"bob\",\"address\": \"hx1111111111111111111111111111111111111111\"},{\"name\": \"alice\", \"address\": \"hx2111111111111111111111111111111111111111\"}]");
+        fields = new Param.Field[2];
+        field0 = new Param.Field();
+        field1 = new Param.Field();
+        field0.setName("name");
+        field0.setType("str");
+        field1.setName("address");
+        field1.setType("Address");
+        fields[0] = field0;
+        fields[1] = field1;
+        param0.setFields(fields);
+        params[0] = param0;
+        callRequest.setParams(params);
+        callRequest.setMethod(method);
+        callRequest.setTo(to);
+        callRequest.validateRequest();
+
+        //validate request for rewardFundAllocation
+        method = "setRewardFundAllocation";
+        param0 = new Param();
+        Param param1 = new Param();
+        Param param2 = new Param();
+        Param param3 = new Param();
+        param0.setType("int");
+        param0.setValue("0x19");
+        param1.setType("int");
+        param1.setValue("0x19");
+        param2.setType("int");
+        param2.setValue("0x19");
+        param3.setType("int");
+        param3.setValue("0x19");
+        params = new Param[4];
+        params[0] = param0; params[1] = param1; params[2] = param2; params[3] = param3;
+        callRequest.setMethod(method);
+        callRequest.setParams(params);
+        callRequest.validateRequest();
+    }
+
+    @Test
+    void initInvalidCallRequests() {
+        // validate ChainScore.blockScore. try to block governance
+        var to = ChainScore.ADDRESS;
+        var method = "blockScore";
+        var params = new Param[1];
+        var param0 = new Param();
+        param0.setValue(Governance.address.toString());
+        param0.setType("Address");
+        params[0] = param0;
+        CallRequest callRequest = new CallRequest();
+        callRequest.setTo(to);
+        callRequest.setMethod(method);
+        callRequest.setParams(params);
+        assertThrows(UserRevertedException.class, callRequest::validateRequest);
+
+        //validate request for rewardFundAllocation(25, 25, 25, 24)
+        method = "setRewardFundAllocation";
+        param0 = new Param();
+        Param param1 = new Param();
+        Param param2 = new Param();
+        Param param3 = new Param();
+        param0.setType("int");
+        param0.setValue("0x19");
+        param1.setType("int");
+        param1.setValue("0x19");
+        param2.setType("int");
+        param2.setValue("0x19");
+        param3.setType("int");
+        param3.setValue("0x18");
+        params = new Param[4];
+        params[0] = param0; params[1] = param1; params[2] = param2; params[3] = param3;
+        callRequest.setMethod(method);
+        callRequest.setParams(params);
+        assertThrows(UserRevertedException.class, callRequest::validateRequest);
+
+        //validate request for rewardFundAllocation(33, 33, 34)
+        param0 = new Param();
+        param1 = new Param();
+        param2 = new Param();
+        param0.setType("int");
+        param0.setValue("0x21");
+        param1.setType("int");
+        param1.setValue("0x21");
+        param2.setType("int");
+        param2.setValue("0x22");
+        params = new Param[3];
+        params[0] = param0; params[1] = param1; params[2] = param2;
+        callRequest.setMethod(method);
+        callRequest.setParams(params);
+        assertThrows(UserRevertedException.class, callRequest::validateRequest);
     }
 }
