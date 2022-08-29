@@ -52,11 +52,10 @@ If you query the proposals registered before governance2, The response will be i
 }
 ```
 
-### New Network proposal response
+### Network proposal response in version2
 
 In the new format, the type of proposal is list.  
 The proposal type is identified by the `name` of the dict element in the `list(result.contents.value.proposals)`.  
-For possible values of `name`, refer to the [link](https://github.com/icon-project/governance2#registerproposal).
 
 ```json
 {
@@ -94,6 +93,68 @@ For possible values of `name`, refer to the [link](https://github.com/icon-proje
   }
 }
 ```
+
+### Network proposal response in version3
+
+In this format, input is information of function to be called.(`to`, `method`, `params`)
+
+```json
+{
+    "jsonrpc": "2.0",
+    "result": {
+        "contents": {
+            "description": "testDesc",
+            "title": "testProposal",
+            "type": "0xa",
+            "value": {
+                "requests": [
+                    {
+                        "method": "setRevision",
+                        "params": [
+                            {
+                                "type": "int",
+                                "value": "0x12", 
+                                "fields": []
+                            }
+                        ],
+                        "to": "cx0000000000000000000000000000000000000000"
+                    }
+                ]
+            }
+        },
+        "endBlockHeight": "0x4b",
+        "id": "0xb75debc2bd1d17c781ef106f149f04c49fa7a090d23b6d7a3824c10bb2b15375",
+        "proposer": "hxa8df82e93e8a9cd5325e37289bcd0fbc0a8b4e5e",
+        "proposerName": "nodehxa8df82e93e8a9cd5325e37289bcd0fbc0a8b4e5e",
+        "startBlockHeight": "0x37",
+        "status": "0x1",
+        "vote": {
+            "agree": {
+                "amount": "0x153020c0eaa50f7600001",
+                "list": [
+                    {
+                        "address": "hxa8df82e93e8a9cd5325e37289bcd0fbc0a8b4e5e",
+                        "amount": "0x153020c0eaa50f7600001",
+                        "id": "0x804a173a735681f923d87d7f194dc1069bfdaa80d554d0051d82f537554273e8",
+                        "name": "nodehxa8df82e93e8a9cd5325e37289bcd0fbc0a8b4e5e",
+                        "timestamp": "0x5e75a885587bc"
+                    }
+                ]
+            },
+            "disagree": {
+                "amount": "0x0",
+                "list": []
+            },
+            "noVote": {
+                "amount": "0x0",
+                "list": []
+            }
+        }
+    },
+    "id": 1234
+}
+```
+
 
 ### Mapping table(type to name)
 

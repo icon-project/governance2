@@ -439,13 +439,78 @@ None
 
 #### Response
 
-Proposal registered in governance2.0.0 has different response format from previously registered proposal. The following
-shows the proposal registered before governance2 and the proposal registered in governance2.  
-Check [changes](https://github.com/icon-project/governance2/blob/main/doc/network_proposal_changes.md)
+There are three types of proposal responses.
+1)Before government2 2)After government2 3)custom call(latest).  
+The following shows the three types of proposals.
+Check [changes](https://github.com/icon-project/governance2/blob/main/doc/network_proposal_changes.md).
+
 
 #### Response1
 
-registered in governance2
+registered before governance2
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 100,
+  "result": {
+    "id": "0xb903239f8543d0..",
+    "proposer": "hxbe258ceb872e08851f1f59694dac2558708ece11",
+    "proposerName": "P-Rep A",
+    "status": "0x0",
+    "startBlockHeight": "0x1",
+    "endBlockHeight": "0x65",
+    "vote": {
+      "agree": {
+        "list": [
+          {
+            "id": "0xb903239f854..",
+            "timestamp": "0x563a6cf330136",
+            "address": "hxe7af5fcfd8dfc67530a01a0e403882687528dfcb",
+            "name": "P-Rep B",
+            "amount": "0x1"
+          },
+          ..
+        ],
+        "amount": "0x12345"
+      },
+      "disagree": {
+        "list": [
+          {
+            "id": "0xa803239f854..",
+            "timestamp": "0x563a6cf330136",
+            "address": "hxbe258ceb872e08851f1f59694dac2558708ece11",
+            "name": "P-Rep C",
+            "amount": "0x1"
+          },
+          ..
+        ],
+        "amount": "0x123"
+      },
+      "noVote": {
+        "list": [
+          "hx31258ceb872e08851f1f59694dac2558708ece11",
+          ..,
+          "hx31258ceb872e08851f1f59694dac2558708eceff"
+        ],
+        "amount": "0x12312341234a"
+      }
+    },
+    "contents": {
+      "title": "set revision",
+      "description": "set revision 14",
+      "type": "0x1",
+      "value": {
+        "revision": "0xe"
+      }
+    }
+  }
+}
+```
+
+#### Response2
+
+registered in governance2(before custom call)
 
 ```json
 {
@@ -506,66 +571,56 @@ registered in governance2
 }
 ```
 
-#### Response2
+#### Response3
 
-registered before governance2
+registered with custom call data
 
-```json
+```
 {
-  "jsonrpc": "2.0",
-  "id": 100,
-  "result": {
-    "id": "0xb903239f8543d0..",
-    "proposer": "hxbe258ceb872e08851f1f59694dac2558708ece11",
-    "proposerName": "P-Rep A",
-    "status": "0x0",
-    "startBlockHeight": "0x1",
-    "endBlockHeight": "0x65",
-    "vote": {
-      "agree": {
-        "list": [
-          {
-            "id": "0xb903239f854..",
-            "timestamp": "0x563a6cf330136",
-            "address": "hxe7af5fcfd8dfc67530a01a0e403882687528dfcb",
-            "name": "P-Rep B",
-            "amount": "0x1"
-          },
-          ..
-        ],
-        "amount": "0x12345"
-      },
-      "disagree": {
-        "list": [
-          {
-            "id": "0xa803239f854..",
-            "timestamp": "0x563a6cf330136",
-            "address": "hxbe258ceb872e08851f1f59694dac2558708ece11",
-            "name": "P-Rep C",
-            "amount": "0x1"
-          },
-          ..
-        ],
-        "amount": "0x123"
-      },
-      "noVote": {
-        "list": [
-          "hx31258ceb872e08851f1f59694dac2558708ece11",
-          ..,
-          "hx31258ceb872e08851f1f59694dac2558708eceff"
-        ],
-        "amount": "0x12312341234a"
-      }
+    "jsonrpc": "2.0",
+    "result": {
+        "contents": {
+            "description": "testDesc",
+            "title": "testProposal",
+            "type": "0xa",
+            "value": {
+                "requests": [
+                    {
+                        "method": "setRevision",
+                        "params": [
+                            {
+                                "type": "int",
+                                "value": "0x12"
+                            }
+                        ],
+                        "to": "cx0000000000000000000000000000000000000000"
+                    }
+                ]
+            }
+        },
+        "endBlockHeight": "0x4b",
+        "id": "0xb75debc2bd1d17c781ef106f149f04c49fa7a090d23b6d7a3824c10bb2b15375",
+        "proposer": "hxa8df82e93e8a9cd5325e37289bcd0fbc0a8b4e5e",
+        "proposerName": "nodehxa8df82e93e8a9cd5325e37289bcd0fbc0a8b4e5e",
+        "startBlockHeight": "0x37",
+        "status": "0x1",
+        "vote": {
+            "agree": {
+                "amount": "0x153020c0eaa50f7600001",
+                "list": [
+                    {
+                        "address": "hxa8df82e93e8a9cd5325e37289bcd0fbc0a8b4e5e",
+                        "amount": "0x153020c0eaa50f7600001",
+                        "id": "0x804a173a735681f923d87d7f194dc1069bfdaa80d554d0051d82f537554273e8",
+                        "name": "nodehxa8df82e93e8a9cd5325e37289bcd0fbc0a8b4e5e",
+                        "timestamp": "0x5e75a885587bc"
+                    }
+                ]
+            },
+            ...
+        }
     },
-    "contents": {
-      "title": "set revision",
-      "description": "set revision 14",
-      "type": "0x1",
-      "value": {
-        "revision": "0xe"
-      }
-    }
-  }
+    "id": 1234
 }
 ```
 
@@ -834,14 +889,14 @@ Invoke method can initiate state transition.
 |:------------|:-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | title       | [T\_STR](#T_STR) | Title of the network proposal                                                                                                                              |
 | description | [T\_STR](#T_STR) | Description of the network proposal                                                                                                                        |
-| value       | T\_LIST[T\_DICT] | Values for each type of network proposal. Hex string of UTF-8 encoded bytes data of JSON string<br />ex. "0x" + bytes.hex(json.dumps(value_list).encode()) |
+| requests       | T\_LIST[T\_DICT] | Values for each type of network proposal. |
 
-#### Value format for each type
+#### request format for each type
 
-* value contains a list of method information to call. eg) CahinScore.setRevision, ChainScore.setStepCost.
+* request contains a list of method information to call. eg) CahinScore.setRevision, ChainScore.setStepCost.
 * Methods are called in the order they are included in `value` list.
 
-##### value fields
+##### request fields
 
 | Key        | Value Type        | Description          |
 |:-----------|:------------------|----------------------|
@@ -862,6 +917,7 @@ Invoke method can initiate state transition.
 | params | T\_LIST[T\_DICT]  | parameters information        |
 | params[0].type | [T\_STR](#T_STR)  | str(fixed)            |
 | params[0].value | [T\_INT](#T_INT)  | revision to set      |
+| params[0].fields | [T\_LIST](#T_LIST)  |       |
 
 ```json
 {
@@ -869,8 +925,9 @@ Invoke method can initiate state transition.
   "method": "setRevision",
   "params": [
     {
-      "type": "str",
-      "value": "0x14"
+      "type": "int",
+      "value": "0x14",
+      "fields": []
     }
   ]
 }
@@ -887,6 +944,7 @@ Invoke method can initiate state transition.
 | params | T\_LIST[T\_DICT]  | parameters information            |
 | params[0].type | [T\_STR](#T_STR)  | Address(fixed)            |
 | params[0].value | [T\_ADDR_SCORE](#T_ADDR_SCORE)  | SCORE address to freeze            |
+| params[0].fields | [T\_LIST](#T_LIST)  |       |
 
 ```json
 {
@@ -895,7 +953,8 @@ Invoke method can initiate state transition.
   "params": [
     {
       "type": "Address",
-      "value": "cx1234123412341234123412341234123412341234"
+      "value": "cx1234123412341234123412341234123412341234",
+      "fields": []
     }
   ]
 }
@@ -912,6 +971,7 @@ Invoke method can initiate state transition.
 | params | T\_LIST[T\_DICT]  |            |
 | params[0].type | [T\_STR](#T_STR)  | Address(fixed)            |
 | params[0].value | [T\_ADDR_SCORE](#T_ADDR_SCORE)  | SCORE address to unfreeze            |
+| params[0].fields | [T\_LIST](#T_LIST)  |       |
 
 ```json
 {
@@ -920,7 +980,8 @@ Invoke method can initiate state transition.
   "params": [
     {
       "type": "Address",
-      "value": "cx1234123412341234123412341234123412341234"
+      "value": "cx1234123412341234123412341234123412341234",
+      "fields": []
     }
   ]
 }
@@ -937,6 +998,7 @@ Invoke method can initiate state transition.
 | params | T\_LIST[T\_DICT]  |            |
 | params[0].type | [T\_STR](#T_STR)  | Address(fixed)            |
 | params[0].value | [T\_ADDR_EOA](#T_ADDR_EOA)  | prep address to disqualify            |
+| params[0].fields | [T\_LIST](#T_LIST)  |       |
 
 ```json
 {
@@ -945,7 +1007,8 @@ Invoke method can initiate state transition.
   "params": [
     {
       "type": "Address",
-      "value": "hx1234123412341234123412341234123412341234"
+      "value": "hx1234123412341234123412341234123412341234",
+      "fields": []
     }
   ]
 }
@@ -962,6 +1025,7 @@ Invoke method can initiate state transition.
 | params | T\_LIST[T\_DICT]  |            |
 | params[0].type | [T\_STR](#T_STR)  | int(fixed)            |
 | params[0].value | [T\_INT](#T_INT)  | step price to set            |
+| params[0].fields | [T\_LIST](#T_LIST)  |       |
 
 ```json
 {
@@ -970,7 +1034,8 @@ Invoke method can initiate state transition.
   "params": [
     {
       "type": "int",
-      "value": "0x2e90edd00"
+      "value": "0x2e90edd00",
+      "fields": []
     }
   ]
 }
@@ -987,8 +1052,10 @@ Invoke method can initiate state transition.
 | params | T\_LIST[T\_DICT]  |            |
 | params[0].type | [T\_STR](#T_STR)  | str(fixed)            |
 | params[0].value | [T\_STR](#T_STR)  | step cost type to set            |
+| params[0].fields | [T\_LIST](#T_LIST)  |       |
 | params[1].type | [T\_STR](#T_STR)  | int(fixed)            |
 | params[1].value | [T\_INT](#T_INT)  | step cost to set     |
+| params[1].fields | [T\_LIST](#T_LIST)  |       |
 
 ```json
 {
@@ -997,11 +1064,13 @@ Invoke method can initiate state transition.
   "params": [
     {
       "type": "str",
-      "value": "get"
+      "value": "get",
+      "fields": []
     },
     {
       "type": "int",
-      "value": "0x1"
+      "value": "0x1",
+      "fields": []
     }
   ]
 }
@@ -1018,6 +1087,7 @@ Invoke method can initiate state transition.
 | params | T\_LIST[T\_DICT]  |            |
 | params[0].type | [T\_STR](#T_STR)  | int(fixed)            |
 | params[0].value | [T\_INT](#T_INT)  | iglobal value to set         |
+| params[0].fields | [T\_LIST](#T_LIST)  |       |
 
 ```json
 {
@@ -1026,7 +1096,8 @@ Invoke method can initiate state transition.
   "params": [
     {
       "type": "int",
-      "value": "0x27b46536c66c8e3000000"
+      "value": "0x27b46536c66c8e3000000",
+      "fields": []
     }
   ]
 }
@@ -1045,12 +1116,16 @@ Invoke method can initiate state transition.
 | params | T\_LIST[T\_DICT]  |            |
 | params[0].type | [T\_STR](#T_STR)  | int(fixed)            |
 | params[0].value | [T\_INT](#T_INT)  | iprep value to set   |
+| params[0].fields | [T\_LIST](#T_LIST)  |       |
 | params[1].type | [T\_STR](#T_STR)  | int(fixed)            |
 | params[1].value | [T\_INT](#T_INT)  | icps value to set    |
+| params[1].fields | [T\_LIST](#T_LIST)  |       |
 | params[2].type | [T\_STR](#T_STR)  | int(fixed)            |
 | params[2].value | [T\_INT](#T_INT)  | irelay value to set  |
+| params[2].fields | [T\_LIST](#T_LIST)  |       |
 | params[3].type | [T\_STR](#T_STR)  | int(fixed)            |
 | params[3].value | [T\_INT](#T_INT)  | ivoter value to set  |
+| params[3].fields | [T\_LIST](#T_LIST)  |       |
 
 ```json
 {
@@ -1059,19 +1134,23 @@ Invoke method can initiate state transition.
   "params": [
     {
       "type": "int",
-      "value": "0x19"
+      "value": "0x19",
+      "fields": []
     },
     {
       "type": "int",
-      "value": "0x19"
+      "value": "0x19",
+      "fields": []
     },
     {
       "type": "int",
-      "value": "0x19"
+      "value": "0x19",
+      "fields": []
     },
     {
       "type": "int",
-      "value": "0x19"
+      "value": "0x19",
+      "fields": []
     }
   ]
 }
@@ -1090,17 +1169,25 @@ Invoke method can initiate state transition.
 | params | T\_LIST[T\_DICT]  |            |
 | params[0].type | [T\_STR](#T_STR)  | str(fixed)            |
 | params[0].value | [T\_STR](#T_STR)  | network SCORE role : cps or relay            |
+| params[0].fields | [T\_LIST](#T_LIST)  |       |
 | params[1].type | [T\_ADDR_SCORE](#T_ADDR_SCORE)  | Address(fixed)            |
 | params[1].value | [T\_ADDR_SCORE](#T_ADDR_SCORE)  | SCORE address to set            |
+| params[1].fields | [T\_LIST](#T_LIST)  |       |
 
 ```json
 {
   "to": "cx0000000000000000000000000000000000000000",
-  "method": "setRewardFund",
+  "method": "setNetworkScore",
   "params": [
     {
-      "type": "int",
-      "value": "0x27b46536c66c8e3000000"
+      "type": "str",
+      "value": "cps",
+      "fields": []
+    },
+    {
+      "type": "Address",
+      "value": "cx12abfcb33efee12abfcb33efee12abfcb33efeea",
+      "fields": []
     }
   ]
 }
@@ -1118,19 +1205,22 @@ Invoke method can initiate state transition.
 | params | T\_LIST[T\_DICT]  |            |
 | params[0].type | [T\_STR](#T_STR)  | Address(fixed)            |
 | params[0].value | [T\_ADDR_SCORE](#T_ADDR_SCORE)  | score Address to update            |
+| params[0].fields | [T\_LIST](#T_LIST)  |       |
 | params[1].type | [T\_STR](#T_STR)  | bytes(fixed)            |
 | params[1].value | [T\_BIN_DATA](#T_BIN_DATA)  | score code in hex string            |
+| params[1].fields | [T\_LIST](#T_LIST)  |       |
 | params[2].type | [T\_STR](#T_STR)  | []str(optional)            |
 | params[2].value | [T\_LIST](#T_LIST)  | parameters in string array            |
+| params[2].fields | [T\_LIST](#T_LIST)  |       |
 
 ```json
 {
   "to": "cx0000000000000000000000000000000000000000",
   "method": "updateNetworkScore",
   "params": [
-    {"type":  "Address", "value":  "cx1111111111111111111111111111111111111111"},
-    {"type":  "bytes", "value":  "0x1234.."},
-    {"type":  "[]str", "value": ["0x1", "string", "hx1111111111111111111111111111111111111111"]}
+    {"type":  "Address", "value":  "cx1111111111111111111111111111111111111111", "fields":  []},
+    {"type":  "bytes", "value":  "0x1234..", "fields": []},
+    {"type":  "[]str", "value": ["0x1", "string", "hx1111111111111111111111111111111111111111"], "fields": []}
   ]
 }
 ```
@@ -1147,13 +1237,14 @@ Invoke method can initiate state transition.
 | params | T\_LIST[T\_DICT]  |            |
 | params[0].type | [T\_STR](#T_STR)  | int(fixed)            |
 | params[0].value | [T\_INT](#T_INT)  | slashing rate value            |
+| params[0].fields | [T\_LIST](#T_LIST)  |       |
 
 ```json
 {
   "to": "cx0000000000000000000000000000000000000000",
   "method": "setConsistentValidationSlashingRate",
   "params": [
-    {"type":  "int", "value":  "0x1a"}
+    {"type":  "int", "value":  "0x1a", "fields": []}
   ]
 }
 ```
@@ -1169,13 +1260,14 @@ Invoke method can initiate state transition.
 | params | T\_LIST[T\_DICT]  |            |
 | params[0].type | [T\_STR](#T_STR)  | int(fixed)            |
 | params[0].value | [T\_INT](#T_INT)  | slashing rate value            |
+| params[0].fields | [T\_LIST](#T_LIST)  |       |
 
 ```json
 {
   "to": "cx0000000000000000000000000000000000000000",
   "method": "setNonVoteSlashingRate",
   "params": [
-    {"type":  "int", "value":  "0x1b"}
+    {"type":  "int", "value":  "0x1b", "fields": []}
   ]
 }
 ```
@@ -1204,34 +1296,36 @@ Invoke method can initiate state transition.
       "params": {
         "title": "Disqualify P-Rep A",
         "description": "P-Rep A does not maintain node",
-        "value": "0x7b2261646472657373223a2022.."
+        "requests": [
+          {
+            "to": "cx0000000000000000000000000000000000000000",
+            "method": "setRevision",
+            "params": [
+              {
+                "type": "int",
+                "value": "0x12",
+                "fields": []
+              }
+            ]
+          },
+          {
+            "to": "cx0000000000000000000000000000000000000000",
+            "method": "disqualifyPRep",
+            "params": [
+              {
+                "type": "Address",
+                "value": "hx1f11e5c54f006b6a5d5fe65486908592151a7c57",
+                "fields": []
+              }
+            ]
+          }
+        ]
       }
     }
   }
 }
 ```
 
-`value` is in hexadecimal format of the following json string.
-
-```json
-[
-  {
-    "to": "cx0000000000000000000000000000000000000000",
-    "method": "setConsistentValidationSlashingRate",
-    "params": [
-      {"type":  "int", "value":  "0x1a"}
-    ]
-  },
-  {
-    "to": "cx0000000000000000000000000000000000000000",
-    "method": "setNonVoteSlashingRate",
-    "params": [
-      {"type":  "int", "value":  "0x1b"}
-    ]
-  },
-  ...
-]
-```
 
 ## cancelProposal
 
