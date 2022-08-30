@@ -254,17 +254,17 @@ public class Proposal {
     }
 
     private void voteAgree(PRepInfo voter) {
-        VoteInfo.Vote[] updatedAgree = new VoteInfo.Vote[vote.sizeofAgreed() + 1];
-        VoteInfo.Vote v = new VoteInfo.Vote(
+        VoteInfo.VoterInfo[] updatedAgree = new VoteInfo.VoterInfo[vote.sizeofAgreed() + 1];
+        VoteInfo.VoterInfo v = new VoteInfo.VoterInfo(
                 Context.getTransactionHash(),
                 BigInteger.valueOf(Context.getTransactionTimestamp()),
                 voter.getAddress(),
                 voter.getName(),
                 voter.power()
         );
-        System.arraycopy(vote.agree.voteList, 0, updatedAgree, 0, vote.sizeofAgreed());
+        System.arraycopy(vote.agree.voterInfoList, 0, updatedAgree, 0, vote.sizeofAgreed());
         updatedAgree[vote.sizeofAgreed()] = v;
-        vote.agree.setVoteList(updatedAgree);
+        vote.agree.setVoterInfoList(updatedAgree);
 
         var votedAmount = vote.agree.getAmount();
         vote.agree.setAmount(votedAmount.add(voter.power()));
@@ -273,17 +273,17 @@ public class Proposal {
     }
 
     private void voteDisagree(PRepInfo voter) {
-        VoteInfo.Vote[] updatedDisagree = new VoteInfo.Vote[vote.sizeofDisagreed() + 1];
-        VoteInfo.Vote v = new VoteInfo.Vote(
+        VoteInfo.VoterInfo[] updatedDisagree = new VoteInfo.VoterInfo[vote.sizeofDisagreed() + 1];
+        VoteInfo.VoterInfo v = new VoteInfo.VoterInfo(
                 Context.getTransactionHash(),
                 BigInteger.valueOf(Context.getTransactionTimestamp()),
                 voter.getAddress(),
                 voter.getName(),
                 voter.power()
         );
-        System.arraycopy(vote.disagree.voteList, 0, updatedDisagree, 0, vote.sizeofDisagreed());
+        System.arraycopy(vote.disagree.voterInfoList, 0, updatedDisagree, 0, vote.sizeofDisagreed());
         updatedDisagree[vote.sizeofDisagreed()] = v;
-        vote.disagree.setVoteList(updatedDisagree);
+        vote.disagree.setVoterInfoList(updatedDisagree);
 
         var votedAmount = vote.disagree.getAmount();
         vote.disagree.setAmount(votedAmount.add(voter.power()));
