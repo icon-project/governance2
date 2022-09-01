@@ -22,7 +22,7 @@ import score.UserRevertedException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class CallRequestsTest {
+public class RequestTest {
 
     @Test
     void initValidCallRequest() {
@@ -34,7 +34,7 @@ public class CallRequestsTest {
         param0.setValue("cxaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         param0.setType("Address");
         params[0] = param0;
-        CallRequest callRequest = new CallRequest();
+        Request callRequest = new Request();
         callRequest.setTo(to);
         callRequest.setMethod(method);
         callRequest.setParams(params);
@@ -113,7 +113,7 @@ public class CallRequestsTest {
         param0.setValue(Governance.address.toString());
         param0.setType("Address");
         params[0] = param0;
-        CallRequest callRequest = new CallRequest();
+        Request callRequest = new Request();
         callRequest.setTo(to);
         callRequest.setMethod(method);
         callRequest.setParams(params);

@@ -26,7 +26,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
-public class CallRequest {
+public class Request {
     final static String SET_REVISION = "setRevision";
     final static String UNBLOCK_SCORE = "unblockScore";
     final static String BLOCK_SCORE = "blockScore";
@@ -55,7 +55,7 @@ public class CallRequest {
         this.params = params;
     }
 
-    public static void writeObject(ObjectWriter w, CallRequest m) {
+    public static void writeObject(ObjectWriter w, Request m) {
         w.beginList(3);
         w.write(m.to);
         w.write(m.method);
@@ -67,7 +67,7 @@ public class CallRequest {
         w.end();
     }
 
-    public static CallRequest readObject(ObjectReader r) {
+    public static Request readObject(ObjectReader r) {
         r.beginList();
         var to = r.readAddress();
         var method = r.readString();
@@ -82,11 +82,11 @@ public class CallRequest {
         }
         r.end();
         r.end();
-        var cr = new CallRequest();
-        cr.setParams(params);
-        cr.setMethod(method);
-        cr.setTo(to);
-        return cr;
+        var request = new Request();
+        request.setParams(params);
+        request.setMethod(method);
+        request.setTo(to);
+        return request;
     }
 
     public Object[] getParams() {

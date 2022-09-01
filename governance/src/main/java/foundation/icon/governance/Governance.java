@@ -174,7 +174,7 @@ public class Governance {
     public void registerProposal(
             String title,
             String description,
-            CallRequest[] requests
+            Request[] requests
     ) {
         Context.require(PROPOSAL_REGISTRATION_FEE.compareTo(Context.getValue()) == 0, "100 ICX required to register proposal");
         ChainScore.burn(PROPOSAL_REGISTRATION_FEE);
@@ -182,7 +182,7 @@ public class Governance {
         var prep = ChainScore.getPRepInfoFromList(proposer);
         Context.require(prep != null, "No permission - only for main prep");
 
-        var callRequests = new CallRequests(requests);
+        var callRequests = new Requests(requests);
         callRequests.validateRequests();
         Value v = new Value(Proposal.EXTERNAL_CALL, callRequests);
 

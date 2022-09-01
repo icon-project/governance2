@@ -22,53 +22,53 @@ import scorex.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class CallRequests {
-    private CallRequest[] requests;
+public class Requests {
+    private Request[] requests;
 
-    public CallRequests(CallRequest[] requests) {
+    public Requests(Request[] requests) {
         this.requests = requests;
     }
 
-    public static void writeObject(ObjectWriter w, CallRequests c) {
+    public static void writeObject(ObjectWriter w, Requests c) {
         w.beginList(1);
         w.beginList(c.requests.length);
-        for (CallRequest r : c.requests) {
+        for (Request r : c.requests) {
             w.write(r);
         }
         w.end();
         w.end();
     }
 
-    public static CallRequests readObject(ObjectReader r) {
+    public static Requests readObject(ObjectReader r) {
         r.beginList();
-        CallRequest[] callRequests;
-        List<CallRequest> requestList = new ArrayList<>();
+        Request[] requests;
+        List<Request> requestList = new ArrayList<>();
         r.beginList();
-        while(r.hasNext()) requestList.add(r.read(CallRequest.class));
+        while(r.hasNext()) requestList.add(r.read(Request.class));
         r.end();
         var len = requestList.size();
-        callRequests = new CallRequest[len];
+        requests = new Request[len];
         for (int i = 0; i < len; i++) {
-            callRequests[i] = requestList.get(i);
+            requests[i] = requestList.get(i);
         }
         r.end();
-        return new CallRequests(callRequests);
+        return new Requests(requests);
     }
 
     public List<Object> toList(){
         ArrayList<Map<String, Object>> callRequests = new ArrayList<>();
-        for (CallRequest request: requests) {
+        for (Request request: requests) {
             callRequests.add(request.toMap());
         }
         return List.of(callRequests.toArray());
     }
 
     public void validateRequests() {
-        for (CallRequest cr : requests) cr.validateRequest();
+        for (Request cr : requests) cr.validateRequest();
     }
 
     public void handleRequests(Governance governance) {
-        for (CallRequest cr : requests) cr.handleRequest(governance);
+        for (Request cr : requests) cr.handleRequest(governance);
     }
 
     public byte[] toBytes() {
@@ -77,4 +77,3 @@ public class CallRequests {
         return w.toByteArray();
     }
 }
-
