@@ -24,21 +24,27 @@ import java.util.List;
 import java.util.Map;
 
 class PRepInfo {
+    public final static BigInteger GRADE_MAIN = BigInteger.ZERO;
+    public final static BigInteger GRADE_SUB = BigInteger.ONE;
+    public final static BigInteger STATUS_ACTIVE = BigInteger.ZERO;
     private final String name;
     private final Address address;
-    private final BigInteger delegated;
     private final BigInteger power;
+    private final BigInteger grade;
+    private final BigInteger status;
 
     public PRepInfo(
             String name,
             Address address,
-            BigInteger delegated,
-            BigInteger power
+            BigInteger power,
+            BigInteger grade,
+            BigInteger status
     ) {
         this.name = name;
         this.address = address;
-        this.delegated = delegated;
         this.power = power;
+        this.grade = grade;
+        this.status = status;
     }
 
     public String getName() {
@@ -49,13 +55,18 @@ class PRepInfo {
         return address;
     }
 
-    public BigInteger getDelegated() {
-        return delegated;
-    }
-
     public BigInteger power() {
         return power;
     }
+
+    public BigInteger getGrade() {
+        return grade;
+    }
+
+    public BigInteger getStatus() {
+        return status;
+    }
+
 }
 
 class ChainScore {
@@ -171,8 +182,8 @@ class ChainScore {
         return (Map<String, Object>) Context.call(CHAIN_SCORE, "getMainPReps");
     }
 
-    static Map<String, Object> getPReps() {
-        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getPReps");
+    static Map<String, Object> getPRep(Address address) {
+        return (Map<String, Object>) Context.call(CHAIN_SCORE, "getPRep", address);
     }
 
     static Map<String, Object> getPRepTerm() {
@@ -192,24 +203,26 @@ class ChainScore {
         return expireVotingHeight.add((BigInteger) term.get("endBlockHeight"));
     }
 
-    static PRepInfo getPRepInfoFromList(Address address) {
-        PRepInfo[] preps = ChainScore.getPRepsInfo();
-        for (PRepInfo prep : preps) {
-            if (address.equals(prep.getAddress())) {
-                return prep;
-            }
-        }
-        return null;
-    }
-
     static PRepInfo[] getMainPRepsInfo() {
         Map<String, Object> mainPreps = getMainPReps();
         return getPRepInfolist(mainPreps);
     }
 
-    static PRepInfo[] getPRepsInfo() {
-        Map<String, Object> preps = getPReps();
-        return getPRepInfolist(preps);
+    static PRepInfo getPrepInfo(Address address) {
+        try{
+            Map<String, Object> prep = getPRep(address);
+            PRepInfo prepInfo = new PRepInfo(
+                    (String) prep.get("name"),
+                    (Address) prep.get("address"),
+                    (BigInteger) prep.get("power"),
+                    (BigInteger) prep.get("grade"),
+                    (BigInteger) prep.get("status")
+            );
+            if (prepInfo.getStatus().compareTo(PRepInfo.STATUS_ACTIVE) != 0) return null;
+            return prepInfo;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     static private PRepInfo[] getPRepInfolist(Map<String, Object> preps) {
@@ -221,8 +234,9 @@ class ChainScore {
             PRepInfo itemInfo = new PRepInfo(
                     (String) item.get("name"),
                     (Address) item.get("address"),
-                    (BigInteger) item.get("delegated"),
-                    (BigInteger) item.get("power")
+                    (BigInteger) item.get("power"),
+                    null,
+                    null
             );
 
             prepInfo[i] = itemInfo;

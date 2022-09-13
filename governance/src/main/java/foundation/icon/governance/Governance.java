@@ -241,8 +241,8 @@ public class Governance {
         Context.require(PROPOSAL_REGISTRATION_FEE.compareTo(Context.getValue()) == 0, "100 ICX required to register proposal");
         ChainScore.burn(PROPOSAL_REGISTRATION_FEE);
         Address proposer = Context.getCaller();
-        var prep = ChainScore.getPRepInfoFromList(proposer);
-        Context.require(prep != null, "No permission - only for main prep");
+        var prep = ChainScore.getPrepInfo(proposer);
+        Context.require(prep != null && prep.getGrade().compareTo(PRepInfo.GRADE_MAIN) == 0, "No permission - only for main prep");
 
         String stringValue = new String(value);
         JsonValue json = Json.parse(stringValue);
@@ -266,7 +266,7 @@ public class Governance {
     @External
     public void voteProposal(byte[] id, int vote) {
         Address sender = Context.getCaller();
-        var prep = ChainScore.getPRepInfoFromList(sender);
+        var prep = ChainScore.getPrepInfo(sender);
 
         Proposal p = networkProposal.getProposal(id);
         Context.require(p != null, "no registered proposal");
@@ -293,7 +293,7 @@ public class Governance {
     public void applyProposal(byte[] id) {
         Address sender = Context.getCaller();
         Proposal p = networkProposal.getProposal(id);
-        var prep = ChainScore.getPRepInfoFromList(sender);
+        var prep = ChainScore.getPrepInfo(sender);
         BigInteger blockHeight = BigInteger.valueOf(Context.getBlockHeight());
         Context.require(p.agreed(sender) || p.disagreed(sender), "No permission - only for voted preps");
         Context.require(p.getStatus(blockHeight) == NetworkProposal.APPROVED_STATUS, "Only approved proposal can be applied");
@@ -552,7 +552,8 @@ public class Governance {
     }
 
     private void validateDisqualifyPRep(Address address) {
-        Context.require(ChainScore.getPRepInfoFromList(address) != null, address.toString() + " is not p-rep");
+        var prepInfo = ChainScore.getPrepInfo(address);
+        Context.require(prepInfo != null && prepInfo.getStatus().compareTo(PRepInfo.STATUS_ACTIVE) == 0, address.toString() + " is not p-rep");
     }
 
     private void validateStepPrice(BigInteger price) {
