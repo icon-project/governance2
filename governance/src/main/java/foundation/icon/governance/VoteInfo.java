@@ -20,6 +20,7 @@ import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import score.Address;
+import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
 
@@ -42,9 +43,9 @@ import java.util.Map;
 public class VoteInfo {
     final static int AGREE_VOTE = 1;
     final static int DISAGREE_VOTE = 0;
-    Vote agree;
-    Vote disagree;
-    NoVote noVote;
+    private Vote agree;
+    private Vote disagree;
+    private NoVote noVote;
 
     public static class VoterInfo {
         private final byte[] id;
@@ -164,7 +165,7 @@ public class VoteInfo {
             BigInteger total = BigDecimal.valueOf(
                     obj.getDouble("amount", 0)
             ).toBigInteger();
-            this.setAmount(total);
+            setAmount(total);
 
             VoterInfo[] voterInfoList = new VoterInfo[array.size()];
             int i = 0;
@@ -190,7 +191,7 @@ public class VoteInfo {
 
                 voterInfoList[i++] = new VoterInfo(id, timestamp, address, name, amount);
             }
-            this.setVoterInfoList(voterInfoList);
+            setVoterInfoList(voterInfoList);
         }
 
         public static void writeObject(ObjectWriter w, Vote v) {
@@ -219,8 +220,8 @@ public class VoteInfo {
     }
 
     public static class NoVote {
-        Address[] list;
-        BigInteger amount;
+        private Address[] list;
+        private BigInteger amount;
 
         public NoVote() {
             this.list = new Address[0];
@@ -230,7 +231,7 @@ public class VoteInfo {
         public static void writeObject(ObjectWriter w, NoVote n) {
             w.beginList(2);
             w.write(n.size());
-            for (Address v : n.getAddressList()) {
+            for (Address v : n.list) {
                 w.write(v);
             }
             w.write(n.getAmount());
@@ -252,10 +253,6 @@ public class VoteInfo {
             n.setAmount(r.readBigInteger());
             r.end();
             return n;
-        }
-
-        public Address[] getAddressList() {
-            return this.list;
         }
 
         public void setAddressList(Address[] list) {
@@ -351,6 +348,10 @@ public class VoteInfo {
         noVote.setAddressList(addresses);
     }
 
+    public Address[] getNoVoteList() {
+        return noVote.list;
+    }
+
     public Map<String, Map<String, Object>> toMap() {
         return Map.of(
                 "agree", agree.toMap(),
@@ -387,25 +388,17 @@ public class VoteInfo {
         return disagree.getAmount();
     }
 
-    private void buildAgreeWithJson(JsonValue jsonValue) {
-        this.agree.readJson(jsonValue);
-    }
-
-    private void buildDisagreeWithJson(JsonValue jsonValue) {
-        this.disagree.readJson(jsonValue);
-    }
-
-    private void buildNoVoteWithJson(JsonValue jsonValue) {
-        this.noVote.readJson(jsonValue);
+    private void buildVote(Vote vote, JsonValue jsonValue) {
+        vote.readJson(jsonValue);
     }
 
     private void build(JsonObject jso) {
-        this.buildAgreeWithJson(jso.get("agree"));
-        this.buildDisagreeWithJson(jso.get("disagree"));
-        this.buildNoVoteWithJson(jso.get("noVote"));
+        buildVote(agree, jso.get("agree"));
+        buildVote(disagree, jso.get("disagree"));
+        noVote.readJson(jso.get("noVote"));
     }
 
-    public static VoteInfo makeVoterWithJson(JsonValue jsonValue) {
+    public static VoteInfo makeVoter(JsonValue jsonValue) {
         JsonObject voteJson = jsonValue.asObject();
         VoteInfo v = new VoteInfo();
         v.build(voteJson);
@@ -431,5 +424,45 @@ public class VoteInfo {
             if (a.equals(voter)) return true;
         }
         return false;
+    }
+
+    void vote(PRepInfo voter, int vote) {
+        VoteInfo.Vote v;
+        if (vote == VoteInfo.AGREE_VOTE) {
+            v = agree;
+        } else {
+            v = disagree;
+        }
+        VoteInfo.VoterInfo[] votedInfo = new VoteInfo.VoterInfo[v.voterInfoList.length + 1];
+        VoteInfo.VoterInfo voterInfo = new VoteInfo.VoterInfo(
+                Context.getTransactionHash(),
+                BigInteger.valueOf(Context.getTransactionTimestamp()),
+                voter.getAddress(),
+                voter.getName(),
+                voter.power()
+        );
+        System.arraycopy(v.voterInfoList, 0, votedInfo, 0, v.voterInfoList.length);
+        votedInfo[v.voterInfoList.length] = voterInfo;
+        v.setVoterInfoList(votedInfo);
+
+        var votedAmount = v.getAmount();
+        v.setAmount(votedAmount.add(voter.power()));
+
+        updateNoVote(voter);
+    }
+
+    private void updateNoVote(PRepInfo prep) {
+        var addresses = noVote.list;
+        int size = sizeofNoVote();
+        int index = 0;
+        var updatedList = new Address[size - 1];
+        for (int i = 0; i < size; i++) {
+            if (!prep.getAddress().equals(addresses[i])) {
+                updatedList[index++] = addresses[i];
+            }
+        }
+        noVote.setAddressList(updatedList);
+        var amount = noVote.getAmount();
+        noVote.setAmount(amount.subtract(prep.power()));
     }
 }
