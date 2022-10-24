@@ -51,6 +51,7 @@ public class Value {
     public static final String NETWORK_SCORE_UPDATE_TYPE = "networkScoreUpdate";
     public static final String ACCUMULATED_VALIDATION_FAILURE_SLASHING_RATE = "accumulatedValidationFailureSlashingRate";
     public static final String MISSED_NETWORK_PROPOSAL_VOTE_SLASHING_RATE = "missedNetworkProposalVoteSlashingRate";
+    public static final String CALL = "call";
     private byte[] data;
 
     public Value(int p, String text) {
@@ -76,20 +77,6 @@ public class Value {
         // StepPrice, IRep, Revision, RewardFund
         this.value = value;
         this.proposalType = p;
-    }
-
-    public Value(int p, Address address, byte[] data) {
-        // Network SCORE update
-        this.proposalType = p;
-        this.data = data;
-        this.address = address;
-    }
-
-    public Value(int p, String text, Address address) {
-        // Network SCORE designation
-        this.proposalType = p;
-        this.address = address;
-        this.stringValue = text;
     }
 
     public Value(int p, StepCosts value) {

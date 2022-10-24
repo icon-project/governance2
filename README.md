@@ -1100,6 +1100,48 @@ Invoke method can initiate state transition.
 }
 ```
 
+##### call
+
+* call SCORE method
+
+| Key                | Value Type       | Description                                           |
+|:-------------------|:-----------------|-------------------------------------------------------|
+| name               | [T\_STR](#T_STR) | "customCall" (fixed value) |
+| value              | T\_DICT          |                                                       |
+| value.to | [T\_ADDRESS_SCORE](#T_ADDRESS_SCORE) | SCORE address                               |
+| value.method | [T\_STR](#T_STR) | method name                               |
+| value.params | [T\_LIST](#T_LIST) | parameters                               |
+| value.params.type | [T\_STR](#T_STR) | type of parameter                               |
+| value.params.value | [T\_STR](#T_STR) | value                             |
+| value.params.fields | T\_DICT[T_STR] | empty if parameter type is not `struct` or `[]struct`. It has the keys of the struct as keys, and the types of values as values. |
+
+```json
+{
+  "name": "call",
+  "value": {
+    "to": "cx0000000000000000000000000000000000000000",
+    "method": "someMethod",
+    "params": [
+      {
+        "type": "str",
+        "value": "Alice"
+      },
+      {
+        "type": "struct",
+        "value": {
+          "nickName": "Bob",
+          "address": "hxb6b5791be0b5ef67063b3c10b840fb81514db2fd"
+        },
+        "fields": {
+          "nickName": "str",
+          "address": "Address"
+        }
+      }
+    ]
+  }
+}
+```
+
 ### Examples
 
 *Request*

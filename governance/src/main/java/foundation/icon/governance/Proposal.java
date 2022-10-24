@@ -20,7 +20,6 @@ import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import score.Address;
-import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
 
@@ -219,7 +218,7 @@ public class Proposal {
         ).toBigInteger();
 
         int status = jsonObj.getInt("status", 0);
-        VoteInfo vote = VoteInfo.makeVoterWithJson(jsonObj.get("vote"));
+        VoteInfo vote = VoteInfo.makeVoter(jsonObj.get("vote"));
 
         int totalVoter = jsonObj.getInt("total_voter", 0);
 
@@ -246,64 +245,7 @@ public class Proposal {
     }
 
     public void updateVote(PRepInfo p, int vote) {
-        if (vote == VoteInfo.AGREE_VOTE) {
-            voteAgree(p);
-        } else {
-            voteDisagree(p);
-        }
-    }
-
-    private void voteAgree(PRepInfo voter) {
-        VoteInfo.Vote[] updatedAgree = new VoteInfo.Vote[vote.sizeofAgreed() + 1];
-        VoteInfo.Vote v = new VoteInfo.Vote(
-                Context.getTransactionHash(),
-                BigInteger.valueOf(Context.getTransactionTimestamp()),
-                voter.getAddress(),
-                voter.getName(),
-                voter.power()
-        );
-        System.arraycopy(vote.agree.voteList, 0, updatedAgree, 0, vote.sizeofAgreed());
-        updatedAgree[vote.sizeofAgreed()] = v;
-        vote.agree.setVoteList(updatedAgree);
-
-        var votedAmount = vote.agree.getAmount();
-        vote.agree.setAmount(votedAmount.add(voter.power()));
-
-        updateNoVote(voter);
-    }
-
-    private void voteDisagree(PRepInfo voter) {
-        VoteInfo.Vote[] updatedDisagree = new VoteInfo.Vote[vote.sizeofDisagreed() + 1];
-        VoteInfo.Vote v = new VoteInfo.Vote(
-                Context.getTransactionHash(),
-                BigInteger.valueOf(Context.getTransactionTimestamp()),
-                voter.getAddress(),
-                voter.getName(),
-                voter.power()
-        );
-        System.arraycopy(vote.disagree.voteList, 0, updatedDisagree, 0, vote.sizeofDisagreed());
-        updatedDisagree[vote.sizeofDisagreed()] = v;
-        vote.disagree.setVoteList(updatedDisagree);
-
-        var votedAmount = vote.disagree.getAmount();
-        vote.disagree.setAmount(votedAmount.add(voter.power()));
-
-        updateNoVote(voter);
-    }
-
-    private void updateNoVote(PRepInfo prep) {
-        var addresses = vote.noVote.getAddressList();
-        int size = vote.sizeofNoVote();
-        int index = 0;
-        var updatedList = new Address[size - 1];
-        for (int i = 0; i < size; i++) {
-            if (!prep.getAddress().equals(addresses[i])) {
-                updatedList[index++] = addresses[i];
-            }
-        }
-        vote.noVote.setAddressList(updatedList);
-        var amount = vote.noVote.getAmount();
-        vote.noVote.setAmount(amount.subtract(prep.power()));
+        this.vote.vote(p, vote);
     }
 
     boolean agreed(Address prep) {
@@ -339,6 +281,6 @@ public class Proposal {
     }
 
     Address[] getNonVoters() {
-        return vote.noVote.getAddressList();
+        return vote.getNoVoteList();
     }
 }
