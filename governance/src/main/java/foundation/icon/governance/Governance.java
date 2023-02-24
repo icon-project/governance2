@@ -34,45 +34,43 @@ import java.util.Map;
 public class Governance {
     private static final BigInteger EXA = BigInteger.valueOf(1_000_000_000_000_000_000L);
     private static final BigInteger PROPOSAL_REGISTRATION_FEE = BigInteger.valueOf(100).multiply(EXA);
-
-    private final static ChainScore chainScore = new ChainScore();
     private final static Address address = Address.fromString("cx0000000000000000000000000000000000000001");
     private final static NetworkProposal networkProposal = new NetworkProposal();
     private final ArrayDB<Address> auditors = Context.newArrayDB("auditor_list", Address.class);
     private final DictDB<BigInteger, TimerInfo> timerInfo = Context.newDictDB("timerInfo", TimerInfo.class);
 
     private void setRevision(BigInteger code) {
-        chainScore.setRevision(code);
+        ChainScore.setRevision(code);
         RevisionChanged(code);
     }
 
     private void setStepPrice(BigInteger price) {
-        chainScore.setStepPrice(price);
+        ChainScore.setStepPrice(price);
         StepPriceChanged(price);
     }
 
     private void setStepCosts(String type, BigInteger cost) {
-        chainScore.setStepCost(type, cost);
+        ChainScore.setStepCost(type, cost);
         StepCostChanged(type, cost);
     }
 
     private void setRewardFund(BigInteger rewardFund) {
-        chainScore.setRewardFund(rewardFund);
+        ChainScore.setRewardFund(rewardFund);
         RewardFundSettingChanged(rewardFund);
     }
 
     private void setRewardFundsRate(BigInteger iprep, BigInteger icps, BigInteger irelay, BigInteger ivoter) {
-        chainScore.setRewardFundsRate(iprep, icps, irelay, ivoter);
+        ChainScore.setRewardFundsRate(iprep, icps, irelay, ivoter);
         RewardFundAllocationChanged(iprep, icps, irelay, ivoter);
     }
 
     private void blockScore(Address address) {
-        chainScore.blockScore(address);
+        ChainScore.blockScore(address);
         MaliciousScore(address, 0);
     }
 
     private void unblockScore(Address address) {
-        chainScore.unblockScore(address);
+        ChainScore.unblockScore(address);
         MaliciousScore(address, 1);
     }
 
@@ -86,7 +84,7 @@ public class Governance {
 
     private boolean _disqualifyPRep(Address address) {
         try {
-            chainScore.disqualifyPRep(address);
+            ChainScore.disqualifyPRep(address);
             return true;
         } catch (Exception e) {
             return false;
@@ -114,39 +112,39 @@ public class Governance {
 
     @External(readonly = true)
     public BigInteger getRevision() {
-        return chainScore.getRevision();
+        return ChainScore.getRevision();
     }
 
     @External(readonly = true)
     public String getVersion() {
-        return "2.1.2";
+        return "2.1.3";
     }
 
     @External(readonly = true)
     public BigInteger getStepPrice() {
-        return chainScore.getStepPrice();
+        return ChainScore.getStepPrice();
     }
 
     @External(readonly = true)
     public Map<String, Object> getStepCosts() {
-        return chainScore.getStepCosts();
+        return ChainScore.getStepCosts();
     }
 
     @External(readonly = true)
     public BigInteger getMaxStepLimit(String contextType) {
-        return chainScore.getMaxStepLimit(contextType);
+        return ChainScore.getMaxStepLimit(contextType);
     }
 
     @External(readonly = true)
     public Map<String, Object> getScoreStatus(Address address) {
-        return chainScore.getScoreStatus(address);
+        return ChainScore.getScoreStatus(address);
     }
 
     @External
     public void acceptScore(byte[] txHash) {
         var caller = Context.getCaller();
         Context.require(isAuditor(caller), "Invalid sender: no permission");
-        chainScore.acceptScore(txHash);
+        ChainScore.acceptScore(txHash);
         Accepted(txHash);
     }
 
@@ -154,7 +152,7 @@ public class Governance {
     public void rejectScore(byte[] txHash, String reason) {
         var caller = Context.getCaller();
         Context.require(isAuditor(caller), "Invalid sender: no permission");
-        chainScore.rejectScore(txHash);
+        ChainScore.rejectScore(txHash);
         Rejected(txHash, reason);
     }
 
@@ -186,7 +184,7 @@ public class Governance {
 
     @External(readonly = true)
     public boolean isInScoreBlackList(Address address) {
-        var addresses = chainScore.getBlockedScores();
+        var addresses = ChainScore.getBlockedScores();
         for (Address addr : addresses) {
             if (address.equals(addr)) return true;
         }
@@ -241,11 +239,10 @@ public class Governance {
             byte[] value
     ) {
         Context.require(PROPOSAL_REGISTRATION_FEE.compareTo(Context.getValue()) == 0, "100 ICX required to register proposal");
-        chainScore.burn(PROPOSAL_REGISTRATION_FEE);
+        ChainScore.burn(PROPOSAL_REGISTRATION_FEE);
         Address proposer = Context.getCaller();
-        PRepInfo[] mainPRepsInfo = chainScore.getMainPRepsInfo();
-        var prep = getPRepInfoFromList(proposer, mainPRepsInfo);
-        Context.require(prep != null, "No permission - only for main prep");
+        var prep = ChainScore.getPrepInfo(proposer);
+        Context.require(prep != null && prep.getGrade().compareTo(PRepInfo.GRADE_MAIN) == 0, "No permission - only for main prep");
 
         String stringValue = new String(value);
         JsonValue json = Json.parse(stringValue);
@@ -253,43 +250,23 @@ public class Governance {
         validateProposals(values);
         Value v = new Value(Proposal.NETWORK_PROPOSAL, value);
 
-        var term = chainScore.getPRepTerm();
-
-        /*
-            currentTermEnd: endBlockHeight
-            4-terms: termPeriod * 4
-            currentTermEnd + 4terms = 5terms
-         */
-        BigInteger expireVotingHeight = (BigInteger) term.get("period");
-        expireVotingHeight = expireVotingHeight.multiply(BigInteger.valueOf(4));
-        expireVotingHeight = expireVotingHeight.add((BigInteger) term.get("endBlockHeight"));
+        BigInteger expireVotingHeight = ChainScore.getExpireVotingHeight();
 
         networkProposal.registerProposal(
                 title,
                 description,
                 v,
-                mainPRepsInfo,
                 expireVotingHeight
         );
-        BigInteger penaltyHeight = BigInteger.ONE.add(expireVotingHeight);
-        TimerInfo ti = timerInfo.getOrDefault(penaltyHeight, null);
-        if (ti == null) {
-            ti = new TimerInfo(new TimerInfo.ProposalIds());
-            ti.addProposalId(Context.getTransactionHash());
-            timerInfo.set(penaltyHeight, ti);
-            chainScore.addTimer(penaltyHeight);
-        } else {
-            ti.addProposalId(Context.getTransactionHash());
-            timerInfo.set(penaltyHeight, ti);
-        }
+
+        setTimerInfo(BigInteger.ONE.add(expireVotingHeight));
         NetworkProposalRegistered(title, description, Proposal.NETWORK_PROPOSAL, value, proposer);
     }
 
     @External
     public void voteProposal(byte[] id, int vote) {
         Address sender = Context.getCaller();
-        PRepInfo[] prepsInfo = chainScore.getPRepsInfo();
-        var prep = getPRepInfoFromList(sender, prepsInfo);
+        var prep = ChainScore.getPrepInfo(sender);
 
         Proposal p = networkProposal.getProposal(id);
         Context.require(p != null, "no registered proposal");
@@ -316,8 +293,7 @@ public class Governance {
     public void applyProposal(byte[] id) {
         Address sender = Context.getCaller();
         Proposal p = networkProposal.getProposal(id);
-        PRepInfo[] prepsInfo = chainScore.getPRepsInfo();
-        var prep = getPRepInfoFromList(sender, prepsInfo);
+        var prep = ChainScore.getPrepInfo(sender);
         BigInteger blockHeight = BigInteger.valueOf(Context.getBlockHeight());
         Context.require(p.agreed(sender) || p.disagreed(sender), "No permission - only for voted preps");
         Context.require(p.getStatus(blockHeight) == NetworkProposal.APPROVED_STATUS, "Only approved proposal can be applied");
@@ -339,13 +315,13 @@ public class Governance {
                 "Can not be canceled - voting/approved proposal can be canceled");
         Context.require(sender.equals(p.proposer), "No permission - only for proposer");
 
-        networkProposal.cancelProposal(p);
+        networkProposal.setStatus(p, NetworkProposal.CANCELED_STATUS);
         var timerHeight = BigInteger.ONE.add(p.expireBlockHeight);
         var ti = timerInfo.getOrDefault(timerHeight, null);
         if (ti != null) {
             if (ti.proposalIds.ids.length == 1) {
                 timerInfo.set(timerHeight, null);
-                chainScore.removeTimer(timerHeight);
+                ChainScore.removeTimer(timerHeight);
             } else {
                 ti.removeProposalId(id);
                 timerInfo.set(timerHeight, ti);
@@ -363,11 +339,11 @@ public class Governance {
         for (byte[] id : ti.proposalIds.ids) {
             var proposal = networkProposal.getProposal(id);
             var novoters = proposal.getNonVoters();
-            chainScore.penalizeNonvoters(List.of(novoters));
+            ChainScore.penalizeNonvoters(List.of(novoters));
             int status = proposal.getStatus(blockHeight);
             if (status == NetworkProposal.EXPIRED_STATUS) {
                 if (proposal.apply != null) {
-                    networkProposal.applyProposal(proposal);
+                    networkProposal.setStatus(proposal, NetworkProposal.APPLIED_STATUS);
                 } else {
                     NetworkProposalExpired(proposal.id);
                 }
@@ -378,19 +354,10 @@ public class Governance {
         timerInfo.set(blockHeight, null);
     }
 
-    private PRepInfo getPRepInfoFromList(Address address, PRepInfo[] prepsInfo) {
-        for (PRepInfo prep : prepsInfo) {
-            if (address.equals(prep.getAddress())) {
-                return prep;
-            }
-        }
-        return null;
-    }
-
     private void applyProposal(Proposal proposal, PRepInfo pRepInfo) {
         proposal.apply = new ApplyInfo(
                 Context.getTransactionHash(), pRepInfo.getAddress(), pRepInfo.getName(), BigInteger.valueOf(Context.getTransactionTimestamp()));
-        networkProposal.applyProposal(proposal);
+        networkProposal.setStatus(proposal, NetworkProposal.APPLIED_STATUS);
         var data = networkProposal.getProposalValue(proposal.id);
         String stringValue = new String(data);
         JsonValue json = Json.parse(stringValue);
@@ -406,7 +373,7 @@ public class Governance {
                 case Value.REVISION_TYPE:
                     var revision = Converter.toInteger(valueObject.getString("revision", null));
                     setRevision(revision);
-                    return;
+                    continue;
                 case Value.MALICIOUS_SCORE_TYPE:
                     var type = Converter.toInteger(valueObject.getString("type", null));
                     processMaliciousProposal(Converter.toAddress(valueObject.getString("address", null)), type);
@@ -454,7 +421,7 @@ public class Governance {
                         var v = networkScores.get(j).asObject();
                         String role = v.getString("role", null);
                         Address address = Converter.toAddress(v.getString("address", null));
-                        chainScore.setNetworkScore(role, address);
+                        ChainScore.setNetworkScore(role, address);
                         if (address != null) NetworkScoreDesignated(role, address);
                         else NetworkScoreDeallocated(role);
                     }
@@ -479,24 +446,28 @@ public class Governance {
                     continue;
                 case Value.ACCUMULATED_VALIDATION_FAILURE_SLASHING_RATE: {
                     var rate = Converter.toInteger(valueObject.getString("slashingRate", null));
-                    chainScore.setConsistentValidationSlashingRate(rate);
+                    ChainScore.setConsistentValidationSlashingRate(rate);
                     continue;
                 }
                 case Value.MISSED_NETWORK_PROPOSAL_VOTE_SLASHING_RATE: {
                     var rate = Converter.toInteger(valueObject.getString("slashingRate", null));
-                    chainScore.setNonVoteSlashingRate(rate);
+                    ChainScore.setNonVoteSlashingRate(rate);
                     continue;
                 }
+                case Value.CALL:
+                    var request = Request.fromJson(valueObject);
+                    request.call();
+                    continue;
                 case Value.OPEN_BTP_NETWORK: {
                     String networkTypeName = valueObject.getString("networkTypeName", null);
                     String networkName = valueObject.getString("name", null);
                     var owner = Converter.toAddress(valueObject.getString("owner", null));
-                    chainScore.openBTPNetwork(networkTypeName, networkName, owner);
+                    ChainScore.openBTPNetwork(networkTypeName, networkName, owner);
                     continue;
                 }
                 case Value.CLOSE_BTP_NETWORK: {
                     var id = Converter.toInteger(valueObject.getString("id", null));
-                    chainScore.closeBTPNetwork(id);
+                    ChainScore.closeBTPNetwork(id);
                     continue;
                 }
             }
@@ -545,7 +516,7 @@ public class Governance {
                 case Value.REWARD_FUND_TYPE:
                     Context.require(size == 1);
                     var iglobal = Converter.toInteger(value.getString("iglobal", null));
-                    chainScore.validateRewardFund(iglobal);
+                    ChainScore.validateRewardFund(iglobal);
                     continue;
                 case Value.REWARD_FUNDS_ALLOCATION:
                     Context.require(size == 1);
@@ -569,6 +540,9 @@ public class Governance {
                     Context.require(slashingRate.compareTo(BigInteger.ZERO) >= 0 && slashingRate.compareTo(BigInteger.valueOf(100)) <= 0,
                             "slashing rate invalid");
                     continue;
+                case Value.CALL:
+                    Request.fromJson(value);
+                    continue;
                 case Value.OPEN_BTP_NETWORK:
                     Context.require(size == 3);
                     Context.require(value.getString("networkTypeName", null) != null);
@@ -586,7 +560,7 @@ public class Governance {
     }
 
     private void validateRevision(BigInteger revision) {
-        var prev = chainScore.getRevision();
+        var prev = ChainScore.getRevision();
         Context.require(revision.compareTo(prev) > 0, "can not decrease revision");
     }
 
@@ -601,12 +575,12 @@ public class Governance {
     }
 
     private void validateDisqualifyPRep(Address address) {
-        PRepInfo[] preps = chainScore.getPRepsInfo();
-        Context.require(getPRepInfoFromList(address, preps) != null, address.toString() + " is not p-rep");
+        var prepInfo = ChainScore.getPrepInfo(address);
+        Context.require(prepInfo != null && prepInfo.getStatus().compareTo(PRepInfo.STATUS_ACTIVE) == 0, address.toString() + " is not p-rep");
     }
 
     private void validateStepPrice(BigInteger price) {
-        var prevPrice = chainScore.getStepPrice();
+        var prevPrice = ChainScore.getStepPrice();
         var hundred = BigInteger.valueOf(100);
         var max = prevPrice.multiply(BigInteger.valueOf(125)).divide(hundred);
         var min = prevPrice.multiply(BigInteger.valueOf(75)).divide(hundred);
@@ -637,8 +611,21 @@ public class Governance {
             Context.require(Value.CPS_SCORE.equals(role) || Value.RELAY_SCORE.equals(role),
                     "Invalid network SCORE role: " + role);
             if (address == null) return;
-            Address owner = chainScore.getScoreOwner(address);
+            Address owner = ChainScore.getScoreOwner(address);
             Context.require(owner.equals(Governance.address), "Only owned by governance can be designated");
+        }
+    }
+
+    private void setTimerInfo(BigInteger penaltyHeight) {
+        TimerInfo ti = timerInfo.getOrDefault(penaltyHeight, null);
+        if (ti == null) {
+            ti = new TimerInfo(new TimerInfo.ProposalIds());
+            ti.addProposalId(Context.getTransactionHash());
+            timerInfo.set(penaltyHeight, ti);
+            ChainScore.addTimer(penaltyHeight);
+        } else {
+            ti.addProposalId(Context.getTransactionHash());
+            timerInfo.set(penaltyHeight, ti);
         }
     }
 

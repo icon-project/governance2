@@ -119,12 +119,12 @@ public class NetworkProposal {
             String title,
             String description,
             Value value,
-            PRepInfo[] prepsInfo,
             BigInteger expireHeight
     ) {
         var id = Context.getTransactionHash();
         var proposer = Context.getCaller();
         var blockHeight = BigInteger.valueOf(Context.getBlockHeight());
+        var prepsInfo = ChainScore.getMainPRepsInfo();
         BigInteger totalPower = BigInteger.ZERO;
         String proposerName = "";
         Address[] preps = new Address[prepsInfo.length];
@@ -167,13 +167,8 @@ public class NetworkProposal {
         proposalValueDict.set(id, value.data());
     }
 
-    public void cancelProposal(Proposal p) {
-        p.status = CANCELED_STATUS;
-        proposalDict.set(p.id, p);
-    }
-
-    public void applyProposal(Proposal p) {
-        p.status = APPLIED_STATUS;
+    public void setStatus(Proposal p, int status) {
+        p.status = status;
         proposalDict.set(p.id, p);
     }
 
@@ -202,9 +197,8 @@ public class NetworkProposal {
                     votingEvent = EVENT_DISAPPROVED;
                 }
             }
-            proposalDict.set(p.id, p);
-            return votingEvent;
         }
-        return EVENT_NONE;
+        proposalDict.set(p.id, p);
+        return votingEvent;
     }
 }

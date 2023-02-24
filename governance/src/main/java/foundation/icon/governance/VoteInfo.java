@@ -20,6 +20,7 @@ import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import score.Address;
+import score.Context;
 import score.ObjectReader;
 import score.ObjectWriter;
 
@@ -42,18 +43,18 @@ import java.util.Map;
 public class VoteInfo {
     final static int AGREE_VOTE = 1;
     final static int DISAGREE_VOTE = 0;
-    Agree agree;
-    Disagree disagree;
-    NoVote noVote;
+    private Vote agree;
+    private Vote disagree;
+    private NoVote noVote;
 
-    public static class Vote {
+    public static class VoterInfo {
         private final byte[] id;
         private final BigInteger timestamp;
         private final Address address;
         private final String name;
         private final BigInteger amount;
 
-        public Vote(byte[] id, BigInteger timestamp, Address address, String name, BigInteger amount) {
+        public VoterInfo(byte[] id, BigInteger timestamp, Address address, String name, BigInteger amount) {
             this.id = id;
             this.timestamp = timestamp;
             this.address = address;
@@ -61,7 +62,7 @@ public class VoteInfo {
             this.amount = amount;
         }
 
-        public static void writeObject(ObjectWriter w, Vote v) {
+        public static void writeObject(ObjectWriter w, VoterInfo v) {
             w.beginList(5);
             w.write(v.id);
             w.write(v.timestamp);
@@ -71,9 +72,9 @@ public class VoteInfo {
             w.end();
         }
 
-        public static Vote readObject(ObjectReader r) {
+        public static VoterInfo readObject(ObjectReader r) {
             r.beginList();
-            var v = new Vote(
+            var v = new VoterInfo(
                     r.readByteArray(),
                     r.readBigInteger(),
                     r.readAddress(),
@@ -105,21 +106,26 @@ public class VoteInfo {
         }
     }
 
-    public abstract static class Slot {
-        Vote[] voteList;
+    public static class Vote {
+        VoterInfo[] voterInfoList;
         BigInteger amount;
 
-        public Slot(Vote[] list, BigInteger amount) {
-            this.voteList = list;
+        public Vote() {
+            voterInfoList = new VoterInfo[0];
+            amount = BigInteger.ZERO;
+        }
+
+        public Vote(VoterInfo[] list, BigInteger amount) {
+            this.voterInfoList = list;
             this.amount = amount;
         }
 
-        public Vote[] getVoteList() {
-            return this.voteList;
+        public VoterInfo[] getVoterInfoList() {
+            return this.voterInfoList;
         }
 
-        public void setVoteList(Vote[] list) {
-            this.voteList = list;
+        public void setVoterInfoList(VoterInfo[] list) {
+            this.voterInfoList = list;
         }
 
         public BigInteger getAmount() {
@@ -131,13 +137,13 @@ public class VoteInfo {
         }
 
         public Integer size() {
-            return this.voteList.length;
+            return this.voterInfoList.length;
         }
 
         public Map<String, Object> toMap() {
-            var entries = new Map[voteList.length];
-            for (int i = 0; i < voteList.length; i++) {
-                entries[i] = voteList[i].toMap();
+            var entries = new Map[voterInfoList.length];
+            for (int i = 0; i < voterInfoList.length; i++) {
+                entries[i] = voterInfoList[i].toMap();
             }
             return Map.of(
                     "list", entries,
@@ -147,7 +153,7 @@ public class VoteInfo {
 
         public Map<String, Object> getSummary() {
             return Map.of(
-                    "count", voteList.length,
+                    "count", voterInfoList.length,
                     "amount", amount
             );
         }
@@ -159,9 +165,9 @@ public class VoteInfo {
             BigInteger total = BigDecimal.valueOf(
                     obj.getDouble("amount", 0)
             ).toBigInteger();
-            this.setAmount(total);
+            setAmount(total);
 
-            Vote[] voteList = new Vote[array.size()];
+            VoterInfo[] voterInfoList = new VoterInfo[array.size()];
             int i = 0;
             for (JsonValue item : array) {
                 JsonObject voteJson = item.asObject();
@@ -183,82 +189,39 @@ public class VoteInfo {
                         voteJson.getDouble("amount", 0)
                 ).toBigInteger();
 
-                voteList[i++] = new Vote(id, timestamp, address, name, amount);
+                voterInfoList[i++] = new VoterInfo(id, timestamp, address, name, amount);
             }
-            this.setVoteList(voteList);
-        }
-    }
-
-    public static class Agree extends Slot {
-        public Agree() {
-            super(new Vote[0], BigInteger.ZERO);
+            setVoterInfoList(voterInfoList);
         }
 
-        public static void writeObject(ObjectWriter w, Agree a) {
+        public static void writeObject(ObjectWriter w, Vote v) {
             w.beginList(2);
-            w.write(a.size());
-            for (Vote v : a.getVoteList()) {
-                w.write(v);
+            w.write(v.size());
+            for (VoterInfo voterInfo : v.getVoterInfoList()) {
+                w.write(voterInfo);
             }
-            w.write(a.getAmount());
+            w.write(v.getAmount());
             w.end();
         }
 
-        public static Agree readObject(ObjectReader r) {
+        public static Vote readObject(ObjectReader r) {
             r.beginList();
-            var a = new Agree();
             int size = r.readInt();
-            Vote[] voteList = new Vote[size];
+            VoterInfo[] voterInfoList = new VoterInfo[size];
 
             for (int i = 0; i < size; i++) {
-                Vote v = r.read(Vote.class);
-                voteList[i] = v;
+                VoterInfo v = r.read(VoterInfo.class);
+                voterInfoList[i] = v;
             }
-
-            a.setVoteList(voteList);
-            a.setAmount(r.readBigInteger());
+            var a = new Vote(voterInfoList, r.readBigInteger());
             r.end();
             return a;
         }
     }
 
-
-    public static class Disagree extends Slot {
-        public Disagree() {
-            super(new Vote[0], BigInteger.ZERO);
-        }
-
-        public static void writeObject(ObjectWriter w, Disagree d) {
-            w.beginList(2);
-            w.write(d.size());
-            for (Vote v : d.getVoteList()) {
-                w.write(v);
-            }
-            w.write(d.getAmount());
-            w.end();
-        }
-
-        public static Disagree readObject(ObjectReader r) {
-            r.beginList();
-            var d = new Disagree();
-            int size = r.readInt();
-            Vote[] voteList = new Vote[size];
-
-            for (int i = 0; i < size; i++) {
-                Vote v = r.read(Vote.class);
-                voteList[i] = v;
-            }
-
-            d.setVoteList(voteList);
-            d.setAmount(r.readBigInteger());
-            r.end();
-            return d;
-        }
-    }
-
     public static class NoVote {
-        Address[] list;
-        BigInteger amount;
+        private Address[] list;
+        private BigInteger amount;
 
         public NoVote() {
             this.list = new Address[0];
@@ -268,7 +231,7 @@ public class VoteInfo {
         public static void writeObject(ObjectWriter w, NoVote n) {
             w.beginList(2);
             w.write(n.size());
-            for (Address v : n.getAddressList()) {
+            for (Address v : n.list) {
                 w.write(v);
             }
             w.write(n.getAmount());
@@ -290,10 +253,6 @@ public class VoteInfo {
             n.setAmount(r.readBigInteger());
             r.end();
             return n;
-        }
-
-        public Address[] getAddressList() {
-            return this.list;
         }
 
         public void setAddressList(Address[] list) {
@@ -347,14 +306,14 @@ public class VoteInfo {
     }
 
     public VoteInfo() {
-        this.agree = new Agree();
-        this.disagree = new Disagree();
+        this.agree = new Vote();
+        this.disagree = new Vote();
         this.noVote = new NoVote();
     }
 
     public VoteInfo(
-            Agree a,
-            Disagree d,
+            Vote a,
+            Vote d,
             NoVote n
     ) {
         this.agree = a;
@@ -373,8 +332,8 @@ public class VoteInfo {
     public static VoteInfo readObject(ObjectReader r) {
         r.beginList();
         var v = new VoteInfo(
-                r.read(Agree.class),
-                r.read(Disagree.class),
+                r.read(Vote.class),
+                r.read(Vote.class),
                 r.read(NoVote.class)
         );
         r.end();
@@ -387,6 +346,10 @@ public class VoteInfo {
 
     public void setNoVoteList(Address[] addresses) {
         noVote.setAddressList(addresses);
+    }
+
+    public Address[] getNoVoteList() {
+        return noVote.list;
     }
 
     public Map<String, Map<String, Object>> toMap() {
@@ -425,25 +388,17 @@ public class VoteInfo {
         return disagree.getAmount();
     }
 
-    private void buildAgreeWithJson(JsonValue jsonValue) {
-        this.agree.readJson(jsonValue);
-    }
-
-    private void buildDisagreeWithJson(JsonValue jsonValue) {
-        this.disagree.readJson(jsonValue);
-    }
-
-    private void buildNoVoteWithJson(JsonValue jsonValue) {
-        this.noVote.readJson(jsonValue);
+    private void buildVote(Vote vote, JsonValue jsonValue) {
+        vote.readJson(jsonValue);
     }
 
     private void build(JsonObject jso) {
-        this.buildAgreeWithJson(jso.get("agree"));
-        this.buildDisagreeWithJson(jso.get("disagree"));
-        this.buildNoVoteWithJson(jso.get("noVote"));
+        buildVote(agree, jso.get("agree"));
+        buildVote(disagree, jso.get("disagree"));
+        noVote.readJson(jso.get("noVote"));
     }
 
-    public static VoteInfo makeVoterWithJson(JsonValue jsonValue) {
+    public static VoteInfo makeVoter(JsonValue jsonValue) {
         JsonObject voteJson = jsonValue.asObject();
         VoteInfo v = new VoteInfo();
         v.build(voteJson);
@@ -451,14 +406,14 @@ public class VoteInfo {
     }
 
     public boolean agreed(Address voter) {
-        for (Vote v : agree.voteList) {
+        for (VoterInfo v : agree.voterInfoList) {
             if (v.address.equals(voter)) return true;
         }
         return false;
     }
 
     public boolean disagreed(Address voter) {
-        for (Vote v : disagree.voteList) {
+        for (VoterInfo v : disagree.voterInfoList) {
             if (v.address.equals(voter)) return true;
         }
         return false;
@@ -469,5 +424,45 @@ public class VoteInfo {
             if (a.equals(voter)) return true;
         }
         return false;
+    }
+
+    void vote(PRepInfo voter, int vote) {
+        VoteInfo.Vote v;
+        if (vote == VoteInfo.AGREE_VOTE) {
+            v = agree;
+        } else {
+            v = disagree;
+        }
+        VoteInfo.VoterInfo[] votedInfo = new VoteInfo.VoterInfo[v.voterInfoList.length + 1];
+        VoteInfo.VoterInfo voterInfo = new VoteInfo.VoterInfo(
+                Context.getTransactionHash(),
+                BigInteger.valueOf(Context.getTransactionTimestamp()),
+                voter.getAddress(),
+                voter.getName(),
+                voter.power()
+        );
+        System.arraycopy(v.voterInfoList, 0, votedInfo, 0, v.voterInfoList.length);
+        votedInfo[v.voterInfoList.length] = voterInfo;
+        v.setVoterInfoList(votedInfo);
+
+        var votedAmount = v.getAmount();
+        v.setAmount(votedAmount.add(voter.power()));
+
+        updateNoVote(voter);
+    }
+
+    private void updateNoVote(PRepInfo prep) {
+        var addresses = noVote.list;
+        int size = sizeofNoVote();
+        int index = 0;
+        var updatedList = new Address[size - 1];
+        for (int i = 0; i < size; i++) {
+            if (!prep.getAddress().equals(addresses[i])) {
+                updatedList[index++] = addresses[i];
+            }
+        }
+        noVote.setAddressList(updatedList);
+        var amount = noVote.getAmount();
+        noVote.setAmount(amount.subtract(prep.power()));
     }
 }
