@@ -117,7 +117,7 @@ public class Governance {
 
     @External(readonly = true)
     public String getVersion() {
-        return "2.1.3";
+        return "2.2.0";
     }
 
     @External(readonly = true)
