@@ -19,12 +19,14 @@ package foundation.icon.governance;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonValue;
+import com.iconloop.score.test.ManualRevertException;
 import org.junit.jupiter.api.Test;
-import score.UserRevertedException;
 
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GovernanceTest {
 
@@ -51,7 +53,7 @@ public class GovernanceTest {
         for (String test: invalid) {
             JsonValue json = Json.parse(test);
             JsonArray values = json.asArray();
-            assertThrows(UserRevertedException.class, () -> gov.validateProposals(values));
+            assertThrows(ManualRevertException.class, () -> gov.validateProposals(values));
         }
     }
 

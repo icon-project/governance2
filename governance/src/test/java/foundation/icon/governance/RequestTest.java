@@ -19,8 +19,8 @@ package foundation.icon.governance;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
+import com.iconloop.score.test.ManualRevertException;
 import org.junit.jupiter.api.Test;
-import score.UserRevertedException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -49,7 +49,7 @@ public class RequestTest {
         for (String test: invalid) {
             JsonValue json = Json.parse(test);
             JsonObject jsonObject = json.asObject();
-            assertThrows(UserRevertedException.class, () -> Request.fromJson(jsonObject));
+            assertThrows(ManualRevertException.class, () -> Request.fromJson(jsonObject));
         }
     }
 }
