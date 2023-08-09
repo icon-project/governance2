@@ -249,26 +249,26 @@ public class Value {
     }
 
     public static class StepCosts {
-        final static String STEP_TYPE_SCHEMA = "schema";
-        final static String STEP_TYPE_DEFAULT = "default";
-        final static String STEP_TYPE_INPUT = "input";
-        final static String STEP_TYPE_CONTRACT_CALL = "contractCall";
-        final static String STEP_TYPE_CONTRACT_CREATE = "contractCreate";
-        final static String STEP_TYPE_CONTRACT_UPDATE = "contractUpdate";
-        final static String STEP_TYPE_CONTRACT_SET = "contractSet";
-        final static String STEP_TYPE_GET = "get";
-        final static String STEP_TYPE_SET = "set";
-        final static String STEP_TYPE_DELETE = "delete";
-        final static String STEP_TYPE_API_CALL = "apiCall";
-        final static String STEP_TYPE_GET_BASE = "getBase";
-        final static String STEP_TYPE_SET_BASE = "setBase";
-        final static String STEP_TYPE_DELETE_BASE = "deleteBase";
-        final static String STEP_TYPE_LOG_BASE = "logBase";
-        final static String STEP_TYPE_LOG = "log";
-        final static String STEP_TYPE_CONTRACT_DESTRUCT = "contractDestruct";
-        final static String STEP_TYPE_REPLACE = "replace";
-        final static String STEP_TYPE_EVENT_LOG = "eventLog";
-        final static String[] STEP_COSTS = {
+        static final String STEP_TYPE_SCHEMA = "schema";
+        static final String STEP_TYPE_DEFAULT = "default";
+        static final String STEP_TYPE_INPUT = "input";
+        static final String STEP_TYPE_CONTRACT_CALL = "contractCall";
+        static final String STEP_TYPE_CONTRACT_CREATE = "contractCreate";
+        static final String STEP_TYPE_CONTRACT_UPDATE = "contractUpdate";
+        static final String STEP_TYPE_CONTRACT_SET = "contractSet";
+        static final String STEP_TYPE_GET = "get";
+        static final String STEP_TYPE_SET = "set";
+        static final String STEP_TYPE_DELETE = "delete";
+        static final String STEP_TYPE_API_CALL = "apiCall";
+        static final String STEP_TYPE_GET_BASE = "getBase";
+        static final String STEP_TYPE_SET_BASE = "setBase";
+        static final String STEP_TYPE_DELETE_BASE = "deleteBase";
+        static final String STEP_TYPE_LOG_BASE = "logBase";
+        static final String STEP_TYPE_LOG = "log";
+        static final String STEP_TYPE_CONTRACT_DESTRUCT = "contractDestruct";
+        static final String STEP_TYPE_REPLACE = "replace";
+        static final String STEP_TYPE_EVENT_LOG = "eventLog";
+        static final String[] STEP_COSTS = {
                 STEP_TYPE_SCHEMA, STEP_TYPE_DEFAULT, STEP_TYPE_CONTRACT_CALL, STEP_TYPE_CONTRACT_CREATE,
                 STEP_TYPE_CONTRACT_UPDATE, STEP_TYPE_CONTRACT_SET, STEP_TYPE_GET, STEP_TYPE_SET, STEP_TYPE_DELETE,
                 STEP_TYPE_INPUT, STEP_TYPE_API_CALL, STEP_TYPE_GET_BASE, STEP_TYPE_SET_BASE, STEP_TYPE_DELETE_BASE,
@@ -374,11 +374,11 @@ public class Value {
     }
 
     public static class RewardFunds {
-        final static String I_PREP = "iprep";
-        final static String I_CPS = "icps";
-        final static String I_RELAY = "irelay";
-        final static String I_VOTER = "ivoter";
-        final static String[] VALUES = {I_PREP, I_CPS, I_RELAY, I_VOTER};
+        static final String I_PREP = "iprep";
+        static final String I_CPS = "icps";
+        static final String I_RELAY = "irelay";
+        static final String I_VOTER = "ivoter";
+        static final String[] VALUES = {I_PREP, I_CPS, I_RELAY, I_VOTER};
         RewardFund[] rewardFunds;
 
         public static class RewardFund {

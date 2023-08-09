@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Map;
 
 class PRepInfo {
-    public final static BigInteger GRADE_MAIN = BigInteger.ZERO;
-    public final static BigInteger GRADE_SUB = BigInteger.ONE;
-    public final static BigInteger STATUS_ACTIVE = BigInteger.ZERO;
+    public static final BigInteger GRADE_MAIN = BigInteger.ZERO;
+    public static final BigInteger GRADE_SUB = BigInteger.ONE;
+    public static final BigInteger STATUS_ACTIVE = BigInteger.ZERO;
     private final String name;
     private final Address address;
     private final BigInteger power;
@@ -66,13 +66,12 @@ class PRepInfo {
     public BigInteger getStatus() {
         return status;
     }
-
 }
 
 class ChainScore {
     static final Address CHAIN_SCORE = Address.fromString("cx0000000000000000000000000000000000000000");
 
-    static private void validateHash(byte[] value) {
+    private static void validateHash(byte[] value) {
         Context.require(value.length == 32);
     }
 
@@ -225,7 +224,7 @@ class ChainScore {
         }
     }
 
-    static private PRepInfo[] getPRepInfolist(Map<String, Object> preps) {
+    private static PRepInfo[] getPRepInfolist(Map<String, Object> preps) {
         List<Map<String, Object>> info = (List<Map<String, Object>>) preps.get("preps");
 
         PRepInfo[] prepInfo = new PRepInfo[info.size()];
@@ -244,5 +243,4 @@ class ChainScore {
 
         return prepInfo;
     }
-
 }

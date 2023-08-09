@@ -35,21 +35,21 @@ public class NetworkProposal {
     private final DictDB<byte[], byte[]> proposalValueDict = Context.newDictDB("proposal_values", byte[].class);
     private final ArrayDB<byte[]> proposalKeys = Context.newArrayDB("proposal_keys", byte[].class);
 
-    public final static int VOTING_STATUS = 0;
-    public final static int APPLIED_STATUS = 1;
-    public final static int DISAPPROVED_STATUS = 2;
-    public final static int CANCELED_STATUS = 3;
-    public final static int APPROVED_STATUS = 4;
-    public final static int EXPIRED_STATUS = 5;
-    public final static int STATUS_MIN = VOTING_STATUS;
-    public final static int STATUS_MAX = EXPIRED_STATUS;
+    public static final int VOTING_STATUS = 0;
+    public static final int APPLIED_STATUS = 1;
+    public static final int DISAPPROVED_STATUS = 2;
+    public static final int CANCELED_STATUS = 3;
+    public static final int APPROVED_STATUS = 4;
+    public static final int EXPIRED_STATUS = 5;
+    public static final int STATUS_MIN = VOTING_STATUS;
+    public static final int STATUS_MAX = EXPIRED_STATUS;
 
-    public final static int GET_PROPOSALS_FILTER_ALL = 100;
-    public final static int GET_PROPOSALS_MAX_SIZE = 10;
+    public static final int GET_PROPOSALS_FILTER_ALL = 100;
+    public static final int GET_PROPOSALS_MAX_SIZE = 10;
 
-    public final static int EVENT_NONE = 0;
-    public final static int EVENT_APPROVED = 1;
-    public final static int EVENT_DISAPPROVED = 2;
+    public static final int EVENT_NONE = 0;
+    public static final int EVENT_APPROVED = 1;
+    public static final int EVENT_DISAPPROVED = 2;
 
     public Proposal getProposal(byte[] id) {
         byte[] data = proposalList.getOrDefault(id, new byte[0]);

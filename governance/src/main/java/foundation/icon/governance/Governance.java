@@ -20,7 +20,12 @@ import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
-import score.*;
+import score.Address;
+import score.ArrayDB;
+import score.Context;
+import score.DictDB;
+import score.ObjectReader;
+import score.ObjectWriter;
 import score.annotation.EventLog;
 import score.annotation.External;
 import score.annotation.Optional;
@@ -30,12 +35,12 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
-
 public class Governance {
     private static final BigInteger EXA = BigInteger.valueOf(1_000_000_000_000_000_000L);
     private static final BigInteger PROPOSAL_REGISTRATION_FEE = BigInteger.valueOf(100).multiply(EXA);
-    private final static Address address = Address.fromString("cx0000000000000000000000000000000000000001");
-    private final static NetworkProposal networkProposal = new NetworkProposal();
+    private static final Address ADDRESS = Address.fromString("cx0000000000000000000000000000000000000001");
+    private static final NetworkProposal networkProposal = new NetworkProposal();
+
     private final ArrayDB<Address> auditors = Context.newArrayDB("auditor_list", Address.class);
     private final DictDB<BigInteger, TimerInfo> timerInfo = Context.newDictDB("timerInfo", TimerInfo.class);
 
@@ -545,7 +550,7 @@ public class Governance {
         if (type != Value.FREEZE_SCORE && type != Value.UNFREEZE_SCORE) {
             Context.revert("invalid value type : " + type);
         } else if (type == Value.FREEZE_SCORE) {
-            if (address.equals(Governance.address)) {
+            if (address.equals(Governance.ADDRESS)) {
                 Context.revert("Can not freeze governance SCORE");
             }
         }
@@ -589,7 +594,7 @@ public class Governance {
                     "Invalid network SCORE role: " + role);
             if (address == null) return;
             Address owner = ChainScore.getScoreOwner(address);
-            Context.require(owner.equals(Governance.address), "Only owned by governance can be designated");
+            Context.require(owner.equals(Governance.ADDRESS), "Only owned by governance can be designated");
         }
     }
 
@@ -747,5 +752,4 @@ public class Governance {
 
     @EventLog(indexed=0)
     public void NetworkProposalExpired(byte[] id) {}
-
 }

@@ -41,8 +41,8 @@ import java.util.Map;
 */
 
 public class VoteInfo {
-    final static int AGREE_VOTE = 1;
-    final static int DISAGREE_VOTE = 0;
+    static final int AGREE_VOTE = 1;
+    static final int DISAGREE_VOTE = 0;
     private Vote agree;
     private Vote disagree;
     private NoVote noVote;
