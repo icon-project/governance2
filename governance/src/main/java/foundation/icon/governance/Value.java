@@ -365,7 +365,7 @@ public class Value {
 
         public Map<String, Object> toMap() {
             var length = costs.length;
-            Map.Entry[] entries = new Map.Entry[length];
+            var entries = new Map.Entry[length];
             for (int i = 0; i < length; i++) {
                 entries[i] = Map.entry(costs[i].type, costs[i].cost);
             }
@@ -430,7 +430,7 @@ public class Value {
                 var fund = Converter.toInteger(value);
                 rewardFunds[i] = new RewardFund(key, fund);
             }
-            Context.require(validKeys.size() == 0, "InvalidFundType");
+            Context.require(validKeys.isEmpty(), "InvalidFundType");
             return new RewardFunds(rewardFunds);
         }
 
@@ -461,7 +461,7 @@ public class Value {
 
         public Map<String, Object> toMap() {
             var length = rewardFunds.length;
-            Map.Entry[] entries = new Map.Entry[length];
+            var entries = new Map.Entry[length];
             for (int i = 0; i < length; i++) {
                 entries[i] = Map.entry(rewardFunds[i].type, rewardFunds[i].value);
             }

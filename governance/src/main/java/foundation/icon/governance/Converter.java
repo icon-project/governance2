@@ -46,7 +46,7 @@ class Converter {
     }
 
     public static Address toAddress(String value) {
-        if (value == null || value.equals("")) {
+        if (value == null || value.isEmpty()) {
             return null;
         }
         return Address.fromString(value);

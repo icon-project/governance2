@@ -43,9 +43,9 @@ import java.util.Map;
 public class VoteInfo {
     static final int AGREE_VOTE = 1;
     static final int DISAGREE_VOTE = 0;
-    private Vote agree;
-    private Vote disagree;
-    private NoVote noVote;
+    private final Vote agree;
+    private final Vote disagree;
+    private final NoVote noVote;
 
     public static class VoterInfo {
         private final byte[] id;

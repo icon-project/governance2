@@ -37,7 +37,8 @@ import java.util.Map;
 
 public class Governance {
     private static final BigInteger EXA = BigInteger.valueOf(1_000_000_000_000_000_000L);
-    private static final BigInteger PROPOSAL_REGISTRATION_FEE = BigInteger.valueOf(100).multiply(EXA);
+    private static final BigInteger ONE_HUNDRED = BigInteger.valueOf(100);
+    private static final BigInteger PROPOSAL_REGISTRATION_FEE = ONE_HUNDRED.multiply(EXA);
     private static final Address ADDRESS = Address.fromString("cx0000000000000000000000000000000000000001");
     private static final NetworkProposal networkProposal = new NetworkProposal();
 
@@ -529,7 +530,7 @@ public class Governance {
                 case Value.MISSED_NETWORK_PROPOSAL_VOTE_SLASHING_RATE:
                     Context.require(size == 1);
                     var slashingRate = Converter.toInteger(value.getString("slashingRate", null));
-                    Context.require(slashingRate.compareTo(BigInteger.ZERO) >= 0 && slashingRate.compareTo(BigInteger.valueOf(100)) <= 0,
+                    Context.require(slashingRate.compareTo(BigInteger.ZERO) >= 0 && slashingRate.compareTo(ONE_HUNDRED) <= 0,
                             "slashing rate invalid");
                     continue;
                 case Value.CALL:
@@ -563,10 +564,8 @@ public class Governance {
 
     private void validateStepPrice(BigInteger price) {
         var prevPrice = ChainScore.getStepPrice();
-        var hundred = BigInteger.valueOf(100);
-        var max = prevPrice.multiply(BigInteger.valueOf(125)).divide(hundred);
-        var min = prevPrice.multiply(BigInteger.valueOf(75)).divide(hundred);
-
+        var max = prevPrice.multiply(BigInteger.valueOf(125)).divide(ONE_HUNDRED);
+        var min = prevPrice.multiply(BigInteger.valueOf(75)).divide(ONE_HUNDRED);
         Context.require(price.compareTo(min) >= 0 && price.compareTo(max) <= 0, "Invalid step price: " + price);
     }
 
@@ -579,7 +578,7 @@ public class Governance {
             }
             sum = sum.add(value.getValue());
         }
-        Context.require(sum.compareTo(BigInteger.valueOf(100)) == 0, "sum of reward funds must be 100");
+        Context.require(sum.compareTo(ONE_HUNDRED) == 0, "sum of reward funds must be 100");
     }
 
     private void validateDesignationProposal(JsonObject value) {

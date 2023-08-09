@@ -1,3 +1,19 @@
+/*
+ * Copyright 2022 ICON Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package foundation.icon.governance;
 
 import com.eclipsesource.json.Json;
@@ -12,9 +28,9 @@ import java.math.BigInteger;
 import java.util.Map;
 
 public class Request {
-    private Address to;
-    private String method;
-    private Param[] params;
+    private final Address to;
+    private final String method;
+    private final Param[] params;
 
     public Request(Address to, String method, Param[] params) {
         this.to = to;
@@ -23,9 +39,9 @@ public class Request {
     }
 
     public static class Param {
-        private String type;
-        private String value;
-        private Map<String, String> fields;
+        private final String type;
+        private final String value;
+        private final Map<String, String> fields;
 
         public Param(String type, String value, Map<String, String> fields) {
             this.type = type;
@@ -55,17 +71,7 @@ public class Request {
                     throw new IllegalArgumentException("invalid value");
                 }
                 case "bytes": {
-                    if (value.startsWith("0x") && (value.length() % 2 == 0)) {
-                        String hex = value.substring(2);
-                        int len = hex.length() / 2;
-                        byte[] bytes = new byte[len];
-                        for (int i = 0; i < len; i++) {
-                            int j = i * 2;
-                            bytes[i] = (byte) Integer.parseInt(hex.substring(j, j + 2), 16);
-                        }
-                        return bytes;
-                    }
-                    throw new IllegalArgumentException("invalid value");
+                    return Converter.hexToBytes(value);
                 }
                 case "struct": {
                     var v = Json.parse(value).asObject();
