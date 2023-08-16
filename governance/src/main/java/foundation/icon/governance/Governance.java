@@ -282,8 +282,8 @@ public class Governance {
         Context.require(!p.isExpired(blockHeight), "This proposal has already expired");
         Context.require(p.getStatus(blockHeight) != NetworkProposal.CANCELED_STATUS, "This proposal has canceled");
 
-        Context.require(p.isInNoVote(sender), "No permission - only for prep were main prep when network registered");
         Context.require(!p.agreed(sender) && !p.disagreed(sender), "Already voted");
+        Context.require(p.isInNoVote(sender), "No permission - only for prep were main prep when network registered");
 
         var event = networkProposal.voteProposal(p, vote, prep);
         NetworkProposalVoted(id, vote, sender);

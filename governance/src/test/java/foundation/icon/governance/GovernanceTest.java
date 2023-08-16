@@ -27,6 +27,7 @@ import com.iconloop.score.test.TestBase;
 import foundation.icon.governance.mock.ChainScore;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import score.UserRevertedException;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -72,6 +73,19 @@ public class GovernanceTest extends TestBase {
         for (String key : validProposals.keySet()) {
             assertDoesNotThrow(() -> registerProposal(key));
         }
+    }
+
+    @Test
+    void voteProposal() {
+        // registerProposal first
+        var id = registerProposal("Text");
+        // 1st vote (success)
+        assertDoesNotThrow(() ->
+                govScore.invoke(owner, "voteProposal", id, 1));
+        // 2nd vote (should revert)
+        var reverted = assertThrows(UserRevertedException.class, () ->
+                govScore.invoke(owner, "voteProposal", id, 1));
+        assertTrue(reverted.getMessage().contains("Already voted"));
     }
 
     @Test
