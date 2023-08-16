@@ -19,37 +19,70 @@ package foundation.icon.governance;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonValue;
+import com.iconloop.score.test.Account;
 import com.iconloop.score.test.ManualRevertException;
+import com.iconloop.score.test.Score;
+import com.iconloop.score.test.ServiceManager;
+import com.iconloop.score.test.TestBase;
+import foundation.icon.governance.mock.ChainScore;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class GovernanceTest {
+public class GovernanceTest extends TestBase {
+    private static final BigInteger ONE_HUNDRED = BigInteger.valueOf(100);
+    private static final ServiceManager sm = getServiceManager();
+    private static final Account owner = sm.createAccount(1000);
+    private static Score govScore;
+
+    private static final Map<String, String> validProposals = Map.ofEntries(
+            Map.entry("Text", "[{\"name\": \"text\", \"value\": {\"text\": \"test proposal\"}}]"),
+            Map.entry("Revision", "[{\"name\": \"revision\", \"value\": {\"revision\": \"0x15\"}}]"),
+            Map.entry("NetworkScoreDesignation", "[{\"name\": \"networkScoreDesignation\", \"value\":" +
+                    "{\"networkScores\":[{\"role\":\"cps\",\"address\":\"cxdca1178010b5368aea929ad5c06abee64b91acc2\"}]}}]"),
+            Map.entry("RewardFundAllocation", "[{\"name\": \"rewardFundsAllocation\", \"value\":" +
+                    "{\"rewardFunds\":{\"iprep\":\"0xd\",\"icps\":\"0xa\",\"irelay\":\"0x0\",\"ivoter\":\"0x4d\"}}}]")
+    );
+
+    @BeforeAll
+    public static void setup() throws Exception {
+        // install ChainScore mock
+        sm.deploy(ChainScore.ADDRESS, owner, new ChainScore());
+        // then deploy gov score
+        govScore = sm.deploy(owner, Governance.class);
+    }
+
+    byte[] registerProposal(String key) {
+        System.out.println("[registerProposal] " + key + "=" + validProposals.get(key));
+        govScore.invoke(owner, ONE_HUNDRED.multiply(ICX),
+                "registerProposal", key, "test proposal for " + key, validProposals.get(key).getBytes());
+        return sm.getBlock().hashOfTransactionAt(0);
+    }
 
     @Test
-    void validateProposal() {
-        Governance gov = new Governance();
-        String[] valid = new String[]{
-                "[{\"name\": \"text\", \"value\": {\"text\": \"test proposal\"}}]",
-                "[{\"name\": \"rewardFundsAllocation\", \"value\":" + "{\"rewardFunds\": {" +
-                        "\"iprep\":\"0x10\", \"icps\":\"0xa\", \"irelay\":\"0xa\", \"ivoter\":\"0x40\"}}}]",
-        };
-        for (String test: valid) {
-            JsonValue json = Json.parse(test);
-            JsonArray values = json.asArray();
-            gov.validateProposals(values);
+    void registerProposal() {
+        for (String key : validProposals.keySet()) {
+            assertDoesNotThrow(() -> registerProposal(key));
         }
+    }
 
+    @Test
+    void validateProposalsNegative() {
         String[] invalid = new String[]{
                 "[{\"name\": \"rewardFundsAllocation\", \"value\":" + "{\"rewardFunds\": {\"iprep\": \"0x64\"}}}]",
                 "[{\"name\": \"rewardFundsAllocation\", \"value\":" + "{\"rewardFunds\": {" +
                         "\"iprep\":\"0x10\", \"icps\":\"0x10\", \"irelay\":\"0xa\", \"ivoter\":\"0x40\"}}}]",
                 "[{\"name\": \"text\", \"value\": {\"text\": \"test proposal\"}, \"invalidKey\": \"invalid value\"}]",
         };
+        Governance gov = new Governance();
         for (String test: invalid) {
             JsonValue json = Json.parse(test);
             JsonArray values = json.asArray();
