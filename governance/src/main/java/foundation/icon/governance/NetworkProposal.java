@@ -144,8 +144,6 @@ public class NetworkProposal {
         v.setAmountForNoVote(totalPower);
         v.setNoVoteList(preps);
 
-        Context.println("NetworkProposal(" + " ExpireVoting: " + expireHeight);
-
         Proposal proposal = new Proposal(
                 id,
                 proposer,
