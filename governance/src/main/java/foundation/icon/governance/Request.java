@@ -113,6 +113,14 @@ public class Request {
                     }
                     return list;
                 }
+                case "[]bytes": {
+                    var array = Json.parse(value).asArray();
+                    var list = new ArrayList<byte[]>();
+                    for (var v : array) {
+                        list.add(Converter.hexToBytes(v.asString()));
+                    }
+                    return list;
+                }
             }
             throw new IllegalArgumentException("unknown param type");
         }

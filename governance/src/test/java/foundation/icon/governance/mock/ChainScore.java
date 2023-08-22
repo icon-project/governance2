@@ -176,7 +176,7 @@ public class ChainScore {
     }
 
     @External
-    public void testArrayCall(String[] strs, BigInteger[] ints, boolean[] bools) {
+    public void testArrayCall(String[] strs, BigInteger[] ints, boolean[] bools, byte[][] bytes) {
         Context.println(">>> ChainScore.testArrayCall");
         var sb = new StringBuilder("String[]{");
         for (String s : strs) {
@@ -201,5 +201,13 @@ public class ChainScore {
         sb3.deleteCharAt(sb3.length() - 1);
         sb3.append("}");
         Context.println("  - " + sb3);
+
+        var sb4 = new StringBuilder("bytes[]{");
+        for (byte[] b : bytes) {
+            sb4.append(Converter.bytesToHex(b)).append(",");
+        }
+        sb4.deleteCharAt(sb4.length() - 1);
+        sb4.append("}");
+        Context.println("  - " + sb4);
     }
 }
