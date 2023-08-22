@@ -20,7 +20,22 @@ import score.Address;
 
 import java.math.BigInteger;
 
-class Converter {
+public class Converter {
+    private static final char[] HEX_ARRAY = "0123456789abcdef".toCharArray();
+
+    public static String bytesToHex(byte[] bytes) {
+        if (bytes == null) {
+            return null;
+        }
+        char[] hexChars = new char[bytes.length * 2];
+        for (int i = 0; i < bytes.length; i++) {
+            int v = bytes[i] & 0xFF;
+            hexChars[i * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[i * 2 + 1] = HEX_ARRAY[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+
     public static byte[] hexToBytes(String value) {
         if (value != null && value.startsWith("0x") && (value.length() % 2 == 0)) {
             String hex = value.substring(2);
@@ -50,5 +65,14 @@ class Converter {
             return null;
         }
         return Address.fromString(value);
+    }
+
+    public static Boolean toBoolean(String value) {
+        if (value.equals("0x0") || value.equals("false")) {
+            return Boolean.FALSE;
+        } else if (value.equals("0x1") || value.equals("true")) {
+            return Boolean.TRUE;
+        }
+        throw new IllegalArgumentException("invalid bool value");
     }
 }

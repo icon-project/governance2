@@ -534,7 +534,9 @@ public class Governance {
                             "slashing rate invalid");
                     continue;
                 case Value.CALL:
-                    Request.fromJson(value);
+                    var request = Request.fromJson(value);
+                    // prevalidate the parameter conversion
+                    request.getParams();
                     continue;
                 default:
                     Context.revert("undefined proposal type");

@@ -63,79 +63,67 @@ public class Request {
                     return Converter.toInteger(value);
                 }
                 case "bool": {
-                    if (value.equals("0x0") || value.equals("false")) {
-                        return Boolean.FALSE;
-                    } else if (value.equals("0x1") || value.equals("true")) {
-                        return Boolean.TRUE;
-                    }
-                    throw new IllegalArgumentException("invalid value");
+                    return Converter.toBoolean(value);
                 }
                 case "bytes": {
                     return Converter.hexToBytes(value);
                 }
                 case "struct": {
                     var v = Json.parse(value).asObject();
-                    var map = new HashMap<String, Object>();
-                    for (String key : fields.keySet()) {
-                        var t = fields.get(key);
-                        map.put(key, convertParam(t, v.get(key).asString(), fields));
-                    }
-                    return map;
+                    return convertToHashMap(v, fields);
                 }
                 case "[]struct": {
-                    var v = Json.parse(value).asArray();
+                    var array = Json.parse(value).asArray();
                     var list = new ArrayList<Map<String, Object>>();
-                    for (int i = 0; i < v.size(); i++) {
-                        var map = new HashMap<String, Object>();
-                        for (String key : fields.keySet()) {
-                            var t = fields.get(key);
-                            map.put(key, convertParam(t, v.get(i).asObject().get(key).asString(), fields));
-                        }
-                        list.add(map);
+                    for (var item : array) {
+                        var v = item.asObject();
+                        list.add(convertToHashMap(v, fields));
                     }
                     return list;
                 }
                 case "[]Address": {
-                    var v = Json.parse(value).asArray();
+                    var array = Json.parse(value).asArray();
                     var list = new ArrayList<Address>();
-                    for (JsonValue jsonValue : v) {
-                        list.add(Address.fromString(jsonValue.asString()));
+                    for (var v : array) {
+                        list.add(Address.fromString(v.asString()));
                     }
                     return list;
                 }
                 case "[]int": {
-                    var v = Json.parse(value).asArray();
+                    var array = Json.parse(value).asArray();
                     var list = new ArrayList<BigInteger>();
-                    for (JsonValue jsonValue : v) {
-                        list.add(Converter.toInteger(jsonValue.asString()));
+                    for (var v : array) {
+                        list.add(Converter.toInteger(v.asString()));
                     }
                     return list;
                 }
                 case "[]bool": {
-                    var v = Json.parse(value).asArray();
+                    var array = Json.parse(value).asArray();
                     var list = new ArrayList<Boolean>();
-                    for (JsonValue jsonValue : v) {
-                        String strVal = jsonValue.asString();
-                        if (strVal.equals("0x0") || strVal.equals("false")) {
-                            list.add(Boolean.FALSE);
-                        } else if (strVal.equals("0x1") || strVal.equals("true")) {
-                            list.add(Boolean.TRUE);
-                        } else {
-                            throw new IllegalArgumentException("invalid value");
-                        }
+                    for (var v : array) {
+                        list.add(Converter.toBoolean(v.asString()));
                     }
                     return list;
                 }
                 case "[]str": {
-                    var v = Json.parse(value).asArray();
+                    var array = Json.parse(value).asArray();
                     var list = new ArrayList<String>();
-                    for (JsonValue jsonValue : v) {
-                        list.add(jsonValue.asString());
+                    for (var v : array) {
+                        list.add(v.asString());
                     }
                     return list;
                 }
             }
-            throw new IllegalArgumentException("Unknown type");
+            throw new IllegalArgumentException("unknown param type");
+        }
+
+        private static HashMap<String, Object> convertToHashMap(JsonObject v, Map<String, String> fields) {
+            var map = new HashMap<String, Object>();
+            for (String key : fields.keySet()) {
+                var type = fields.get(key);
+                map.put(key, convertParam(type, v.get(key).asString(), fields));
+            }
+            return map;
         }
     }
 

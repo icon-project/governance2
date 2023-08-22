@@ -16,6 +16,7 @@
 
 package foundation.icon.governance.mock;
 
+import foundation.icon.governance.Converter;
 import score.Address;
 import score.Context;
 import score.annotation.External;
@@ -33,6 +34,11 @@ public class ChainScore {
     @External
     public void burn() {
         Context.println(">>> ChainScore.burn, value=" + Context.getValue());
+    }
+
+    @External
+    public void claimIScore() {
+        Context.println(">>> ChainScore.claimIScore");
     }
 
     @External
@@ -90,5 +96,110 @@ public class ChainScore {
                 )
             )
         );
+    }
+
+    @External
+    public void openBTPNetwork(String netType, String name, Address owner) {
+        Context.println(">>> ChainScore.openBTPNetwork, netType=" + netType + ", name=" + name + ", owner=" + owner);
+    }
+
+    @External
+    public void setRewardFundAllocation(BigInteger iprep, BigInteger icps, BigInteger irelay, BigInteger ivoter) {
+        var sum = iprep.add(icps).add(irelay).add(ivoter);
+        Context.println(">>> ChainScore.setRewardFundAllocation, sum=" + sum);
+        Context.println("  - iprep=" + iprep + ", icps=" + icps + ", irelay=" + irelay + ", ivoter=" + ivoter);
+        Context.require(sum.equals(BigInteger.valueOf(100)));
+    }
+
+    @External
+    public void penalizeNonvoters(Address[] preps) {
+        StringBuilder prepAddresses = new StringBuilder("[");
+        int count = preps.length;
+        for (Address p : preps) {
+            prepAddresses.append(p.toString());
+            if (--count > 0) {
+                prepAddresses.append(", ");
+            }
+        }
+        prepAddresses.append("]");
+        Context.println(">>> ChainScore.penalizeNonvoters, preps=" + prepAddresses);
+    }
+
+    static public class Delegation {
+        private Address address;
+        private BigInteger value;
+
+        public Address getAddress() {
+            return address;
+        }
+
+        public BigInteger getValue() {
+            return value;
+        }
+
+        public void setAddress(Address address) {
+            this.address = address;
+        }
+
+        public void setValue(BigInteger value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return "Delegation{" +
+                    "address=" + address +
+                    ", value=" + value +
+                    '}';
+        }
+    }
+
+    @External
+    public void setDelegation(Delegation[] delegations) {
+        Context.println(">>> ChainScore.setDelegation, len=" + delegations.length);
+        for (var d : delegations) {
+            Context.println("  - " + d);
+        }
+    }
+
+    @External
+    public void testParamCall(boolean bool, byte[] bytes) {
+        Context.println(">>> ChainScore.testParamCall");
+        Context.println("  - bool=" + bool);
+        Context.println("  - bytes=" + Converter.bytesToHex(bytes));
+    }
+
+    @External
+    public void testStructCall(Delegation delegation) {
+        Context.println(">>> ChainScore.testStructCall");
+        Context.println("  - " + delegation);
+    }
+
+    @External
+    public void testArrayCall(String[] strs, BigInteger[] ints, boolean[] bools) {
+        Context.println(">>> ChainScore.testArrayCall");
+        var sb = new StringBuilder("String[]{");
+        for (String s : strs) {
+            sb.append(s).append(",");
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        sb.append("}");
+        Context.println("  - " + sb);
+
+        var sb2 = new StringBuilder("BigInteger[]{");
+        for (BigInteger i : ints) {
+            sb2.append(i).append(",");
+        }
+        sb2.deleteCharAt(sb2.length() - 1);
+        sb2.append("}");
+        Context.println("  - " + sb2);
+
+        var sb3 = new StringBuilder("bools[]{");
+        for (boolean b : bools) {
+            sb3.append(b).append(",");
+        }
+        sb3.deleteCharAt(sb3.length() - 1);
+        sb3.append("}");
+        Context.println("  - " + sb3);
     }
 }
