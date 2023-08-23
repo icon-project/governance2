@@ -446,7 +446,7 @@ public class Governance {
                         for (int j = 0; j < size; j++) {
                             scoreParams[j] = p.get(j).asString();
                         }
-                        Context.deploy(addr, content, scoreParams);
+                        Context.deploy(addr, content, (Object[]) scoreParams);
                     }
                     NetworkScoreUpdated(addr);
                     continue;
